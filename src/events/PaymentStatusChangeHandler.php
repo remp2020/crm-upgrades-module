@@ -5,7 +5,6 @@ namespace Crm\UpgradesModule\Events;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Events\SubscriptionStartsEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
@@ -41,11 +40,11 @@ class PaymentStatusChangeHandler extends AbstractListener
             return;
         }
 
-        if ($payment->subscription_type->type == SubscriptionTypesRepository::TYPE_PRODUCT) {
+        if ($payment->subscription_type->no_subscription) {
             return;
         }
 
-        if (!in_array($payment->status, [PaymentsRepository::STATUS_PAID, PaymentsRepository::STATUS_PREPAID]) || $payment->subscription_type->no_subscription) {
+        if (!in_array($payment->status, [PaymentsRepository::STATUS_PAID, PaymentsRepository::STATUS_PREPAID])) {
             return;
         }
 
