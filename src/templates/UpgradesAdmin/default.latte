@@ -1,0 +1,121 @@
+{block #title}{_upgrades.admin.upgrades.title}{/block}
+
+{block #content}
+
+ <div class="row">
+
+  <div class="col-md-12">
+    <h1>
+        {_upgrades.admin.upgrades.title}
+      <small>
+        / {_system.total} {$totalPayments}
+        {if $totalPayments != $filteredCount}
+			, {_system.filtered} {$filteredCount}
+        {/if}
+      </small>
+    </h1>
+
+    <hr>
+  </div>
+
+  <div class="col-md-12">
+    <ul class="nav nav-pills">
+      <li role="presentation" n:class="$type == null ? active">
+        <a n:href="default">{_upgrades.admin.upgrades.all} <small>({$totalPayments})</small></a>
+      </li>
+
+      {foreach $availableTypes as $availableType}
+        <li role="presentation" n:class="$type == $availableType ? active">
+          <a n:href="default $availableType">{$availableType} <small>({$typesCounts[$availableType]})</small></a>
+        </li>
+      {/foreach}
+    </ul>
+    <hr>
+  </div>
+
+  <div class="col-md-12">
+    {control upgradesGraph}
+  </div>
+
+
+  <div class="col-md-12">
+    {if $filteredCount > 0}
+      <table class="table table-striped table-hover table-bordered">
+        <thead>
+          <tr>
+              <th>{_upgrades.admin.upgrades.type}</th>
+              <th>{_upgrades.admin.upgrades.time_of_upgrade}</th>
+              <th>{_upgrades.admin.upgrades.variable_symbol}</th>
+              <th>{_upgrades.admin.upgrades.user}</th>
+              <th>{_upgrades.admin.upgrades.amount}</th>
+              <th>{_upgrades.admin.upgrades.gateway}</th>
+              <th>{_upgrades.admin.upgrades.subscription_type}</th>
+              <th>{_upgrades.admin.upgrades.status}</th>
+              <th>{_upgrades.admin.upgrades.created_at}</th>
+              <th>{_upgrades.admin.upgrades.actions}</th>
+          </tr>
+	    </thead>
+        <tbody>
+          {foreach $payments as $payment}
+		    <tr>
+		      <td><span class="label label-default">{$payment->upgrade_type}</span></td>
+		      <td>{$payment->modified_at|userDate}</td>
+		      <td>
+		      	<code>{$payment->variable_symbol}</code>
+		      	<i n:if="$payment->note" class="fa fa-info-circle text-danger fa-wh" data-toggle="tooltip" data-placement="top" title="{$payment->note|breaklines}"></i>
+		      </td>
+		      <td><a href="{link :Users:UsersAdmin:Show $payment->user_id}">{$payment->user->email}</a></td>
+		      <td>{$payment->amount|price}</td>
+		      <td><a href="{plink :Payments:PaymentGatewaysAdmin:Show $payment->payment_gateway_id}">{$payment->payment_gateway->name}</a></td>
+		      <td>{if $payment->subscription_type_id}<a href="{plink :Subscriptions:SubscriptionTypesAdmin:Show $payment->subscription_type_id}">{$payment->subscription_type->name}</a>{/if}</td>
+		      <td>
+		    	 <div class="dropdown clearfix">
+		    	   {var $btn_class = 'btn-default'}
+		    	   {if $payment->status == \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_PAID}
+		    		 {var $btn_class = 'btn-success'}
+		    	   {elseif $payment->status == \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_FORM}
+		    		 {var $btn_class = 'btn-info'}
+		    	   {elseif $payment->status == \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_FAIL || $payment->status == \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_TIMEOUT}
+		    		 {var $btn_class = 'btn-danger'}
+		    	   {/if}
+		    	   <button class="btn {$btn_class} btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+		    	     {$payment->status}
+		    	     <span class="caret"></span>
+		    	   </button>
+		    	   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_FORM, payment => $payment->id}">Form</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-toggle="modal" data-target="#change-status-modal-{$payment->id}">Paid</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_FAIL, payment => $payment->id}">Fail</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repository\PaymentsRepository::STATUS_TIMEOUT, payment => $payment->id}">Timeout</a></li>
+		    	   </ul>
+		    	 </div>
+		      </td>
+		      <td>
+		      	<small>{$payment->created_at|userDate}</small>
+		      	<small>{if $payment->paid_at}, {_upgrades.admin.upgrades.paid_at} {$payment->paid_at|userDate}{/if}</small>
+		      	<br>
+		      	{if $payment->referer}
+              		<code>{$payment->referer}</code>
+              	{/if}
+		      </td>
+		      <td style="white-space: nowrap">
+		        <a href="{link :Payments:PaymentsAdmin:Edit $payment->id, $payment->user_id}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i> {_upgrades.admin.upgrades.edit}</a>
+
+				{control listingWidget 'admin.payments.listing.action', $payment}
+		      </td>
+		    </tr>
+	      {/foreach}
+        </tbody>
+      </table>
+
+      {control vp}
+    {else}
+     <div class="well well-lg text-center">
+       <p class="text-muted">{_upgrades.admin.upgrades.no_records}</p>
+     </div>
+    {/if}
+  </div>
+
+ </div>
+
+{/block}

@@ -1,0 +1,34 @@
+{block #headstart}
+{/block}
+
+{block #content}
+
+<div class="row">
+    <div class="col-md-12">
+        <h1><span n:block=title>{_upgrades.frontend.upgrade.select.select_upgrade}</span></h1>
+        <p>
+            {capture $content}{$upgraders[0]->getBaseSubscription()->subscription_type|typeContent|noescape}{/capture}
+            {_upgrades.frontend.upgrade.select.current_content_access, [content => $content]|noescape}
+        </p>
+    </div>
+
+    <div class="col-md-6 select-card">
+        <hr />
+        <table>
+            {foreach $upgraders as $i => $upgrader}
+                <tr>
+                    <td>
+                        <span>{_upgrades.frontend.upgrade.select.upgraded_content_access}<br>{$upgrader->getTargetSubscriptionType()|typeContent|noescape}</span>
+                        <hr>
+                    </td>
+                    <td style="padding: 1em; vertical-align: top;">
+                        <a n:href="subscription upgraderId => $i" class="pay-button btn btn-primary">{_upgrades.frontend.upgrade.select.click_here}</a>
+                    </td>
+                </tr>
+            {/foreach}
+        </table>
+    </div>
+</div>
+
+<script src="/layouts/dennikn/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/layouts/default/js/iframeResizer.contentWindow.min.js"></script>

@@ -1,0 +1,102 @@
+{var $upgradeSubscriptionType = $upgrader->getTargetSubscriptionType()}
+{var $price = $upgrader->calculateChargePrice()}
+
+{capture $infotext}
+    <p class="text-muted">
+        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription}
+            <strong>{$upgrader->getBaseSubscription()->subscription_type->price|price}</strong> {_upgrades.frontend.upgrade.subscription_info.valid_to}
+            <strong>{$upgrader->getBaseSubscription()->end_time|userDate}</strong>.</span>
+        <br>
+        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.paid_extend_confirmation}
+            <strong>{$upgrader->calculateUpgradedEndTime()|userDate}</strong>.</span>
+    </p>
+{/capture}
+
+<div class="buttons row">
+    <div class="col-md-8 col-sm-8 col-xs-12 text-right">
+
+        {form upgradeForm}
+
+            <div class="modal fade" id="modal-{$upgrader->getType()}" tabindex="-1" role="dialog">
+                <div class="modal-dialog text-left" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="{_upgrades.frontend.upgrade.subscription.confirm_modal.close}"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">{_upgrades.frontend.upgrade.subscription.confirm_modal.title}</h4>
+                        </div>
+                        <div class="modal-body">
+                            {$infotext}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default"
+                                    data-dismiss="modal">{_upgrades.frontend.upgrade.subscription.confirm_modal.close}</button>
+                            <button type="submit" class="btn btn-large btn-buy text-right">
+                                {_upgrades.frontend.upgrade.subscription.confirm_modal.submit} {if $price > 0}({$price|price}){/if}
+                            </button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+
+        {/form}
+
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-large btn-buy" data-toggle="modal" data-target="#modal-{$upgrader->getType()}" style="padding: 15px 25px;">
+            {_upgrades.frontend.upgrade.subscription.confirm_modal.submit} {if $price > 0}({$price|price}){/if}
+        </button>
+
+        <div class="col-md-12">
+            <div id="payment-types" class="col-md-8 text-left pull-right">
+                <div class="row">
+                    <h4>{_upgrades.frontend.upgrade.subscription.select_payment_gateway}</h4>
+                </div>
+                <div id="payment-gateway-error" class="row" style="display: none;">
+                    <div class="alert alert-danger">{_upgrades.frontend.upgrade.error.choose_gateway}</div>
+                </div>
+                {foreach $upgradeGateways as $upgradeGateway}
+                    <div class="row">
+                        <label class="radio-inline payment-type {$upgradeGateway->gateway->code}">
+                            <input type="radio" value="{$upgradeGateway->gateway->id}"
+                                   name="payment_gateway"> {$upgradeGateway->description|noescape}
+                        </label>
+                    </div>
+                {/foreach}
+            </div>
+            <script>
+                (function () {
+                    var $err = $('#payment-gateway-error'),
+                        $gateways = $('[name="payment_gateway"]'),
+                        $modal = $("#modal-" + {$upgrader->getType()});
+
+                    $modal.on('show.bs.modal', function(e) {
+                        var gatewayChosen = $gateways.filter(':checked');
+                        if (!gatewayChosen.length) {
+                            $err.show();
+                            $('html, body', window.parent.document).animate({
+                                scrollTop: $err.offset().top
+                            });
+                            return false;
+                        }
+
+                        $err.hide();
+                        $('#' + {$control["upgradeForm"]['payment_gateway_id']->htmlId}).val(gatewayChosen.val())
+                    });
+
+                    $gateways.on('change', function () {
+                        $err.hide();
+                    });
+                }());
+            </script>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 col-xs-12">
+        <a href="{$cmsUrl}" class="btn btn-outline"
+           target="_top">{_upgrades.frontend.upgrade.subscription.back}</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-center upgrade-description">
+        {$infotext}
+    </div>
+</div>

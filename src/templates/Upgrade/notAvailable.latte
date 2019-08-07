@@ -1,0 +1,139 @@
+{block #headstart}
+
+{/block}
+
+
+{block #content}
+
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300&subset=latin-ext" rel="stylesheet">
+
+<style>
+    .upgrade {
+        background-repeat: repeat-x;
+        background-color: #ffffff;
+        padding-top:0px;
+        font-family: 'Open Sans', sans-serif;
+    }
+    .header img {
+        width: 100%;
+        margin: 15px 0;
+    }
+    .upgrade h1 {
+        font-size: 26px;
+        margin:0;
+        padding-top: 40px;
+    }
+    .upgrade .header {
+        margin-bottom: 20px;
+    }
+    .upgrade .btn {
+        border-radius: 0;
+        font-weight: bold;
+        font-size: 19px;
+    }
+    .upgrade .btn-outline {
+        border: 2px solid #c4c4c4;
+        color: black;
+        padding: 5px 30px;
+        margin-top: 10px;
+    }
+    .upgrade .btn-buy {
+        background-color: #46b864;
+        border-color: #37b069;
+        color: white;
+    }
+    .upgrade a.btn-buy:hover {
+        text-decoration: underline;
+    }
+    .upgrade .image {
+        margin-top: 20px;
+        margin-bottom:20px;
+        border-radius: 0;
+    }
+    .upgrade .image img {
+        max-width: 680px;
+    }
+    .upgrade .buttons {
+        margin-bottom:40px;
+    }
+    .upgrade .image img {
+        width: 100%;
+    }
+
+    .upgrade .modal-footer .btn {
+        font-size: 14px;
+    }
+
+    .upgrade .modal-body .text-muted {
+        color: #000;
+    }
+
+    .upgrade .upgrade-description {
+        {* padding-top: 60px; *}
+    }
+
+    .modal-body .modal-text {
+        display: block;
+    }
+
+    .upgrade-description strong {
+        font-weight: normal;
+    }
+
+    @media screen and (max-width: 760px) {
+        .upgrade .btn  {
+            font-size: 15px;
+        }
+    }
+
+    @media screen and (max-width: 736px) {
+        .upgrade .btn  {
+            font-size: 15px;
+        }
+        .upgrade .btn-buy, .upgrade .btn-outline {
+            padding: 10px 20px;
+            white-space: normal;
+        }
+        .upgrade .btn-outline {
+            padding: 5px 15px;
+        }
+        .upgrade .header {
+            margin-bottom: 0;
+        }
+        .buttons .text-right {
+            text-align: center;
+        }
+        .buttons .col-xs-12 {
+            margin-bottom: 10px;
+        }
+        .buttons .col-xs-12 {
+            text-align:center;
+        }
+    }
+
+</style>
+
+<div class="container upgrade">
+    {control snippet 'upgrade-header'}
+
+    <div class="col-md-12 text-center">
+        <div class="alert alert-danger text-center">
+            {if in_array($error, [\Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NOT_LOGGED_IN, \Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NO_SUBSCRIPTION])}
+                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.not_available|noescape}</p>
+            {elseif in_array($error, [\Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NO_BASE_PAYMENT])}
+                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.no_base_payment|noescape}</p>
+            {else}
+                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.no_upgrade_possible|noescape}</p>
+            {/if}
+        </div>
+    </div>
+</div>
+
+<script src="/layouts/dennikn/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/layouts/default/js/iframeResizer.contentWindow.min.js"></script>
+
+<script type="text/javascript">
+    $('form').submit(function() {
+        $(this).find('button[type=submit]').prop('disabled',true);
+    });
+</script>

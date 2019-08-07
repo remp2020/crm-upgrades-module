@@ -1,0 +1,29 @@
+services:
+	moduleManager:
+		setup:
+			- addModule(Crm\UpgradesModule\UpgradesModule())
+
+	- Crm\UpgradesModule\Repository\UpgradeSchemasRepository
+	- Crm\UpgradesModule\Components\PaidRecurrentWidget
+	- Crm\UpgradesModule\Components\ShortWidget
+	- Crm\UpgradesModule\Components\FreeRecurrentWidget
+	- Crm\UpgradesModule\Components\UserPaymentsListingBadge
+	- Crm\UpgradesModule\Upgrade\AvailableUpgraders
+	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
+
+	paidExtendWidget:
+		class: Crm\UpgradesModule\Components\PaidExtendWidget
+		setup:
+			- addPaymentGateway(cardpay, "Platobná karta - jednorázová platba")
+			- addPaymentGateway(csob, "	Platební karta - jednorázová platba")
+			- addPaymentGateway(tatrapay, "TatraPay")
+			- addPaymentGateway(bank_transfer, "Bankový prevod")
+			- addPaymentGateway(proforma_invoice, "Platba predfaktúrou")
+
+	upgraderFactory:
+		class: Crm\UpgradesModule\Upgrade\UpgraderFactory
+		setup:
+			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidExtendUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Upgrade\ShortUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade())
