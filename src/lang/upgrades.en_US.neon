@@ -49,9 +49,9 @@ frontend:
 			back: Back
 			actual_subscription: Your actual subscription grants you access to
 		subscription_info:
-			actual_subscription: You're currently having subscription for
+			actual_subscription: You're currently having subscription with %content% for
 			valid_to: valid to
-			short_confirmation: "If you confirm the subscription upgrade, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
+			short_confirmation: "If you confirm the subscription upgrade with access to %content%, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
 			paid_extend_confirmation: "When upgrading, you'll be asked for a new payment. The payment amount will be discounted based on your current subscription price and remaining days. Your new subscription would be valid to"
 			special_confirmation: "You need to pay 1 eur to upgrade a subscription."
 			actual_price: You're currently having access for

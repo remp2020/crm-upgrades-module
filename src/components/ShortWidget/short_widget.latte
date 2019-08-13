@@ -2,11 +2,12 @@
 
 {capture $infotext}
     <p class="text-muted">
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription}
-            <strong>{$upgrader->getBaseSubscription()->subscription_type->price|price}</strong> {_upgrades.frontend.upgrade.subscription_info.valid_to}
+        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription, ['content' => ($upgrader->getBaseSubscription()->subscription_type|typeContent)]|noescape}
+            <strong>{$upgrader->getBaseSubscription()->subscription_type->price|price}</strong>
+            {_upgrades.frontend.upgrade.subscription_info.valid_to}
             <strong>{$upgrader->getBaseSubscription()->end_time|userDate}</strong>.</span>
         <br>
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.short_confirmation}
+        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.short_confirmation, ['content' => ($upgrader->getTargetSubscriptionType()|typeContent)]|noescape}
             <strong>{$upgrader->calculateShortenedEndTime()|userDate}</strong>.</span>
     </p>
 {/capture}

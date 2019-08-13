@@ -49,9 +49,9 @@ frontend:
 			back: Späť na titulku
 			actual_subscription: Vaše aktuálne predplatné obsahuje
 		subscription_info:
-			actual_subscription: Aktuálne máte zakúpený pristup za
+			actual_subscription: Aktuálne máte zakúpený pristup na %content% za
 			valid_to: platný do
-			short_confirmation: "Ak potvrdíte prechod na vyššie predplatné, dnešné predplatné vám „rozmeníme“ na drahšie predplatné – nemusíte teraz nič doplácať, len sa skráti čas, dokedy vaše predplatné potrvá. Váše predplatné bude platné do"
+			short_confirmation: "Ak potvrdíte prechod na vyššie predplatné s prístupom na %content%, dnešné predplatné vám „rozmeníme“ na drahšie predplatné – nemusíte teraz nič doplácať, len sa skráti čas, dokedy vaše predplatné potrvá. Váše predplatné bude platné do"
 			paid_extend_confirmation: "Pri prechode na vyšší balíček Vás požiadame o novú platbu. Jej výška sa zníži o sumu vášho doteraz nevyčerpaného aktuálneho predplatného. Nové predplatné bude platiť do"
 			special_confirmation: "Pre prechod na vyšší balíček je potrebné doplatiť 1 eur."
 			actual_price: Momentálne platíte za prístup
