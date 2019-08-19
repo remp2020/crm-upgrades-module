@@ -6,6 +6,7 @@ use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
@@ -29,6 +30,8 @@ class PaidExtendUpgrade implements UpgraderInterface
 
     private $paymentsRepository;
 
+    private $recurrentPaymentsRepository;
+
     private $hermesEmitter;
 
     private $monthlyFix;
@@ -41,6 +44,7 @@ class PaidExtendUpgrade implements UpgraderInterface
 
     public function __construct(
         PaymentsRepository $paymentsRepository,
+        RecurrentPaymentsRepository $recurrentPaymentsRepository,
         PaymentGatewaysRepository $paymentGatewaysRepository,
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionTypesRepository $subscriptionTypesRepository,
@@ -48,6 +52,7 @@ class PaidExtendUpgrade implements UpgraderInterface
     ) {
         $this->paymentGatewaysRepository = $paymentGatewaysRepository;
         $this->paymentsRepository = $paymentsRepository;
+        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->hermesEmitter = $hermesEmitter;
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
@@ -61,7 +66,10 @@ class PaidExtendUpgrade implements UpgraderInterface
     public function isUsable(): bool
     {
         if ($this->basePayment->payment_gateway->is_recurrent) {
-            return false;
+            $recurrent = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+            if (!$this->recurrentPaymentsRepository->isStopped($recurrent)) {
+                return false;
+            }
         }
         $shortenedEndTime = $this->calculateShortenedEndTime();
         if ((new DateTime())->diff($shortenedEndTime)->days >= 14) {

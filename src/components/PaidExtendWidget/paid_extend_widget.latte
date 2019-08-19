@@ -3,7 +3,7 @@
 
 {capture $infotext}
     <p class="text-muted">
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription}
+        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription, ['content' => ($upgrader->getBaseSubscription()->subscription_type|typeContent)]|noescape}
             <strong>{$upgrader->getBaseSubscription()->subscription_type->price|price}</strong> {_upgrades.frontend.upgrade.subscription_info.valid_to}
             <strong>{$upgrader->getBaseSubscription()->end_time|userDate}</strong>.</span>
         <br>

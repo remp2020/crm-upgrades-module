@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use League\Event\Emitter;
 use Nette\Utils\DateTime;
@@ -18,6 +19,8 @@ class ShortUpgrade implements UpgraderInterface
 
     private $paymentsRepository;
 
+    private $recurrentPaymentsRepository;
+
     private $subscriptionsRepository;
 
     private $emitter;
@@ -28,11 +31,13 @@ class ShortUpgrade implements UpgraderInterface
 
     public function __construct(
         PaymentsRepository $paymentsRepository,
+        RecurrentPaymentsRepository $recurrentPaymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
         Emitter $emitter,
         \Tomaj\Hermes\Emitter $hermesEmitter
     ) {
         $this->paymentsRepository = $paymentsRepository;
+        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->emitter = $emitter;
         $this->hermesEmitter = $hermesEmitter;
@@ -46,7 +51,10 @@ class ShortUpgrade implements UpgraderInterface
     public function isUsable(): bool
     {
         if ($this->basePayment->payment_gateway->is_recurrent) {
-            return false;
+            $recurrent = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+            if (!$this->recurrentPaymentsRepository->isStopped($recurrent)) {
+                return false;
+            }
         }
         $shortenedEndTime = $this->calculateShortenedEndTime();
         if ((new DateTime())->diff($shortenedEndTime)->days < 14) {
