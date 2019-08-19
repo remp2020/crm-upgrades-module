@@ -13,15 +13,6 @@ trait SplitSubscriptionTrait
     {
         $changeTime = new DateTime();
 
-        // stop current subscription immediately
-        $this->subscriptionsRepository->setExpired(
-            $this->baseSubscription,
-            $changeTime,
-            '[upgrade] Original end_time ' . $this->baseSubscription->end_time
-        );
-
-        $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
-
         // create new upgraded subscription starting now ending at provided end time
         $newSubscription = $this->subscriptionsRepository->add(
             $this->targetSubscriptionType,
@@ -34,6 +25,16 @@ trait SplitSubscriptionTrait
             $this->baseSubscription->address,
             false
         );
+
+        // stop old subscription immediately (order is important, new subscription has to be running before we stop this)
+        $this->subscriptionsRepository->setExpired(
+            $this->baseSubscription,
+            $changeTime,
+            '[upgrade] Original end_time ' . $this->baseSubscription->end_time
+        );
+
+        $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
+
         $this->subscriptionsRepository->update($newSubscription, [
             'internal_status' => SubscriptionsRepository::INTERNAL_STATUS_ACTIVE,
         ]);
