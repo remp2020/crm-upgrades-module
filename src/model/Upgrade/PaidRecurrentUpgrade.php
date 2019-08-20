@@ -15,7 +15,6 @@ use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Exception;
 use League\Event\Emitter;
-use Nette\Database\Table\IRow;
 use Nette\Utils\DateTime;
 
 class PaidRecurrentUpgrade implements UpgraderInterface
