@@ -96,6 +96,9 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             // return new SubscriptionUpgrade($this->translator->translate('upgrades.frontend.upgrade.error.card_expiring'), false, $basePayment, $actualUserSubscription);
             return false;
         }
+        if ($this->recurrentPaymentsRepository->isStopped($recurrent)) {
+            return false;
+        }
 
         $remainingDiff = (new DateTime())->diff($this->baseSubscription->end_time);
         if ($remainingDiff->days < 5) {
