@@ -61,13 +61,22 @@ class AvailableUpgraders
             return [];
         }
 
-        $actualUserSubscription = $this->subscriptionsRepository->actualUserSubscription($this->user->id);
-        if (!$actualUserSubscription) {
+        $actualSubscriptions = $this->subscriptionsRepository->actualUserSubscriptions($this->user->id)->fetchAll();
+        if (count($actualSubscriptions) === 0) {
             $this->error = self::ERROR_NO_SUBSCRIPTION;
             return [];
         }
 
-        $basePayment = $this->paymentsRepository->subscriptionPayment($actualUserSubscription);
+        $basePayment = null;
+        $actualUserSubscription = null;
+
+        foreach ($actualSubscriptions as $subscription) {
+            $actualUserSubscription = $subscription;
+            $basePayment = $this->paymentsRepository->subscriptionPayment($subscription);
+            if ($basePayment) {
+                break;
+            }
+        }
         if (!$basePayment) {
             $this->userActionsLogRepository->add($this->user->getId(), 'upgrade.cannot_upgrade', [
                 'subscription_id' => $actualUserSubscription->id,
