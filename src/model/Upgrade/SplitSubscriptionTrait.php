@@ -3,7 +3,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
-use Crm\SubscriptionsModule\Events\SubscriptionStartsEvent;
+use Crm\SubscriptionsModule\Events\SubscriptionUpdatedEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Utils\DateTime;
 
@@ -27,19 +27,15 @@ trait SplitSubscriptionTrait
         );
 
         // stop old subscription immediately (order is important, new subscription has to be running before we stop this)
-        $this->subscriptionsRepository->setExpired(
-            $this->baseSubscription,
-            $changeTime,
-            '[upgrade] Original end_time ' . $this->baseSubscription->end_time
-        );
-
+        $this->subscriptionsRepository->update($this->baseSubscription, [
+            'end_time' => $changeTime,
+            'note' => '[upgrade] Original end_time ' . $this->baseSubscription->end_time,
+        ]);
+        $this->emitter->emit(new SubscriptionUpdatedEvent($this->baseSubscription));
+        $this->subscriptionsRepository->setExpired($this->baseSubscription);
         $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
 
-        $this->subscriptionsRepository->update($newSubscription, [
-            'internal_status' => SubscriptionsRepository::INTERNAL_STATUS_ACTIVE,
-        ]);
-
-        $this->emitter->emit(new SubscriptionStartsEvent($newSubscription));
+        $this->subscriptionsRepository->setStarted($newSubscription);
 
         return $newSubscription;
     }
