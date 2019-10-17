@@ -15,7 +15,6 @@ use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Exception;
 use League\Event\Emitter;
-use Nette\Utils\DateTime;
 
 class PaidRecurrentUpgrade implements UpgraderInterface
 {
@@ -92,15 +91,14 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         if ($recurrent->subscription_type_id != $this->baseSubscription->subscription_type_id) {
             return false;
         }
-        if ($recurrent->expires_at !== null && $recurrent->expires_at < DateTime::from('+1 month')) {
-            // return new SubscriptionUpgrade($this->translator->translate('upgrades.frontend.upgrade.error.card_expiring'), false, $basePayment, $actualUserSubscription);
+        if ($recurrent->expires_at !== null && $recurrent->expires_at < $this->now()->modify('+31 days')) {
             return false;
         }
         if ($this->recurrentPaymentsRepository->isStopped($recurrent)) {
             return false;
         }
 
-        $remainingDiff = (new DateTime())->diff($this->baseSubscription->end_time);
+        $remainingDiff = $this->now()->diff($this->baseSubscription->end_time);
         if ($remainingDiff->days < 5) {
             return false;
         }
@@ -110,7 +108,6 @@ class PaidRecurrentUpgrade implements UpgraderInterface
 
     public function applyConfig(array $config): UpgraderInterface
     {
-        $clone = (clone $this);
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
@@ -118,8 +115,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             }
             $this->monthlyFix = $monthlyFix;
         }
-
-        return $clone;
+        return $this;
     }
 
     public function profitability(): float
@@ -224,7 +220,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             $totalSubscriptionAmount += SubscriptionTypePaymentItem::fromPaymentItem($paymentItem)->totalPrice();
         }
         $dayPrice = $totalSubscriptionAmount / $subscriptionDays;
-        $saveFromActual = (new DateTime())->diff($this->baseSubscription->end_time)->days * $dayPrice;
+        $saveFromActual = $this->now()->diff($this->baseSubscription->end_time)->days * $dayPrice;
         $saveFromActual = round($saveFromActual, 2);
 
         // vypocitame kolko stoji do konca stareho predplatneho novy typ predplatneho
@@ -240,7 +236,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             $newDayPrice = $this->targetSubscriptionType->price / $this->targetSubscriptionType->length;
         }
 
-        $newPrice = (new DateTime())->diff($this->baseSubscription->end_time)->days * $newDayPrice;
+        $newPrice = $this->now()->diff($this->baseSubscription->end_time)->days * $newDayPrice;
         $newPrice = round($newPrice, 2);
 
         $chargePrice = $newPrice - $saveFromActual;

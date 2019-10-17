@@ -60,15 +60,14 @@ class FreeRecurrentUpgrade implements UpgraderInterface
         if ($recurrent->subscription_type_id != $this->baseSubscription->subscription_type_id) {
             return false;
         }
-        if ($recurrent->expires_at !== null && $recurrent->expires_at < DateTime::from('+1 month')) {
-            // return new SubscriptionUpgrade($this->translator->translate('upgrades.frontend.upgrade.error.card_expiring'), false, $basePayment, $actualUserSubscription);
+        if ($recurrent->expires_at !== null && $recurrent->expires_at < $this->now()->modify('+31 days')) {
             return false;
         }
         if ($this->recurrentPaymentsRepository->isStopped($recurrent)) {
             return false;
         }
 
-        $remainingDiff = (new DateTime())->diff($this->baseSubscription->end_time);
+        $remainingDiff = $this->now()->diff($this->baseSubscription->end_time);
         if ($remainingDiff->days >= 5) {
             return false;
         }
@@ -78,7 +77,6 @@ class FreeRecurrentUpgrade implements UpgraderInterface
 
     public function applyConfig(array $config): UpgraderInterface
     {
-        $clone = (clone $this);
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
@@ -86,8 +84,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             }
             $this->monthlyFix = $monthlyFix;
         }
-
-        return $clone;
+        return $this;
     }
 
     public function profitability(): float
@@ -120,9 +117,14 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             'modified_at' => new DateTime(),
             'upgrade_type' => self::TYPE,
         ]);
+
+        $customAmount = $this->getFutureChargePrice();
+        if ($customAmount === $this->targetSubscriptionType->price) {
+            $customAmount = null;
+        }
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'next_subscription_type_id' => $this->targetSubscriptionType->id,
-            'custom_amount' => $this->getFutureChargePrice(),
+            'custom_amount' => $customAmount,
             'note' => $note . "\n(" . time() . ')',
         ]);
 

@@ -11,6 +11,7 @@ use Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 use Nette\Application\UI\Form;
 use Nette\Localization\ITranslator;
+use Nette\Security\User;
 use Nette\Utils\Json;
 
 /**
@@ -26,18 +27,22 @@ class FreeRecurrentWidget extends BaseWidget
 
     private $availableUpgraders;
 
+    private $user;
+
     public function __construct(
         WidgetManager $widgetManager,
         ApplicationConfig $applicationConfig,
         UpgraderFactory $upgraderFactory,
         ITranslator $translator,
-        AvailableUpgraders $availableUpgraders
+        AvailableUpgraders $availableUpgraders,
+        User $user
     ) {
         parent::__construct($widgetManager);
         $this->applicationConfig = $applicationConfig;
         $this->upgraderFactory = $upgraderFactory;
         $this->translator = $translator;
         $this->availableUpgraders = $availableUpgraders;
+        $this->user = $user;
     }
 
     public function identifier()
@@ -47,6 +52,10 @@ class FreeRecurrentWidget extends BaseWidget
 
     public function render(array $params)
     {
+        if (!$this->user->isLoggedIn()) {
+            return;
+        }
+
         if (!$params['upgrader'] instanceof \Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade) {
             return;
         }
@@ -73,7 +82,7 @@ class FreeRecurrentWidget extends BaseWidget
 
     public function upgrade($form, $values)
     {
-        $upgraders = $this->availableUpgraders->all();
+        $upgraders = $this->availableUpgraders->all($this->user->getId());
         if (!isset($upgraders[$values->upgrader_idx])) {
             throw new \Exception('attempt to upgrade with invalid upgrader index');
         }

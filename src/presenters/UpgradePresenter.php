@@ -37,9 +37,11 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderSelect()
     {
+        $this->onlyLoggedIn();
+
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all();
+            $upgraders = $this->availableUpgraders->all($this->user->getId());
         } catch (UpgradeException $e) {
             Debugger::log($e);
         }
@@ -55,9 +57,11 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderSubscription($upgraderId = null)
     {
+        $this->onlyLoggedIn();
+        
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all();
+            $upgraders = $this->availableUpgraders->all($this->user->getId());
         } catch (UpgradeException $e) {
             Debugger::log($e);
         }

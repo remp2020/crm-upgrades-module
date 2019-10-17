@@ -8,7 +8,6 @@ use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Repository\UpgradeSchemasRepository;
 use Crm\UsersModule\Repository\UserActionsLogRepository;
-use Nette\Security\User;
 use Nette\Utils\Json;
 
 class AvailableUpgraders
@@ -18,8 +17,6 @@ class AvailableUpgraders
     const ERROR_NO_SUBSCRIPTION = 'no_subscription';
 
     const ERROR_NOT_LOGGED_IN = 'not_logged_in';
-
-    private $user;
 
     private $subscriptionsRepository;
 
@@ -36,7 +33,6 @@ class AvailableUpgraders
     private $error;
 
     public function __construct(
-        User $user,
         SubscriptionsRepository $subscriptionsRepository,
         PaymentsRepository $paymentsRepository,
         UserActionsLogRepository $userActionsLogRepository,
@@ -44,7 +40,6 @@ class AvailableUpgraders
         UpgraderFactory $upgraderFactory,
         ContentAccessRepository $contentAccessRepository
     ) {
-        $this->user = $user;
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->userActionsLogRepository = $userActionsLogRepository;
@@ -53,15 +48,15 @@ class AvailableUpgraders
         $this->contentAccessRepository = $contentAccessRepository;
     }
 
-    public function all(string ...$contentTypeNames)
+    public function all($userId, array $contentTypeNames = [], array $requiredTags = [])
     {
         $this->error = null;
-        if (!$this->user->isLoggedIn()) {
+        if (!$userId) {
             $this->error = self::ERROR_NOT_LOGGED_IN;
             return [];
         }
 
-        $actualSubscriptions = $this->subscriptionsRepository->actualUserSubscriptions($this->user->id)->fetchAll();
+        $actualSubscriptions = $this->subscriptionsRepository->actualUserSubscriptions($userId)->fetchAll();
         if (count($actualSubscriptions) === 0) {
             $this->error = self::ERROR_NO_SUBSCRIPTION;
             return [];
@@ -78,7 +73,7 @@ class AvailableUpgraders
             }
         }
         if (!$basePayment) {
-            $this->userActionsLogRepository->add($this->user->getId(), 'upgrade.cannot_upgrade', [
+            $this->userActionsLogRepository->add($userId, 'upgrade.cannot_upgrade', [
                 'subscription_id' => $actualUserSubscription->id,
                 'subscription_type_id' => $actualUserSubscription->subscription_type_id,
             ]);
@@ -100,7 +95,7 @@ class AvailableUpgraders
         foreach ($availableOptions as $option) {
             $upgrader = null;
             try {
-                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $actualUserSubscription->subscription_type);
+                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $actualUserSubscription->subscription_type, $requiredTags);
             } catch (NoDefaultSubscriptionTypeException $e) {
                 $missingDefaultSubscriptionTypes[] = $e->getContext();
                 continue;
@@ -158,7 +153,7 @@ class AvailableUpgraders
             $params['target_contents'] = $missingDefaultSubscriptionTypes;
             $params['subscription_id'] = $actualUserSubscription->id;
             $params['subscription_type_id'] = $actualUserSubscription->subscription_type_id;
-            $this->userActionsLogRepository->add($this->user->getId(), 'upgrade.missing_default_target_subscription_type', $params);
+            $this->userActionsLogRepository->add($userId, 'upgrade.missing_default_target_subscription_type', $params);
         }
 
         return array_values($upgraders);

@@ -72,7 +72,7 @@ class PaidExtendUpgrade implements UpgraderInterface
             }
         }
         $shortenedEndTime = $this->calculateShortenedEndTime();
-        if ((new DateTime())->diff($shortenedEndTime)->days >= 14) {
+        if ($this->now()->diff($shortenedEndTime)->days >= 14) {
             return false;
         }
 
@@ -81,7 +81,6 @@ class PaidExtendUpgrade implements UpgraderInterface
 
     public function applyConfig(array $config): UpgraderInterface
     {
-        $clone = (clone $this);
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
@@ -89,8 +88,7 @@ class PaidExtendUpgrade implements UpgraderInterface
             }
             $this->monthlyFix = $monthlyFix;
         }
-
-        return $clone;
+        return $this;
     }
 
     public function setGateway(IRow $gateway): UpgraderInterface
@@ -169,7 +167,7 @@ class PaidExtendUpgrade implements UpgraderInterface
             $totalSubscriptionAmount += SubscriptionTypePaymentItem::fromPaymentItem($paymentItem)->totalPrice();
         }
         $dayPrice = $totalSubscriptionAmount / $subscriptionDays;
-        $saveFromActual = (new DateTime())->diff($this->baseSubscription->end_time)->days * $dayPrice;
+        $saveFromActual = $this->now()->diff($this->baseSubscription->end_time)->days * $dayPrice;
         $saveFromActual = round($saveFromActual, 2);
 
         // get full price of upgraded subscription
@@ -191,6 +189,6 @@ class PaidExtendUpgrade implements UpgraderInterface
 
     public function calculateUpgradedEndTime()
     {
-        return (new DateTime)->add(new \DateInterval("P{$this->targetSubscriptionType->length}D"));
+        return $this->now()->add(new \DateInterval("P{$this->targetSubscriptionType->length}D"));
     }
 }

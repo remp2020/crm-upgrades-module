@@ -16,6 +16,8 @@ trait UpgraderTrait
 
     private $browserId;
 
+    private $now;
+
     private $trackingParams = [];
 
     public function setBaseSubscription(IRow $baseSubscription): UpgraderInterface
@@ -98,5 +100,16 @@ trait UpgraderTrait
             }
         }
         return $upgradedItem;
+    }
+
+    public function setNow(\DateTime $now): UpgraderInterface
+    {
+        $this->now = $now;
+        return $this;
+    }
+
+    public function now(): \DateTime
+    {
+        return $this->now ? clone $this->now : new \DateTime();
     }
 }

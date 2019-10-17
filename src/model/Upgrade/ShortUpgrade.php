@@ -57,7 +57,7 @@ class ShortUpgrade implements UpgraderInterface
             }
         }
         $shortenedEndTime = $this->calculateShortenedEndTime();
-        if ((new DateTime())->diff($shortenedEndTime)->days < 14) {
+        if ($this->now()->diff($shortenedEndTime)->days < 14) {
             return false;
         }
 
@@ -66,7 +66,6 @@ class ShortUpgrade implements UpgraderInterface
 
     public function applyConfig(array $config): UpgraderInterface
     {
-        $clone = (clone $this);
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
@@ -74,13 +73,12 @@ class ShortUpgrade implements UpgraderInterface
             }
             $this->monthlyFix = $monthlyFix;
         }
-
-        return $clone;
+        return $this;
     }
 
     public function profitability(): float
     {
-        return $this->calculateShortenedEndTime()->getTimestamp() - (new DateTime())->getTimestamp();
+        return $this->calculateShortenedEndTime()->getTimestamp() - $this->now()->getTimestamp();
     }
 
     public function upgrade(): bool

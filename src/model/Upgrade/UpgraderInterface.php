@@ -29,6 +29,16 @@ interface UpgraderInterface
     public function getBrowserId(): ?string;
 
     /**
+     * setNow sets the base date for upgrade calculation that should be used instead of current time.
+     *
+     * @param \DateTime $now
+     * @return UpgraderInterface
+     */
+    public function setNow(\DateTime $now): UpgraderInterface;
+
+    public function now(): \DateTime;
+
+    /**
      * @return boolean|IRow
      */
     public function upgrade();

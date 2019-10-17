@@ -13,6 +13,8 @@ class UpgraderFactory
     /** @var UpgraderInterface[] */
     private $upgraders = [];
 
+    private $requiredTags = [];
+
     private $subscriptionTypesRepository;
 
     private $paymentsRepository;
@@ -29,18 +31,25 @@ class UpgraderFactory
         $this->subscriptionsRepository = $subscriptionsRepository;
     }
 
-    public function registerUpgrader(UpgraderInterface $upgrader)
+    public function registerUpgrader(UpgraderInterface $upgrader, $requiredTags = [])
     {
         $this->upgraders[$upgrader->getType()] = $upgrader;
+        $this->requiredTags[$upgrader->getType()] = $requiredTags;
     }
 
-    public function getUpgraders()
+    /**
+     * @return UpgraderInterface[]
+     */
+    public function getUpgraders(): array
     {
         return $this->upgraders;
     }
 
-    public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType): ?UpgraderInterface
+    public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType, $requiredTags = []): ?UpgraderInterface
     {
+        if (!isset($this->upgraders[$upgradeOption->type])) {
+            throw new \Exception('Upgrader with given type is not registered: ' . $upgradeOption->type);
+        }
         $upgrader = clone $this->upgraders[$upgradeOption->type];
 
         if ($upgradeOption->subscription_type_id) {
@@ -64,46 +73,64 @@ class UpgraderFactory
                 return null;
             }
 
-            $subscriptionType = $this->subscriptionTypesRepository->getTable()
-                ->where([
-                    'active' => true,
-                    'default' => true,
-                    'length' => $baseSubscriptionType->length,
-                ])
-                ->order('price')
-                ->limit(1);
-
-            // query to filter only subscription types with all the current and target contents
-            foreach (array_unique(array_merge($currentContent, $config->require_content)) as $content) {
-                if (isset($config->omit_content) && in_array($content, $config->omit_content)) {
-                    continue;
+            $subscriptionType = $this->getDefaultSubscriptionType($baseSubscriptionType, $currentContent, $baseSubscriptionType->length, $config);
+            if (!$subscriptionType) {
+                // If baseSubscriptionType uses nonstandard initial length, this might happen. Let's try to use extending_length
+                // (if it's set) to search for default subscription type.
+                if ($baseSubscriptionType->extending_length) {
+                    $subscriptionType = $this->getDefaultSubscriptionType($baseSubscriptionType, $currentContent, $baseSubscriptionType->extending_length, $config);
                 }
 
-                $typesWithContent = $this->subscriptionTypesRepository->getTable()
-                    ->select('subscription_types.id')
-                    ->where([
-                        ':subscription_type_content_access.content_access.name' => $content,
-                    ])
-                    ->fetchAll();
-
-                $subscriptionType->where([
-                    'id' => $typesWithContent,
-                ]);
-            }
-
-            $subscriptionType = $subscriptionType->fetch();
-            if (!$subscriptionType) {
-                throw new NoDefaultSubscriptionTypeException(
-                    "Cannot determine target subscription type for upgrade option [{$upgradeOption->id}], default subscription type not set.",
-                    [
-                        'target_content' => array_unique(array_merge($currentContent, $config->require_content)),
-                    ]
-                );
+                if (!$subscriptionType) {
+                    throw new NoDefaultSubscriptionTypeException(
+                        "Cannot determine target subscription type for upgrade option [{$upgradeOption->id}], default subscription type not set.",
+                        [
+                            'target_content' => array_unique(array_merge($currentContent, $config->require_content)),
+                        ]
+                    );
+                }
             }
 
             $upgrader->setTargetSubscriptionType($subscriptionType);
         }
 
+        if (count(array_diff($requiredTags, $this->requiredTags[$upgrader->getType()])) > 0) {
+            // required tags were not met
+            return null;
+        }
+
         return $upgrader;
+    }
+
+    private function getDefaultSubscriptionType(IRow $baseSubscriptionType, $currentContent, $length, $config)
+    {
+        $subscriptionType = $this->subscriptionTypesRepository->getTable()
+            ->where([
+                'active' => true,
+                'default' => true,
+                'length' => $length,
+            ])
+            ->order('price')
+            ->limit(1);
+
+        // query to filter only subscription types with all the current and target contents
+        foreach (array_unique(array_merge($currentContent, $config->require_content)) as $content) {
+            if (isset($config->omit_content) && in_array($content, $config->omit_content)) {
+                continue;
+            }
+
+            $typesWithContent = $this->subscriptionTypesRepository->getTable()
+                ->select('subscription_types.id')
+                ->where([
+                    ':subscription_type_content_access.content_access.name' => $content,
+                ])
+                ->fetchAll();
+
+            $subscriptionType->where([
+                'id' => $typesWithContent,
+            ]);
+        }
+
+        return $subscriptionType->fetch();
     }
 }
