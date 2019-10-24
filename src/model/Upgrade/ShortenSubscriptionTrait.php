@@ -22,8 +22,8 @@ trait ShortenSubscriptionTrait
 
         $subscriptionDays = $this->baseSubscription->start_time->diff($this->baseSubscription->end_time)->days;
         $dayPrice = $this->basePayment->amount / $subscriptionDays;
-        $saveFromActual = $this->now()->diff($this->baseSubscription->end_time)->days * $dayPrice;
-        $saveFromActual = round($saveFromActual, 2);
+        $remainingSeconds = $this->baseSubscription->end_time->getTimestamp() - $this->now()->getTimestamp();
+        $savedFromActual = $remainingSeconds / 60 / 60 / 24 * $dayPrice;
 
         // calculate daily price of target subscription type
         if ($this->monthlyFix) {
@@ -35,7 +35,7 @@ trait ShortenSubscriptionTrait
         }
 
         // determine how many days of new subscription type we can "buy" with what we "saved" from remaining days of current subscription
-        $length = ceil($saveFromActual / $newDayPrice);
-        return $this->now()->add(new \DateInterval("P{$length}D"));
+        $lengthInSeconds = ceil($savedFromActual / $newDayPrice * 24 * 60 * 60);
+        return $this->now()->add(new \DateInterval("PT{$lengthInSeconds}S"));
     }
 }

@@ -30,11 +30,13 @@ trait SplitSubscriptionTrait
             'note' => '[upgrade] Original end_time ' . $this->baseSubscription->end_time,
         ]);
         $this->emitter->emit(new SubscriptionUpdatedEvent($this->baseSubscription));
-        $this->subscriptionsRepository->setExpired($this->baseSubscription);
+
+        if ($this->now() <= new DateTime()) {
+            $this->subscriptionsRepository->setExpired($this->baseSubscription);
+            $this->subscriptionsRepository->setStarted($newSubscription);
+        }
+
         $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
-
-        $this->subscriptionsRepository->setStarted($newSubscription);
-
         return $newSubscription;
     }
 }

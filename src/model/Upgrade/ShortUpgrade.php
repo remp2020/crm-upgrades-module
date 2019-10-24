@@ -106,4 +106,22 @@ class ShortUpgrade implements UpgraderInterface
         $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams));
         return true;
     }
+
+    public function getFutureChargePrice(): float
+    {
+        if ($this->monthlyFix) {
+            $subscriptionType = $this->baseSubscription->subscription_type;
+            if ($subscriptionType->next_subscription_type_id) {
+                $subscriptionType = $subscriptionType->next_subscription_type;
+            }
+            $newDayPrice = ($subscriptionType->price / $this->targetSubscriptionType->length) + ($this->monthlyFix / 31);
+            return round($newDayPrice * $this->targetSubscriptionType->length, 2);
+        }
+
+        $subscriptionType = $this->targetSubscriptionType;
+        if ($subscriptionType->next_subscription_type_id) {
+            $subscriptionType = $subscriptionType->next_subscription_type;
+        }
+        return $subscriptionType->price;
+    }
 }
