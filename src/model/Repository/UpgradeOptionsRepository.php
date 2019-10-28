@@ -10,12 +10,12 @@ class UpgradeOptionsRepository extends Repository
 {
     protected $tableName = 'upgrade_options';
 
-    public function add(IRow $upgradeSchema, string $type, ?array $config = [], ?IRow $subscriptionType = null)
+    public function add(IRow $upgradeSchema, string $type, array $config, ?IRow $subscriptionType = null)
     {
         return $this->insert([
             'upgrade_schema_id' => $upgradeSchema->id,
             'type' => $type,
-            'config' => $config ? Json::encode($config) : null,
+            'config' => Json::encode($config),
             'subscription_type_id' => $subscriptionType->id ?? null,
         ]);
     }
