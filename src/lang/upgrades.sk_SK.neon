@@ -49,18 +49,18 @@ frontend:
 			back: Späť na titulku
 			actual_subscription: Vaše aktuálne predplatné obsahuje
 		subscription_info:
-			actual_subscription: Aktuálne máte zakúpený pristup na %content% za
-			valid_to: platný do
-			short_confirmation: "Ak potvrdíte prechod na vyššie predplatné s prístupom na %content%, dnešné predplatné vám „rozmeníme“ na drahšie predplatné – nemusíte teraz nič doplácať, len sa skráti čas, dokedy vaše predplatné potrvá. Váše predplatné bude platné do"
+			actual_subscription: Aktuálne máte <b>%subscription_type%</b> za
+			valid_to: platné do
+			short_confirmation: "Ak potvrdíte prechod na <b>%subscription_type%</b>, dnešné predplatné vám „rozmeníme“ na drahšie predplatné – nemusíte teraz nič doplácať, len sa skráti čas, dokedy vaše predplatné potrvá. Váše predplatné bude platné do"
 			paid_extend_confirmation: "Pri prechode na vyšší balíček Vás požiadame o novú platbu. Jej výška sa zníži o sumu vášho doteraz nevyčerpaného aktuálneho predplatného. Nové predplatné bude platiť do"
 			special_confirmation: "Pre prechod na vyšší balíček je potrebné doplatiť 1 eur."
 			actual_price: Momentálne platíte za prístup
 			payment_period: každých <strong>%count%</strong> dní
-			new_price: "Vaša nová cena za prístup k %content% bude od nasledujúceho obnovenia"
+			new_price: "Vaša nová cena za <b>%subscription_type%</b> bude od nasledujúceho obnovenia"
 			less_than_5_days: "Pri upgrade získate prístup k výhodám vyššieho predplatného okamžite a cenu vyššieho balíka zaplatíte až pri najbližšom obnovení predplatného."
 			more_than_5_days: "Teraz zaplatíte len pomernú časť doplatku za obdobie, ktoré zostáva do konca vášho predplatného."
 		select:
 			select_upgrade: Vyberte upgrade
-			current_content_access: Momentálne Vám vaše predplatné dáva prístup k %content%. Z vášho predplatného je viac možností upgradu. Zvoľte si prosím.
-			upgraded_content_access: Upgrade na predplatné s prístupom na
-			click_here: Kliknite sem
+			current_subscription_type: "Momentálne máte <b>%subscription_type%</b>. Z vášho predplatného je viac možností upgradu. Zvoľte si prosím."
+			upgraded_to: Upgrade na
+			show_conditions: Zobraziť podmienky

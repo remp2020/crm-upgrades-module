@@ -11,7 +11,7 @@
             {_upgrades.frontend.upgrade.subscription_info.payment_period, ['count' => intval($extendingLength)]|noescape}
             .</span>
 
-        {_upgrades.frontend.upgrade.subscription_info.new_price, ['content' => ($upgrader->getTargetSubscriptionType()|typeContent)]|noescape}
+        {_upgrades.frontend.upgrade.subscription_info.new_price, ['subscription_type' => ($upgrader->getTargetSubscriptionType()->user_label)]|noescape}
         <strong>{$upgrader->getFutureChargePrice()|price}</strong>.
 
         <br>
