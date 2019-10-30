@@ -12,6 +12,8 @@ services:
 	- Crm\UpgradesModule\Components\UserPaymentsListingBadge
 	- Crm\UpgradesModule\Upgrade\AvailableUpgraders
 	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
+	- Crm\UpgradesModule\Events\SubscriptionShortenedHandler
+	- Crm\UpgradesModule\Seeders\TestSeeder
 
 	paidExtendWidget:
 		class: Crm\UpgradesModule\Components\PaidExtendWidget

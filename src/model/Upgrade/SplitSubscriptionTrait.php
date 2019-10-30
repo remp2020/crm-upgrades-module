@@ -5,6 +5,7 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\SubscriptionsModule\Events\SubscriptionUpdatedEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use DateTime;
 
 trait SplitSubscriptionTrait
@@ -25,10 +26,13 @@ trait SplitSubscriptionTrait
         );
 
         // stop old subscription immediately (order is important, new subscription has to be running before we stop this)
+        $originalEndTime = $this->baseSubscription->end_time;
         $this->subscriptionsRepository->update($this->baseSubscription, [
             'end_time' => $this->now(),
-            'note' => '[upgrade] Original end_time ' . $this->baseSubscription->end_time,
+            'note' => '[upgrade] Original end_time ' . $originalEndTime,
         ]);
+
+        $this->emitter->emit(new SubscriptionShortenedEvent($this->getBaseSubscription(), $originalEndTime));
         $this->emitter->emit(new SubscriptionUpdatedEvent($this->baseSubscription));
 
         if ($this->now() <= new DateTime()) {

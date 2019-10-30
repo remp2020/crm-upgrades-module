@@ -6,8 +6,8 @@ use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Menu\MenuItem;
 use Crm\ApplicationModule\Widget\WidgetManagerInterface;
-use Crm\UpgradesModule\Components\PaidExtendWidget;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget;
+use Crm\UpgradesModule\Components\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget;
 use Crm\UpgradesModule\Components\ShortWidget;
 use Crm\UpgradesModule\Components\UserPaymentsListingBadge;
@@ -52,6 +52,11 @@ class UpgradesModule extends CrmModule
             \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
             $this->getInstance(\Crm\UpgradesModule\Events\PaymentStatusChangeHandler::class),
             1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+        );
+
+        $emitter->addListener(
+            \Crm\UpgradesModule\Events\SubscriptionShortenedEvent::class,
+            $this->getInstance(\Crm\UpgradesModule\Events\SubscriptionShortenedHandler::class)
         );
     }
 }
