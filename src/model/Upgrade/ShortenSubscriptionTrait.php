@@ -3,6 +3,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Nette\Utils\DateTime;
 
 trait ShortenSubscriptionTrait
@@ -20,8 +21,17 @@ trait ShortenSubscriptionTrait
             return $this->baseSubscription->end_time;
         }
 
+        $subscriptionPaymentItems = $this->getBasePayment()
+            ->related('payment_items')
+            ->where('type = ?', SubscriptionTypePaymentItem::TYPE);
+
+        $subscriptionAmount = 0;
+        foreach ($subscriptionPaymentItems as $subscriptionPaymentItem) {
+            $subscriptionAmount += $subscriptionPaymentItem->count * $subscriptionPaymentItem->amount;
+        }
+
         $subscriptionDays = $this->baseSubscription->start_time->diff($this->baseSubscription->end_time)->days;
-        $dayPrice = $this->basePayment->amount / $subscriptionDays;
+        $dayPrice = $subscriptionAmount / $subscriptionDays;
         $remainingSeconds = $this->baseSubscription->end_time->getTimestamp() - $this->now()->getTimestamp();
         $savedFromActual = $remainingSeconds / 60 / 60 / 24 * $dayPrice;
 
