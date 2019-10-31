@@ -94,7 +94,9 @@ class UpgraderFactory
             $upgrader->setTargetSubscriptionType($subscriptionType);
         }
 
-        if (count(array_diff($requiredTags, $this->requiredTags[$upgrader->getType()])) > 0) {
+        $upgraderTags = $this->requiredTags[$upgrader->getType()];
+
+        if (count($upgraderTags) !== count($requiredTags) || array_diff($upgraderTags, $requiredTags) !== array_diff($requiredTags, $upgraderTags)) {
             // required tags were not met
             return null;
         }
