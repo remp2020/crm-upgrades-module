@@ -19,6 +19,12 @@ class UpgradePresenter extends FrontendPresenter
     /** @var AvailableUpgraders @inject */
     public $availableUpgraders;
 
+    /** @persistent */
+    public $contentAccess = [];
+
+    /** @persistent */
+    public $limit;
+
     public function startup()
     {
         parent::startup();
@@ -41,9 +47,13 @@ class UpgradePresenter extends FrontendPresenter
 
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all($this->user->getId());
+            $upgraders = $this->availableUpgraders->all($this->user->getId(), $this->contentAccess);
         } catch (UpgradeException $e) {
             Debugger::log($e);
+        }
+
+        if ($this->limit) {
+            $upgraders = array_slice($upgraders, 0, $this->limit);
         }
 
         if (count($upgraders) === 0) {
@@ -61,13 +71,17 @@ class UpgradePresenter extends FrontendPresenter
         
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all($this->user->getId());
+            $upgraders = $this->availableUpgraders->all($this->user->getId(), $this->contentAccess);
         } catch (UpgradeException $e) {
             Debugger::log($e);
         }
 
         if (count($upgraders) === 0) {
             $this->redirect('notAvailable', $this->availableUpgraders->getError());
+        }
+
+        if ($this->limit) {
+            $upgraders = array_slice($upgraders, 0, $this->limit);
         }
 
         if (count($upgraders) === 1) {

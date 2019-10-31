@@ -48,7 +48,7 @@ class AvailableUpgraders
         $this->contentAccessRepository = $contentAccessRepository;
     }
 
-    public function all($userId, array $contentTypeNames = [], array $requiredTags = [])
+    public function all($userId, array $contentAccessNames = [], array $requiredTags = [])
     {
         $this->error = null;
         if (!$userId) {
@@ -120,8 +120,8 @@ class AvailableUpgraders
             }
 
             // if we aim for specific content access, check if it's supported by target subscription type
-            if (!empty($contentTypeNames)) {
-                $hasAccess = $this->contentAccessRepository->hasAccess($upgrader->getTargetSubscriptionType(), $contentTypeNames);
+            if (!empty($contentAccessNames)) {
+                $hasAccess = $this->contentAccessRepository->hasAccess($upgrader->getTargetSubscriptionType(), $contentAccessNames);
                 if (!$hasAccess) {
                     continue;
                 }
@@ -159,6 +159,9 @@ class AvailableUpgraders
             $this->userActionsLogRepository->add($userId, 'upgrade.missing_default_target_subscription_type', $params);
         }
 
+        uksort($upgraders, function ($a, $b) use ($profitabilities) {
+            return $profitabilities[$a] < $profitabilities[$b] ? 1 : -1;
+        });
         return array_values($upgraders);
     }
 
