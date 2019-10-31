@@ -25,9 +25,15 @@ trait ShortenSubscriptionTrait
             ->related('payment_items')
             ->where('type = ?', SubscriptionTypePaymentItem::TYPE);
 
+        // try to use subscription payment items if possible
         $subscriptionAmount = 0;
         foreach ($subscriptionPaymentItems as $subscriptionPaymentItem) {
             $subscriptionAmount += $subscriptionPaymentItem->count * $subscriptionPaymentItem->amount;
+        }
+
+        // if there were none, let's use whole payment amount as a base
+        if ($subscriptionAmount === 0) {
+            $subscriptionAmount = $this->getBasePayment()->amount;
         }
 
         $subscriptionDays = $this->baseSubscription->start_time->diff($this->baseSubscription->end_time)->days;
