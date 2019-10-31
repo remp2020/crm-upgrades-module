@@ -7,8 +7,8 @@
     <div class="col-md-12">
         <h1><span n:block=title>{_upgrades.frontend.upgrade.select.select_upgrade}</span></h1>
         <p>
-            {capture $content}{$upgraders[0]->getBaseSubscription()->subscription_type|typeContent|noescape}{/capture}
-            {_upgrades.frontend.upgrade.select.current_content_access, [content => $content]|noescape}
+            {capture $subscriptionType}{$upgraders[0]->getBaseSubscription()->subscription_type->user_label}{/capture}
+            {_upgrades.frontend.upgrade.select.current_subscription_type, [subscription_type => $subscriptionType]|noescape}
         </p>
     </div>
 
@@ -18,11 +18,10 @@
             {foreach $upgraders as $i => $upgrader}
                 <tr>
                     <td>
-                        <span>{_upgrades.frontend.upgrade.select.upgraded_content_access}<br>{$upgrader->getTargetSubscriptionType()|typeContent|noescape}</span>
-                        <hr>
+                        {_upgrades.frontend.upgrade.select.upgraded_to} <b>{$upgrader->getTargetSubscriptionType()->user_label}</b>
                     </td>
-                    <td style="padding: 1em; vertical-align: top;">
-                        <a n:href="subscription upgraderId => $i" class="pay-button btn btn-primary">{_upgrades.frontend.upgrade.select.click_here}</a>
+                    <td style="padding: 0.5em; vertical-align: top;">
+                        <a n:href="subscription upgraderId => $i" class="pay-button btn btn-primary">{_upgrades.frontend.upgrade.select.show_conditions}</a>
                     </td>
                 </tr>
             {/foreach}

@@ -49,18 +49,18 @@ frontend:
 			back: Back
 			actual_subscription: Your actual subscription grants you access to
 		subscription_info:
-			actual_subscription: You're currently having subscription with %content% for
+			actual_subscription: You currently have <b>%subscription_type%</b> for
 			valid_to: valid to
-			short_confirmation: "If you confirm the subscription upgrade with access to %content%, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
+			short_confirmation: "If you confirm the upgrade to <b>%subscription_type%</b>, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
 			paid_extend_confirmation: "When upgrading, you'll be asked for a new payment. The payment amount will be discounted based on your current subscription price and remaining days. Your new subscription would be valid to"
 			special_confirmation: "You need to pay 1 eur to upgrade a subscription."
 			actual_price: You're currently having access for
 			payment_period: every <strong>%count%</strong> days
-			new_price: "Your new price for accessing web, apps and Club N will be since next charging"
+			new_price: "Your new price for <b>%subscription_type%</b> will be since next charging"
 			less_than_5_days: "You'll get an upgrade immediatelly and price of the higher package will be charged when your subscription ends."
 			more_than_5_days: "Now you'll pay proportional amount of money based on your remaining days and price of subscription you're upgrading to."
 		select:
 			select_upgrade: Select upgrade option
-			current_content_access: "Your current subscription gives you access to %content%. There are multiple options how to upgrade your subscription. Please, select one."
-			upgraded_content_access: Upgrade to subscription with access to
-			click_here: Click here
+			current_subscription_type: "Currently you have <b>%subscription_type%</b>. There are more options to upgrade your subscription. Please, select one."
+			upgraded_to: Upgrade to
+			show_conditions: Show conditions
