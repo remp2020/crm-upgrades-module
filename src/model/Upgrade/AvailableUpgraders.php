@@ -69,6 +69,9 @@ class AvailableUpgraders
             $actualUserSubscription = $subscription;
             $basePayment = $this->paymentsRepository->subscriptionPayment($subscription);
             if ($basePayment) {
+                // TODO: handle two subscriptions with base payment
+                // What if there are two subscriptions with base payment? This one might not be upgradeable but the
+                // other one could be.
                 break;
             }
         }
