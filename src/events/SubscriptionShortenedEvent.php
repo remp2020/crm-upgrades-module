@@ -7,19 +7,27 @@ use Nette\Database\Table\ActiveRow;
 
 class SubscriptionShortenedEvent extends AbstractEvent
 {
-    private $subscription;
+    private $baseSubscription;
+
+    private $upgradedSubscription;
 
     private $originalEndTime;
 
-    public function __construct(ActiveRow $subscription, \DateTime $originalEndTime)
+    public function __construct(ActiveRow $baseSubscription, \DateTime $originalEndTime, ActiveRow $upgradedSubscription)
     {
-        $this->subscription = $subscription;
+        $this->baseSubscription = $baseSubscription;
+        $this->upgradedSubscription = $upgradedSubscription;
         $this->originalEndTime = clone $originalEndTime;
     }
 
-    public function getSubscription(): ActiveRow
+    public function getBaseSubscription(): ActiveRow
     {
-        return $this->subscription;
+        return $this->baseSubscription;
+    }
+
+    public function getUpgradedSubscription(): ActiveRow
+    {
+        return $this->upgradedSubscription;
     }
 
     public function getOriginalEndTime(): \DateTime

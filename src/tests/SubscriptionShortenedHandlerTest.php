@@ -55,37 +55,15 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
     public function testNoAction()
     {
         $user = $this->loadUser('admin@example.com');
-        $subscription = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
+        $baseSubscription = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
 
         $endTime = new \DateTime('2019-07-01');
-        $this->subscriptionsRepository->update($subscription, [
+        $upgradedSubscription = $this->createSubscription($user, 'upgrade_tests_monthly', $endTime);
+        $this->subscriptionsRepository->update($baseSubscription, [
             'end_time' => $endTime,
         ]);
         $this->subscriptionShortenedHandler->handle(
-            new SubscriptionShortenedEvent($subscription, new \DateTime('2020-01-01'))
-        );
-
-        $subscriptions = [];
-        foreach ($this->subscriptionsRepository->userSubscriptions($user->id) as $s) {
-            $subscriptions[] = $s;
-        }
-        $this->assertCount(1, $subscriptions);
-        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[0]->start_time);
-        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[0]->end_time);
-    }
-
-    public function testShortFirstHandleMoveOfSecond()
-    {
-        $user = $this->loadUser('admin@example.com');
-        $subscription1 = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
-        $subscription2 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription1->end_time);
-
-        $endTime = new \DateTime('2019-07-01');
-        $this->subscriptionsRepository->update($subscription1, [
-            'end_time' => $endTime,
-        ]);
-        $this->subscriptionShortenedHandler->handle(
-            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'))
+            new SubscriptionShortenedEvent($baseSubscription, new \DateTime('2020-01-01'), $upgradedSubscription)
         );
 
         $subscriptions = [];
@@ -96,22 +74,22 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[1]->start_time);
         $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[1]->end_time);
         $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[0]->start_time);
-        $this->assertEquals(new \DateTime('2020-06-30'), $subscriptions[0]->end_time); // leap year
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[0]->end_time);
     }
 
-    public function testShortFirstHandleMoveOfSecondAndThird()
+    public function testShortFirstHandleMoveOfSecond()
     {
         $user = $this->loadUser('admin@example.com');
         $subscription1 = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
         $subscription2 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription1->end_time);
-        $subscription3 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription2->end_time);
 
         $endTime = new \DateTime('2019-07-01');
+        $upgradedSubscription = $this->createSubscription($user, 'upgrade_tests_monthly', $endTime);
         $this->subscriptionsRepository->update($subscription1, [
             'end_time' => $endTime,
         ]);
         $this->subscriptionShortenedHandler->handle(
-            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'))
+            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'), $upgradedSubscription)
         );
 
         $subscriptions = [];
@@ -122,37 +100,71 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[2]->start_time);
         $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[2]->end_time);
         $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[1]->start_time);
-        $this->assertEquals(new \DateTime('2020-06-30'), $subscriptions[1]->end_time); // 2020 is leap year
-        $this->assertEquals(new \DateTime('2020-06-30'), $subscriptions[0]->start_time);
-        $this->assertEquals(new \DateTime('2021-06-30'), $subscriptions[0]->end_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[1]->end_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[0]->start_time);
+        $this->assertEquals(new \DateTime('2020-07-31'), $subscriptions[0]->end_time); // leap year
     }
 
-    public function testIgnoreOfParallelSubscription()
+    public function testShortFirstHandleMoveOfSecondAndThird()
     {
         $user = $this->loadUser('admin@example.com');
         $subscription1 = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
-        $parallelSubscription = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-12-01'), new \DateTime('2020-01-01'));
         $subscription2 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription1->end_time);
+        $subscription3 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription2->end_time);
 
         $endTime = new \DateTime('2019-07-01');
+        $upgradedSubscription = $this->createSubscription($user, 'upgrade_tests_monthly', $endTime);
         $this->subscriptionsRepository->update($subscription1, [
             'end_time' => $endTime,
         ]);
         $this->subscriptionShortenedHandler->handle(
-            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'))
+            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'), $upgradedSubscription)
         );
 
         $subscriptions = [];
         foreach ($this->subscriptionsRepository->userSubscriptions($user->id) as $s) {
             $subscriptions[] = $s;
         }
-        $this->assertCount(3, $subscriptions);
-        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[2]->start_time);
-        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[2]->end_time);
-        $this->assertEquals(new \DateTime('2019-12-01'), $subscriptions[1]->start_time);
-        $this->assertEquals(new \DateTime('2020-01-01'), $subscriptions[1]->end_time);
-        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[0]->start_time);
-        $this->assertEquals(new \DateTime('2020-06-30'), $subscriptions[0]->end_time); // 2020 is leap year
+        $this->assertCount(4, $subscriptions);
+        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[3]->start_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[3]->end_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[2]->start_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[2]->end_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[1]->start_time);
+        $this->assertEquals(new \DateTime('2020-07-31'), $subscriptions[1]->end_time); // 2020 is leap year
+        $this->assertEquals(new \DateTime('2020-07-31'), $subscriptions[0]->start_time);
+        $this->assertEquals(new \DateTime('2021-07-31'), $subscriptions[0]->end_time);
+    }
+
+    public function testIgnoreOfParallelSubscription()
+    {
+        $user = $this->loadUser('admin@example.com');
+        $subscription1 = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-01-01'));
+        $parallelSubscription = $this->createSubscription($user, 'upgrade_tests_yearly', new \DateTime('2019-06-15'), new \DateTime('2019-07-15'));
+        $subscription2 = $this->createSubscription($user, 'upgrade_tests_yearly', $subscription1->end_time);
+
+        $endTime = new \DateTime('2019-07-01');
+        $upgradedSubscription = $this->createSubscription($user, 'upgrade_tests_monthly', $endTime);
+        $this->subscriptionsRepository->update($subscription1, [
+            'end_time' => $endTime,
+        ]);
+        $this->subscriptionShortenedHandler->handle(
+            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'), $upgradedSubscription)
+        );
+
+        $subscriptions = [];
+        foreach ($this->subscriptionsRepository->userSubscriptions($user->id) as $s) {
+            $subscriptions[] = $s;
+        }
+        $this->assertCount(4, $subscriptions);
+        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[3]->start_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[3]->end_time);
+        $this->assertEquals(new \DateTime('2019-06-15'), $subscriptions[2]->start_time);
+        $this->assertEquals(new \DateTime('2019-07-15'), $subscriptions[2]->end_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[1]->start_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[1]->end_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[0]->start_time);
+        $this->assertEquals(new \DateTime('2020-07-31'), $subscriptions[0]->end_time); // 2020 is leap year
     }
 
     public function testDifferentUserNotAffected()
@@ -164,20 +176,23 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         $subscription2 = $this->createSubscription($user2, 'upgrade_tests_yearly', $subscription1->end_time);
 
         $endTime = new \DateTime('2019-07-01');
+        $upgradedSubscription = $this->createSubscription($user1, 'upgrade_tests_monthly', $endTime);
         $this->subscriptionsRepository->update($subscription1, [
             'end_time' => $endTime,
         ]);
         $this->subscriptionShortenedHandler->handle(
-            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'))
+            new SubscriptionShortenedEvent($subscription1, new \DateTime('2020-01-01'), $upgradedSubscription)
         );
 
         $subscriptions = [];
         foreach ($this->subscriptionsRepository->userSubscriptions($user1->id) as $s) {
             $subscriptions[] = $s;
         }
-        $this->assertCount(1, $subscriptions);
-        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[0]->start_time);
-        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[0]->end_time);
+        $this->assertCount(2, $subscriptions);
+        $this->assertEquals(new \DateTime('2019-01-01'), $subscriptions[1]->start_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[1]->end_time);
+        $this->assertEquals(new \DateTime('2019-07-01'), $subscriptions[0]->start_time);
+        $this->assertEquals(new \DateTime('2019-08-01'), $subscriptions[0]->end_time);
 
         $subscriptions = [];
         foreach ($this->subscriptionsRepository->userSubscriptions($user2->id) as $s) {

@@ -39,5 +39,22 @@ class TestSeeder implements ISeeder
         } else {
             $output->writeln("  * subscription type <info>{$subscriptionTypeCode}</info> exists");
         }
+
+        $subscriptionTypeCode = 'upgrade_tests_monthly';
+        if (!$this->subscriptionTypesRepository->exists($subscriptionTypeCode)) {
+            $subscriptionType = $this->subscriptionTypeBuilder->createNew()
+                ->setNameAndUserLabel('Upgrade tests yearly')
+                ->setCode($subscriptionTypeCode)
+                ->setPrice(12.34)
+                ->setLength(31)
+                ->setSorting(20)
+                ->setActive(true)
+                ->setVisible(true)
+                ->setContentAccessOption('web')
+                ->save();
+            $output->writeln("  <comment>* subscription type <info>{$subscriptionTypeCode}</info> created</comment>");
+        } else {
+            $output->writeln("  * subscription type <info>{$subscriptionTypeCode}</info> exists");
+        }
     }
 }

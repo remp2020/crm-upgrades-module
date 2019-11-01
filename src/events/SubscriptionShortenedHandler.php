@@ -29,12 +29,12 @@ class SubscriptionShortenedHandler extends AbstractListener
             throw new \Exception('Invalid type of event received, SubscriptionShortenedEvent expected: ' . get_class($event));
         }
 
-        $followingSubscription = $this->getFollowingSubscription($event->getSubscription(), $event->getOriginalEndTime());
-        $newEndTime = $event->getSubscription()->end_time;
+        $followingSubscription = $this->getFollowingSubscription($event->getBaseSubscription(), $event->getOriginalEndTime());
+        $newStartTime = $event->getUpgradedSubscription()->end_time;
 
         while ($followingSubscription) {
             $followedEndTime = clone $followingSubscription->end_time;
-            $newEndTime = $this->moveSubscription($followingSubscription, $newEndTime);
+            $newStartTime = $this->moveSubscription($followingSubscription, $newStartTime);
             $followingSubscription = $this->getFollowingSubscription($followingSubscription, $followedEndTime);
         }
     }
