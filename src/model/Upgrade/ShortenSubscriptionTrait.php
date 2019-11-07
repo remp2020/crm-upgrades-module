@@ -15,7 +15,7 @@ trait ShortenSubscriptionTrait
      * @return DateTime
      * @throws \Exception
      */
-    public function calculateShortenedEndTime()
+    public function calculateShortenedEndTime(): DateTime
     {
         if ($this->baseSubscription->end_time < $this->now()) {
             return $this->baseSubscription->end_time;
@@ -38,7 +38,8 @@ trait ShortenSubscriptionTrait
 
         $subscriptionDays = $this->baseSubscription->start_time->diff($this->baseSubscription->end_time)->days;
         $dayPrice = $subscriptionAmount / $subscriptionDays;
-        $remainingSeconds = $this->baseSubscription->end_time->getTimestamp() - $this->now()->getTimestamp();
+        $upgradedSubscriptionStart = $this->calculateShortenedStartTime();
+        $remainingSeconds = $this->baseSubscription->end_time->getTimestamp() - $upgradedSubscriptionStart->getTimestamp();
         $savedFromActual = $remainingSeconds / 60 / 60 / 24 * $dayPrice;
 
         // calculate daily price of target subscription type
@@ -52,6 +53,11 @@ trait ShortenSubscriptionTrait
 
         // determine how many days of new subscription type we can "buy" with what we "saved" from remaining days of current subscription
         $lengthInSeconds = ceil($savedFromActual / $newDayPrice * 24 * 60 * 60);
-        return $this->now()->add(new \DateInterval("PT{$lengthInSeconds}S"));
+        return $upgradedSubscriptionStart->add(new \DateInterval("PT{$lengthInSeconds}S"));
+    }
+
+    public function calculateShortenedStartTime(): DateTime
+    {
+        return max($this->now(), clone $this->baseSubscription->start_time);
     }
 }

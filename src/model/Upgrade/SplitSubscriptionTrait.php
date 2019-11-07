@@ -10,15 +10,19 @@ use DateTime;
 
 trait SplitSubscriptionTrait
 {
-    private function splitSubscription(DateTime $newSubscriptionEndTime)
+    private function splitSubscription(DateTime $newSubscriptionEndTime, DateTime $newSubscriptionStartTime = null)
     {
+        if (!$newSubscriptionStartTime) {
+            $newSubscriptionStartTime = $this->now();
+        }
+
         // create new upgraded subscription starting now ending at provided end time
         $newSubscription = $this->subscriptionsRepository->add(
             $this->targetSubscriptionType,
             $this->basePayment->payment_gateway->is_recurrent,
             $this->basePayment->user,
             SubscriptionsRepository::TYPE_UPGRADE,
-            $this->now(),
+            $newSubscriptionStartTime,
             $newSubscriptionEndTime,
             "Split upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}",
             $this->baseSubscription->address,
@@ -28,7 +32,7 @@ trait SplitSubscriptionTrait
         // stop old subscription immediately (order is important, new subscription has to be running before we stop this)
         $originalEndTime = $this->baseSubscription->end_time;
         $this->subscriptionsRepository->update($this->baseSubscription, [
-            'end_time' => $this->now(),
+            'end_time' => $newSubscriptionStartTime,
             'note' => '[upgrade] Original end_time ' . $originalEndTime,
         ]);
 

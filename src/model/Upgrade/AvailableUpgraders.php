@@ -30,6 +30,8 @@ class AvailableUpgraders
 
     private $contentAccessRepository;
 
+    private $upgradeableSubscriptions;
+
     private $error;
 
     public function __construct(
@@ -38,7 +40,8 @@ class AvailableUpgraders
         UserActionsLogRepository $userActionsLogRepository,
         UpgradeSchemasRepository $upgradeSchemasRepository,
         UpgraderFactory $upgraderFactory,
-        ContentAccessRepository $contentAccessRepository
+        ContentAccessRepository $contentAccessRepository,
+        ActualUserSubscriptions $upgradeableSubscriptions
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
@@ -46,9 +49,33 @@ class AvailableUpgraders
         $this->upgradeSchemasRepository = $upgradeSchemasRepository;
         $this->upgraderFactory = $upgraderFactory;
         $this->contentAccessRepository = $contentAccessRepository;
+        $this->upgradeableSubscriptions = $upgradeableSubscriptions;
     }
 
-    public function all($userId, array $contentAccessNames = [], array $requiredTags = [])
+    /**
+     * all() returns list of available upgraders for given user and contentAccess you're trying to upgrade user to.
+     *
+     * By default the method checks upgrade availability against active user's subscriptions with payment. You can
+     * change the "active subscription" filter by calling setUpgradeableSubscriptions() prior to this call and passing
+     * other implementation of ActualUserSubscriptions interface.
+     *
+     * If user already has access to the content access of subscription type of possible upgrade option, the upgrader
+     * is not included within the final result set.
+     *
+     * If upgrader is not usable - upgraders can check usability themselves based on base/target subscriptions and
+     * payments - it's not included within the final result set.
+     *
+     * List of upgraders is sorted based on profitability (best value for money) starting with the most profitable.
+     *
+     * @param $userId
+     * @param array $targetContentAccessNames Filters only upgrade options with target subscription types which give
+     * access to all specified content access names.
+     * @param array $requiredUpgradeOptionTags Filters only upgrade options with specific tags within their config
+     * object.
+     * @return UpgraderInterface[]
+     * @throws \Nette\Utils\JsonException
+     */
+    public function all($userId, array $targetContentAccessNames = [], array $requiredUpgradeOptionTags = [])
     {
         $this->error = null;
         if (!$userId) {
@@ -56,17 +83,17 @@ class AvailableUpgraders
             return [];
         }
 
-        $actualSubscriptions = $this->subscriptionsRepository->actualUserSubscriptions($userId)->fetchAll();
-        if (count($actualSubscriptions) === 0) {
+        $subscriptions = $this->upgradeableSubscriptions->getSubscriptions($userId);
+        if (count($subscriptions) === 0) {
             $this->error = self::ERROR_NO_SUBSCRIPTION;
             return [];
         }
 
         $basePayment = null;
-        $actualUserSubscription = null;
+        $subscriptionToUpgrade = null;
 
-        foreach ($actualSubscriptions as $subscription) {
-            $actualUserSubscription = $subscription;
+        foreach ($subscriptions as $subscription) {
+            $subscriptionToUpgrade = $subscription;
             $basePayment = $this->paymentsRepository->subscriptionPayment($subscription);
             if ($basePayment) {
                 // TODO: handle two subscriptions with base payment
@@ -77,14 +104,14 @@ class AvailableUpgraders
         }
         if (!$basePayment) {
             $this->userActionsLogRepository->add($userId, 'upgrade.cannot_upgrade', [
-                'subscription_id' => $actualUserSubscription->id,
-                'subscription_type_id' => $actualUserSubscription->subscription_type_id,
+                'subscription_id' => $subscriptionToUpgrade->id,
+                'subscription_type_id' => $subscriptionToUpgrade->subscription_type_id,
             ]);
             $this->error = self::ERROR_NO_BASE_PAYMENT;
             return [];
         }
 
-        $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($actualUserSubscription->subscription_type);
+        $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($subscriptionToUpgrade->subscription_type);
         $availableOptions = [];
         foreach ($schemas as $schema) {
             $availableOptions += $schema->related('upgrade_options')->fetchAll();
@@ -98,7 +125,7 @@ class AvailableUpgraders
         foreach ($availableOptions as $option) {
             $upgrader = null;
             try {
-                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $actualUserSubscription->subscription_type, $requiredTags);
+                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $subscriptionToUpgrade->subscription_type, $requiredUpgradeOptionTags);
             } catch (NoDefaultSubscriptionTypeException $e) {
                 $missingDefaultSubscriptionTypes[] = $e->getContext();
                 continue;
@@ -110,7 +137,7 @@ class AvailableUpgraders
             }
 
             $upgrader
-                ->setBaseSubscription($actualUserSubscription)
+                ->setBaseSubscription($subscriptionToUpgrade)
                 ->setBasePayment($basePayment)
                 ->applyConfig(Json::decode($option->config, Json::FORCE_ARRAY));
 
@@ -120,8 +147,8 @@ class AvailableUpgraders
             }
 
             // if we aim for specific content access, check if it's supported by target subscription type
-            if (!empty($contentAccessNames)) {
-                $hasAccess = $this->contentAccessRepository->hasAccess($upgrader->getTargetSubscriptionType(), $contentAccessNames);
+            if (!empty($targetContentAccessNames)) {
+                $hasAccess = $this->contentAccessRepository->hasAccess($upgrader->getTargetSubscriptionType(), $targetContentAccessNames);
                 if (!$hasAccess) {
                     continue;
                 }
@@ -154,8 +181,8 @@ class AvailableUpgraders
         // as we didn't find any available upgraders, let's log the case that there could be some if they had default subscriptions
         if (empty($upgraders) && !empty($missingDefaultSubscriptionTypes)) {
             $params['target_contents'] = $missingDefaultSubscriptionTypes;
-            $params['subscription_id'] = $actualUserSubscription->id;
-            $params['subscription_type_id'] = $actualUserSubscription->subscription_type_id;
+            $params['subscription_id'] = $subscriptionToUpgrade->id;
+            $params['subscription_type_id'] = $subscriptionToUpgrade->subscription_type_id;
             $this->userActionsLogRepository->add($userId, 'upgrade.missing_default_target_subscription_type', $params);
         }
 
@@ -168,5 +195,10 @@ class AvailableUpgraders
     public function getError()
     {
         return $this->error;
+    }
+
+    public function setUpgradeableSubscriptions(UpgradeableSubscriptionsInterface $usi)
+    {
+        $this->upgradeableSubscriptions = clone $usi;
     }
 }

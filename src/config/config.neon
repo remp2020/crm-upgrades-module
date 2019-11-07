@@ -11,6 +11,8 @@ services:
 	- Crm\UpgradesModule\Components\FreeRecurrentWidget
 	- Crm\UpgradesModule\Components\UserPaymentsListingBadge
 	- Crm\UpgradesModule\Upgrade\AvailableUpgraders
+	- Crm\UpgradesModule\Upgrade\ActualUserSubscriptions
+	- Crm\UpgradesModule\Upgrade\SpecificUserSubscriptions
 	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
 	- Crm\UpgradesModule\Events\SubscriptionShortenedHandler
 	- Crm\UpgradesModule\Seeders\TestSeeder

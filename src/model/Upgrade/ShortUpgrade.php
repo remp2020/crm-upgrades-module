@@ -94,9 +94,10 @@ class ShortUpgrade implements UpgraderInterface
         ];
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', array_merge(['type' => 'payment'], $eventParams)));
 
+        $startTime = $this->calculateShortenedStartTime();
         $endTime = $this->calculateShortenedEndTime();
 
-        $this->splitSubscription($endTime);
+        $this->splitSubscription($endTime, $startTime);
 
         $this->paymentsRepository->update($this->basePayment, [
             'upgrade_type' => self::TYPE,
