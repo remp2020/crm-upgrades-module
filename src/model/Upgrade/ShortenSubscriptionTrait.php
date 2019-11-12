@@ -4,7 +4,7 @@
 namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
-use Nette\Utils\DateTime;
+use DateTime;
 
 trait ShortenSubscriptionTrait
 {
@@ -17,8 +17,8 @@ trait ShortenSubscriptionTrait
      */
     public function calculateShortenedEndTime(): DateTime
     {
-        if ($this->baseSubscription->end_time < $this->now()) {
-            return $this->baseSubscription->end_time;
+        if ($this->getBaseSubscription()->end_time < $this->now()) {
+            return $this->getBaseSubscription()->end_time;
         }
 
         $subscriptionPaymentItems = $this->getBasePayment()
@@ -36,15 +36,18 @@ trait ShortenSubscriptionTrait
             $subscriptionAmount = $this->getBasePayment()->amount;
         }
 
-        $subscriptionDays = $this->baseSubscription->start_time->diff($this->baseSubscription->end_time)->days;
+        $subscriptionDays = $this->getBaseSubscription()->start_time->diff($this->getBaseSubscription()->end_time)->days;
+        if ($subscriptionDays === 0) {
+            return $this->getBaseSubscription()->end_time;
+        }
         $dayPrice = $subscriptionAmount / $subscriptionDays;
         $upgradedSubscriptionStart = $this->calculateShortenedStartTime();
-        $remainingSeconds = $this->baseSubscription->end_time->getTimestamp() - $upgradedSubscriptionStart->getTimestamp();
+        $remainingSeconds = $this->getBaseSubscription()->end_time->getTimestamp() - $upgradedSubscriptionStart->getTimestamp();
         $savedFromActual = $remainingSeconds / 60 / 60 / 24 * $dayPrice;
 
         // calculate daily price of target subscription type
         if ($this->monthlyFix) {
-            $toSubscriptionPrice = $this->baseSubscription->subscription_type->price;
+            $toSubscriptionPrice = $this->getBaseSubscription()->subscription_type->price;
             $newDayPrice = $toSubscriptionPrice / $this->targetSubscriptionType->length + ($this->monthlyFix / 31);
         } else {
             $toSubscriptionPrice = $this->targetSubscriptionType->price;
@@ -58,6 +61,6 @@ trait ShortenSubscriptionTrait
 
     public function calculateShortenedStartTime(): DateTime
     {
-        return max($this->now(), clone $this->baseSubscription->start_time);
+        return max($this->now(), clone $this->getBaseSubscription()->start_time);
     }
 }

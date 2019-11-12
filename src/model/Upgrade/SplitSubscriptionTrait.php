@@ -39,7 +39,7 @@ trait SplitSubscriptionTrait
         $this->emitter->emit(new SubscriptionShortenedEvent($this->getBaseSubscription(), $originalEndTime, $newSubscription));
         $this->emitter->emit(new SubscriptionUpdatedEvent($this->baseSubscription));
 
-        if ($this->now() <= new DateTime()) {
+        if ($newSubscriptionStartTime <= new DateTime()) {
             $this->subscriptionsRepository->setExpired($this->baseSubscription);
             $this->subscriptionsRepository->setStarted($newSubscription);
         }
