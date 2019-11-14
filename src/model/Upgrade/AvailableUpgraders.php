@@ -32,6 +32,8 @@ class AvailableUpgraders
 
     private $upgradeableSubscriptions;
 
+    private $now;
+
     private $error;
 
     public function __construct(
@@ -141,6 +143,10 @@ class AvailableUpgraders
                 ->setBasePayment($basePayment)
                 ->applyConfig(Json::decode($option->config, Json::FORCE_ARRAY));
 
+            if ($this->now) {
+                $upgrader->setNow($this->now);
+            }
+
             // skip upgrader if it's not usable (upgraders know when they can be used)
             if (!$upgrader->isUsable()) {
                 continue;
@@ -200,5 +206,10 @@ class AvailableUpgraders
     public function setUpgradeableSubscriptions(UpgradeableSubscriptionsInterface $usi)
     {
         $this->upgradeableSubscriptions = clone $usi;
+    }
+
+    public function setNow(\DateTime $now)
+    {
+        $this->now = $now;
     }
 }
