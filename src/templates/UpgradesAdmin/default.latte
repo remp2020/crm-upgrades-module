@@ -101,7 +101,7 @@
 		      <td style="white-space: nowrap">
 		        <a href="{link :Payments:PaymentsAdmin:Edit $payment->id, $payment->user_id}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i> {_upgrades.admin.upgrades.edit}</a>
 
-				{control listingWidget 'admin.payments.listing.action', $payment}
+				{control simpleWidget 'admin.payments.listing.action', $payment}
 		      </td>
 		    </tr>
 	      {/foreach}
