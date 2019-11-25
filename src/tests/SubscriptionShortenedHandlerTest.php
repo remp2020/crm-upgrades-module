@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Tests;
 
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionTypesMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use Crm\UpgradesModule\Events\SubscriptionShortenedHandler;
@@ -32,6 +33,7 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         return [
             SubscriptionsRepository::class,
             SubscriptionTypesRepository::class,
+            SubscriptionTypesMetaRepository::class,
             UsersRepository::class,
         ];
     }
