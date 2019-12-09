@@ -6,6 +6,8 @@ use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\UpgradeException;
+use Nette\Http\Url;
+use Nette\Utils\Strings;
 use Tomaj\Hermes\Emitter;
 use Tracy\Debugger;
 
@@ -38,6 +40,25 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderDefault()
     {
+        // Remember referer for future redirect if provided
+        $cmsUrl = $this->applicationConfig->get('cms_url');
+        $referer = $this->getReferer();
+        if ($cmsUrl && $referer) {
+            try {
+                $urlReferer = new Url($referer);
+                $urlCms = new Url($cmsUrl);
+
+                // Protection against open-redirect vulnerability (only domains and subdomains of $cmsUrl are allowed)
+                $isDomainOrSubdomain = Strings::endsWith($urlReferer->host, $urlCms->host);
+                if ($isDomainOrSubdomain) {
+                    $section = $this->getSession('upgrade');
+                    $section->referer = $referer;
+                }
+            } catch (\InvalidArgumentException $e) {
+                // do nothing in case of invalid URL
+            }
+        }
+
         $this->setLayout($this->getLayoutName());
     }
 
@@ -109,6 +130,10 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderSuccess()
     {
+        $section = $this->getSession('upgrade');
+        if ($section->referer) {
+            $this->template->redirect = $section->referer;
+        }
     }
 
     public function renderNotAvailable($error)

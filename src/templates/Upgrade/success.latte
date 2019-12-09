@@ -5,6 +5,13 @@
 {block #content}
 
 <div style="margin-top:20px; margin-bottom:20px">
+
+	{if $redirect}
+		<script>
+			window.top.location.href = {$redirect};
+		</script>
+	{/if}
+
 	<h2 n:block="title">{_upgrades.frontend.upgrade.success}</h2>
 	{control snippet 'upgrade-success'}
 </div>
