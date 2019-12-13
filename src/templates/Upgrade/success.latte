@@ -6,11 +6,11 @@
 
 <div style="margin-top:20px; margin-bottom:20px">
 
-	{if $redirect}
+	{ifset $redirect}
 		<script>
 			window.top.location.href = {$redirect};
 		</script>
-	{/if}
+	{/ifset}
 
 	<h2 n:block="title">{_upgrades.frontend.upgrade.success}</h2>
 	{control snippet 'upgrade-success'}
