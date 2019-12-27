@@ -27,6 +27,13 @@ class UpgradeSchemas extends AbstractMigration
             ->addIndex(['subscription_type_id', 'upgrade_schema_id'], ['unique' => true])
             ->create();
 
+        // add upgrade_type to payments
+        if(!$this->table('payments')->hasColumn('upgrade_type')) {
+            $this->table('payments')
+                ->addColumn('upgrade_type', 'string', ['null' => true])
+                ->update();
+        }
+
         // match upgrade types with types within upgrader classes (other two were fine)
         $sql = <<<SQL
 UPDATE payments SET upgrade_type = 'paid_recurrent' WHERE upgrade_type = 'recurrent';
@@ -34,13 +41,6 @@ UPDATE payments SET upgrade_type = 'free_recurrent' WHERE upgrade_type = 'recurr
 SQL;
 
         $this->execute($sql);
-
-        // add upgrade_type to payments
-        if(!$this->table('payments')->hasColumn('upgrade_type')) {
-            $this->table('payments')
-                ->addColumn('upgrade_type', 'string', ['null' => true])
-                ->update();
-        }
 
         // remove subscription_type_upgrades for cases where it was created by subscriptions module init migration
         if ($this->table("subscription_types_upgrades")->exists()) {
