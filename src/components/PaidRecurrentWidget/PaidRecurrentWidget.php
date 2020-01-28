@@ -87,8 +87,10 @@ class PaidRecurrentWidget extends BaseWidget
             throw new \Exception('attempt to upgrade with invalid upgrader index');
         }
 
-        /** @var PaidRecurrentUpgrade $upgrader */
         $upgrader = $upgraders[$values->upgrader_idx];
+        if (!$upgrader instanceof PaidRecurrentUpgrade) {
+            throw new \Exception('attempt to use invalid upgrader in PaidRecurrentWidget: ' . get_class($upgrader));
+        }
 
         if ($values->serialized_tracking_params) {
             $upgrader->setTrackingParams(Json::decode($values->serialized_tracking_params, Json::FORCE_ARRAY));

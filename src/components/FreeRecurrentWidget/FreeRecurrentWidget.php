@@ -87,8 +87,10 @@ class FreeRecurrentWidget extends BaseWidget
             throw new \Exception('attempt to upgrade with invalid upgrader index');
         }
 
-        /** @var FreeRecurrentUpgrade $upgrader */
         $upgrader = $upgraders[$values->upgrader_idx];
+        if (!$upgrader instanceof FreeRecurrentUpgrade) {
+            throw new \Exception('attempt to use invalid upgrader in FreeRecurrentWidget: ' . get_class($upgrader));
+        }
 
         if ($values->serialized_tracking_params) {
             $upgrader->setTrackingParams(Json::decode($values->serialized_tracking_params, Json::FORCE_ARRAY));
