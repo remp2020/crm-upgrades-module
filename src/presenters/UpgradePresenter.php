@@ -144,5 +144,6 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderError()
     {
+        $this->setLayout($this->getLayoutName());
     }
 }

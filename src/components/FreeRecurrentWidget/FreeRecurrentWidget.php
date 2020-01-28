@@ -13,6 +13,8 @@ use Nette\Application\UI\Form;
 use Nette\Localization\ITranslator;
 use Nette\Security\User;
 use Nette\Utils\Json;
+use Tracy\Debugger;
+use Tracy\ILogger;
 
 /**
  * @property FrontendPresenter $presenter
@@ -84,12 +86,16 @@ class FreeRecurrentWidget extends BaseWidget
     {
         $upgraders = $this->availableUpgraders->all($this->user->getId());
         if (!isset($upgraders[$values->upgrader_idx])) {
-            throw new \Exception('attempt to upgrade with invalid upgrader index');
+            Debugger::log('attempt to upgrade with invalid upgrader index', ILogger::INFO);
+            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
+            $this->presenter->redirect('error');
         }
 
         $upgrader = $upgraders[$values->upgrader_idx];
         if (!$upgrader instanceof FreeRecurrentUpgrade) {
-            throw new \Exception('attempt to use invalid upgrader in FreeRecurrentWidget: ' . get_class($upgrader));
+            Debugger::log('attempt to use invalid upgrader in FreeRecurrentWidget: ' . get_class($upgrader), ILogger::INFO);
+            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
+            $this->presenter->redirect('error');
         }
 
         if ($values->serialized_tracking_params) {

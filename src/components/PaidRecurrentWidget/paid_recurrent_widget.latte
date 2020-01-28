@@ -63,3 +63,9 @@
         {$infotext}
     </div>
 </div>
+
+<script type="text/javascript">
+    $('#' + {$control["upgradeForm"]->getElementPrototype()->id}).find('.modal .btn-buy').click(function() {
+        $(this).prop('disabled', 'disabled');
+    })
+</script>
