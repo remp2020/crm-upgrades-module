@@ -40,6 +40,8 @@ class UpgradePresenter extends FrontendPresenter
 
     public function renderDefault()
     {
+        $this->onlyLoggedIn();
+
         // Remember referer for future redirect if provided
         $cmsUrl = $this->applicationConfig->get('cms_url');
         $referer = $this->getReferer();
