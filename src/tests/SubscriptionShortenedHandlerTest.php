@@ -3,9 +3,13 @@
 namespace Crm\UpgradesModule\Tests;
 
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
+use Crm\SubscriptionsModule\Repository\SubscriptionExtensionMethodsRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionLengthMethodsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Crm\SubscriptionsModule\Seeders\SubscriptionExtensionMethodsSeeder;
+use Crm\SubscriptionsModule\Seeders\SubscriptionLengthMethodSeeder;
 use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use Crm\UpgradesModule\Events\SubscriptionShortenedHandler;
 use Crm\UpgradesModule\Seeders\TestSeeder;
@@ -33,6 +37,8 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         return [
             SubscriptionsRepository::class,
             SubscriptionTypesRepository::class,
+            SubscriptionExtensionMethodsRepository::class,
+            SubscriptionLengthMethodsRepository::class,
             SubscriptionTypesMetaRepository::class,
             UsersRepository::class,
         ];
@@ -41,6 +47,8 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
     protected function requiredSeeders(): array
     {
         return [
+            SubscriptionExtensionMethodsSeeder::class,
+            SubscriptionLengthMethodSeeder::class,
             TestSeeder::class,
         ];
     }
