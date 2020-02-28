@@ -143,7 +143,7 @@ class PaidExtendUpgrade implements UpgraderInterface
             'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => $newPayment->variable_symbol,
-            'product_ids' => [strval($newPayment->subscription_type_id)],
+            'product_ids' => [(string)$newPayment->subscription_type_id],
             'payment_id' => $newPayment->id,
             'revenue' => $newPayment->amount,
         ]));

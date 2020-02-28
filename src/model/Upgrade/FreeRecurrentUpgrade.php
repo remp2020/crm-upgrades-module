@@ -6,6 +6,7 @@ use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
 use League\Event\Emitter;
 use Nette\Utils\DateTime;
 
@@ -22,6 +23,8 @@ class FreeRecurrentUpgrade implements UpgraderInterface
 
     private $subscriptionsRepository;
 
+    private $subscriptionUpgradesRepository;
+
     private $emitter;
 
     private $hermesEmitter;
@@ -32,12 +35,14 @@ class FreeRecurrentUpgrade implements UpgraderInterface
         RecurrentPaymentsRepository $recurrentPaymentsRepository,
         PaymentsRepository $paymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
+        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
         Emitter $emitter,
         \Tomaj\Hermes\Emitter $hermesEmitter
     ) {
         $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->subscriptionsRepository = $subscriptionsRepository;
+        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
         $this->emitter = $emitter;
         $this->hermesEmitter = $hermesEmitter;
     }
@@ -128,7 +133,12 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             'note' => $note . "\n(" . time() . ')',
         ]);
 
-        $this->splitSubscription($this->baseSubscription->end_time);
+        $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
+        $this->subscriptionUpgradesRepository->add(
+            $this->getBaseSubscription(),
+            $upgradedSubscription,
+            $this->getType()
+        );
 
         $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams));
         return true;

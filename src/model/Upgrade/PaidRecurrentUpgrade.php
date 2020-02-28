@@ -127,7 +127,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
     {
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrentPayment) {
-            throw new Exception('Nemalo by nikdy nastat - pokus upgradnut nerecurentne zaplatenu subscription - paymentID:' . $this->basePayment->id . ' subscriptionID:' . $this->baseSubscription->id);
+            throw new Exception('Attempt to use PaidRecurrent upgrade for non-recurrent payment: ' . $this->basePayment->id);
         }
 
         $upgradedItem = $this->getTargetSubscriptionTypeItem();
@@ -141,7 +141,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
-        // spravit novu platbu a rovno ju chargnut
+        // create new payment and charge it right away
         $newPayment = $this->paymentsRepository->add(
             $this->targetSubscriptionType,
             $this->basePayment->payment_gateway,

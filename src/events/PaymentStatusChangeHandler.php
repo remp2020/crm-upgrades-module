@@ -5,6 +5,7 @@ namespace Crm\UpgradesModule\Events;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Events\SubscriptionStartsEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
@@ -16,15 +17,19 @@ class PaymentStatusChangeHandler extends AbstractListener
 
     private $paymentsRepository;
 
+    private $subscriptionUpgradesRepository;
+
     private $emitter;
 
     public function __construct(
         SubscriptionsRepository $subscriptionsRepository,
         PaymentsRepository $paymentsRepository,
+        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
         Emitter $emitter
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
+        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
         $this->emitter = $emitter;
     }
 
@@ -96,6 +101,12 @@ class PaymentStatusChangeHandler extends AbstractListener
 
         $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
         $this->subscriptionsRepository->update($actualSubscription, ['next_subscription_id' => $newSubscription->id]);
+
+        $this->subscriptionUpgradesRepository->add(
+            $actualSubscription,
+            $newSubscription,
+            $payment->upgrade_type
+        );
 
         $this->emitter->emit(new SubscriptionStartsEvent($newSubscription));
     }

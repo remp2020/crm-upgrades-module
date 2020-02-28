@@ -6,6 +6,7 @@ use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
 use League\Event\Emitter;
 use Nette\Utils\DateTime;
 
@@ -23,6 +24,8 @@ class ShortUpgrade implements UpgraderInterface
 
     private $subscriptionsRepository;
 
+    private $subscriptionUpgradesRepository;
+
     private $emitter;
 
     private $hermesEmitter;
@@ -33,12 +36,14 @@ class ShortUpgrade implements UpgraderInterface
         PaymentsRepository $paymentsRepository,
         RecurrentPaymentsRepository $recurrentPaymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
+        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
         Emitter $emitter,
         \Tomaj\Hermes\Emitter $hermesEmitter
     ) {
         $this->paymentsRepository = $paymentsRepository;
         $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->subscriptionsRepository = $subscriptionsRepository;
+        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
         $this->emitter = $emitter;
         $this->hermesEmitter = $hermesEmitter;
     }
@@ -97,12 +102,18 @@ class ShortUpgrade implements UpgraderInterface
         $startTime = $this->calculateShortenedStartTime();
         $endTime = $this->calculateShortenedEndTime();
 
-        $this->splitSubscription($endTime, $startTime);
+        $upgradedSubscription = $this->splitSubscription($endTime, $startTime);
 
         $this->paymentsRepository->update($this->basePayment, [
             'upgrade_type' => self::TYPE,
             'modified_at' => new DateTime(),
         ]);
+
+        $this->subscriptionUpgradesRepository->add(
+            $this->getBaseSubscription(),
+            $upgradedSubscription,
+            self::TYPE
+        );
 
         $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams));
         return true;
