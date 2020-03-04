@@ -128,6 +128,7 @@ class UpgradePresenter extends FrontendPresenter
         ]));
 
         $this->template->upgraderId = $upgraderId ?? 0;
+        $this->template->contentAccess = $this->contentAccess;
     }
 
     public function renderSuccess()

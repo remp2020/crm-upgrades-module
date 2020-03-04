@@ -117,7 +117,7 @@
     {control snippet 'upgrade-header'}
 
     <div class="row buttons">
-        {control simpleWidget 'frontend.upgrades.subscription', [upgrader => $upgrader, upgrader_idx => $upgraderId]}
+        {control simpleWidget 'frontend.upgrades.subscription', [upgrader => $upgrader, upgrader_idx => $upgraderId, contentAccess => $contentAccess]}
     </div>
 
     <div class="col-md-12 text-center">
