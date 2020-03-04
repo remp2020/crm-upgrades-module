@@ -3,10 +3,11 @@ services:
 		setup:
 			- addModule(Crm\UpgradesModule\UpgradesModule())
 
-	- Crm\UpgradesModule\Repository\UpgradeSchemasRepository
-	- Crm\UpgradesModule\Repository\UpgradeOptionsRepository
-	- Crm\UpgradesModule\Repository\SubscriptionTypeUpgradeSchemasRepository
-	- Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository
+	upgradeSchemasRepository: Crm\UpgradesModule\Repository\UpgradeSchemasRepository
+	upgradeOptionsRepository: Crm\UpgradesModule\Repository\UpgradeOptionsRepository
+	subscriptionTypeUpgradeSchemasRepository: Crm\UpgradesModule\Repository\SubscriptionTypeUpgradeSchemasRepository
+	subscriptionUpgradesRepository: Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository
+
 	- Crm\UpgradesModule\Components\PaidRecurrentWidget
 	- Crm\UpgradesModule\Components\ShortWidget
 	- Crm\UpgradesModule\Components\FreeRecurrentWidget
