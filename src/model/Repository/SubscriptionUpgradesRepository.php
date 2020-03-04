@@ -12,8 +12,8 @@ class SubscriptionUpgradesRepository extends Repository
     public function add(IRow $baseSubscription, IRow $upgradedSubscription, string $type)
     {
         return $this->insert([
-            'base_subscription_id' => $baseSubscription,
-            'upgraded_subscription_id' => $upgradedSubscription,
+            'base_subscription_id' => $baseSubscription->id,
+            'upgraded_subscription_id' => $upgradedSubscription->id,
             'type' => $type,
             'created_at' => new \DateTime(),
         ]);

@@ -100,6 +100,7 @@ class PaidExtendWidget extends BaseWidget
         }
 
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
+        $this['upgradeForm']['content_access']->setValue(Json::encode($params['contentAccess']));
         $this['upgradeForm']['serialized_tracking_params']->setValue(
             Json::encode($this->presenter->trackingParams())
         );
@@ -116,6 +117,7 @@ class PaidExtendWidget extends BaseWidget
         $form = new Form;
         $form->getElementPrototype()->target = '_top';
         $form->addHidden('upgrader_idx')->setRequired();
+        $form->addHidden('content_access');
         $form->addHidden('serialized_tracking_params')->setRequired();
         $form->addHidden('payment_gateway_id')->setHtmlId('payment_gateway_id')->setRequired();
         $form->onSuccess[] = [$this, 'upgrade'];
@@ -124,7 +126,8 @@ class PaidExtendWidget extends BaseWidget
 
     public function upgrade($form, $values)
     {
-        $upgraders = $this->availableUpgraders->all($this->user->getId());
+        $targetContentAccess = Json::decode($values->content_access);
+        $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess);
         if (!isset($upgraders[$values->upgrader_idx])) {
             Debugger::log('attempt to upgrade with invalid upgrader index', ILogger::INFO);
             $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
