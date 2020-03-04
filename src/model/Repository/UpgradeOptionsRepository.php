@@ -10,7 +10,7 @@ class UpgradeOptionsRepository extends Repository
 {
     protected $tableName = 'upgrade_options';
 
-    public function add(IRow $upgradeSchema, string $type, array $config, ?IRow $subscriptionType = null)
+    final public function add(IRow $upgradeSchema, string $type, array $config, ?IRow $subscriptionType = null)
     {
         return $this->insert([
             'upgrade_schema_id' => $upgradeSchema->id,
@@ -20,7 +20,7 @@ class UpgradeOptionsRepository extends Repository
         ]);
     }
 
-    public function findForSchema($upgradeSchemaId, $type, $config = null, $subscriptionTypeId = null)
+    final public function findForSchema($upgradeSchemaId, $type, $config = null, $subscriptionTypeId = null)
     {
         $option = $this->getTable()
             ->where([

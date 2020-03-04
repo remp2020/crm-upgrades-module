@@ -9,7 +9,7 @@ class SubscriptionTypeUpgradeSchemasRepository extends Repository
 {
     protected $tableName = 'subscription_type_upgrade_schemas';
 
-    public function add(IRow $subscriptionType, IRow $upgradeSchema)
+    final public function add(IRow $subscriptionType, IRow $upgradeSchema)
     {
         $data = [
             'subscription_type_id' => $subscriptionType->id,
