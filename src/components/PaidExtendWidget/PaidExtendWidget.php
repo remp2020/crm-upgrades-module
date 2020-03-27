@@ -9,6 +9,8 @@ use Crm\ApplicationModule\Widget\WidgetManager;
 use Crm\PaymentsModule\CannotProcessPayment;
 use Crm\PaymentsModule\PaymentProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Crm\UpgradesModule\Repository\UpgradeOptionsRepository;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
@@ -41,6 +43,10 @@ class PaidExtendWidget extends BaseWidget
 
     private $user;
 
+    private $upgradeOptionsRepository;
+
+    private $subscriptionTypesRepository;
+
     public function __construct(
         WidgetManager $widgetManager,
         ApplicationConfig $applicationConfig,
@@ -49,7 +55,9 @@ class PaidExtendWidget extends BaseWidget
         PaymentProcessor $paymentProcessor,
         PaymentGatewaysRepository $paymentGatewaysRepository,
         AvailableUpgraders $availableUpgraders,
-        User $user
+        User $user,
+        UpgradeOptionsRepository $upgradeOptionsRepository,
+        SubscriptionTypesRepository $subscriptionTypesRepository
     ) {
         parent::__construct($widgetManager);
         $this->applicationConfig = $applicationConfig;
@@ -59,6 +67,8 @@ class PaidExtendWidget extends BaseWidget
         $this->paymentGatewaysRepository = $paymentGatewaysRepository;
         $this->availableUpgraders = $availableUpgraders;
         $this->user = $user;
+        $this->upgradeOptionsRepository = $upgradeOptionsRepository;
+        $this->subscriptionTypesRepository = $subscriptionTypesRepository;
     }
 
     public function identifier()
@@ -100,7 +110,8 @@ class PaidExtendWidget extends BaseWidget
         }
 
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
-        $this['upgradeForm']['content_access']->setValue(Json::encode($params['contentAccess']));
+        $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags']));
+        $this['upgradeForm']['content_access']->setValue(Json::encode($params['content_access']));
         $this['upgradeForm']['serialized_tracking_params']->setValue(
             Json::encode($this->presenter->trackingParams())
         );
@@ -118,6 +129,7 @@ class PaidExtendWidget extends BaseWidget
         $form->getElementPrototype()->target = '_top';
         $form->addHidden('upgrader_idx')->setRequired();
         $form->addHidden('content_access');
+        $form->addHidden('upgrade_option_tags');
         $form->addHidden('serialized_tracking_params')->setRequired();
         $form->addHidden('payment_gateway_id')->setHtmlId('payment_gateway_id')->setRequired();
         $form->onSuccess[] = [$this, 'upgrade'];
@@ -127,7 +139,9 @@ class PaidExtendWidget extends BaseWidget
     public function upgrade($form, $values)
     {
         $targetContentAccess = Json::decode($values->content_access);
-        $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess);
+        $requiredTags = Json::decode($values->upgrade_option_tags);
+
+        $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess, $requiredTags);
         if (!isset($upgraders[$values->upgrader_idx])) {
             Debugger::log('attempt to upgrade with invalid upgrader index', ILogger::INFO);
             $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');

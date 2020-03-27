@@ -5,7 +5,6 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Repository\UpgradeSchemasRepository;
 use Crm\UsersModule\Repository\UserActionsLogRepository;
 use Nette\Utils\Json;
@@ -17,8 +16,6 @@ class AvailableUpgraders
     const ERROR_NO_SUBSCRIPTION = 'no_subscription';
 
     const ERROR_NOT_LOGGED_IN = 'not_logged_in';
-
-    private $subscriptionsRepository;
 
     private $paymentsRepository;
 
@@ -37,7 +34,6 @@ class AvailableUpgraders
     private $error;
 
     public function __construct(
-        SubscriptionsRepository $subscriptionsRepository,
         PaymentsRepository $paymentsRepository,
         UserActionsLogRepository $userActionsLogRepository,
         UpgradeSchemasRepository $upgradeSchemasRepository,
@@ -45,7 +41,6 @@ class AvailableUpgraders
         ContentAccessRepository $contentAccessRepository,
         ActualUserSubscriptions $upgradeableSubscriptions
     ) {
-        $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->userActionsLogRepository = $userActionsLogRepository;
         $this->upgradeSchemasRepository = $upgradeSchemasRepository;
@@ -127,7 +122,7 @@ class AvailableUpgraders
         foreach ($availableOptions as $option) {
             $upgrader = null;
             try {
-                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $subscriptionToUpgrade->subscription_type, $requiredUpgradeOptionTags);
+                $upgrader = $this->upgraderFactory->fromUpgradeOption($option, $subscriptionToUpgrade->subscription_type);
             } catch (NoDefaultSubscriptionTypeException $e) {
                 $missingDefaultSubscriptionTypes[] = $e->getContext();
                 continue;
@@ -138,10 +133,19 @@ class AvailableUpgraders
                 continue;
             }
 
+            $config = Json::decode($option->config, Json::FORCE_ARRAY);
+            if (isset($config['required_tags'])) {
+                if (count($config['required_tags']) !== count($requiredUpgradeOptionTags) ||
+                    array_diff($config['required_tags'], $requiredUpgradeOptionTags) !== array_diff($requiredUpgradeOptionTags, $config['required_tags'])) {
+                    // required tags were not met
+                    continue;
+                }
+            }
+
             $upgrader
                 ->setBaseSubscription($subscriptionToUpgrade)
                 ->setBasePayment($basePayment)
-                ->applyConfig(Json::decode($option->config, Json::FORCE_ARRAY));
+                ->applyConfig($config);
 
             if ($this->now) {
                 $upgrader->setNow($this->now);

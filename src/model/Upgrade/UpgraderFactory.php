@@ -2,10 +2,8 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
-use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
-use Nette\Database\IRow;
+use Nette\Database\Table\IRow;
 use Nette\Utils\Json;
 
 class UpgraderFactory
@@ -13,28 +11,17 @@ class UpgraderFactory
     /** @var UpgraderInterface[] */
     private $upgraders = [];
 
-    private $requiredTags = [];
-
     private $subscriptionTypesRepository;
 
-    private $paymentsRepository;
-
-    private $subscriptionsRepository;
-
     public function __construct(
-        SubscriptionTypesRepository $subscriptionTypesRepository,
-        PaymentsRepository $paymentsRepository,
-        SubscriptionsRepository $subscriptionsRepository
+        SubscriptionTypesRepository $subscriptionTypesRepository
     ) {
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->subscriptionsRepository = $subscriptionsRepository;
     }
 
-    public function registerUpgrader(UpgraderInterface $upgrader, $requiredTags = [])
+    public function registerUpgrader(UpgraderInterface $upgrader)
     {
         $this->upgraders[$upgrader->getType()] = $upgrader;
-        $this->requiredTags[$upgrader->getType()] = $requiredTags;
     }
 
     /**
@@ -45,7 +32,7 @@ class UpgraderFactory
         return $this->upgraders;
     }
 
-    public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType, $requiredTags = []): ?UpgraderInterface
+    public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType): ?UpgraderInterface
     {
         if (!isset($this->upgraders[$upgradeOption->type])) {
             throw new \Exception('Upgrader with given type is not registered: ' . $upgradeOption->type);
@@ -92,13 +79,6 @@ class UpgraderFactory
             }
 
             $upgrader->setTargetSubscriptionType($subscriptionType);
-        }
-
-        $upgraderTags = $this->requiredTags[$upgrader->getType()];
-
-        if (count($upgraderTags) !== count($requiredTags) || array_diff($upgraderTags, $requiredTags) !== array_diff($requiredTags, $upgraderTags)) {
-            // required tags were not met
-            return null;
         }
 
         return $upgrader;

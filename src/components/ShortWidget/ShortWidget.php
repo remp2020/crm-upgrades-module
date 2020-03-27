@@ -63,7 +63,8 @@ class ShortWidget extends BaseWidget
         }
 
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
-        $this['upgradeForm']['content_access']->setValue(Json::encode($params['contentAccess']));
+        $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags']));
+        $this['upgradeForm']['content_access']->setValue(Json::encode($params['content_access']));
         $this['upgradeForm']['serialized_tracking_params']->setValue(
             Json::encode($this->presenter->trackingParams())
         );
@@ -78,6 +79,7 @@ class ShortWidget extends BaseWidget
     {
         $form = new Form;
         $form->addHidden('upgrader_idx')->setRequired();
+        $form->addHidden('upgrade_option_tags');
         $form->addHidden('content_access');
         $form->addHidden('serialized_tracking_params')->setRequired();
         $form->onSuccess[] = [$this, 'upgrade'];
@@ -87,7 +89,9 @@ class ShortWidget extends BaseWidget
     public function upgrade($form, $values)
     {
         $targetContentAccess = Json::decode($values->content_access);
-        $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess);
+        $requiredTags = Json::decode($values->upgrade_option_tags);
+
+        $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess, $requiredTags);
         if (!isset($upgraders[$values->upgrader_idx])) {
             Debugger::log('attempt to upgrade with invalid upgrader index', ILogger::INFO);
             $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
