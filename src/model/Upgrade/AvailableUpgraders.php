@@ -86,32 +86,46 @@ class AvailableUpgraders
             return [];
         }
 
-        $basePayment = null;
-        $subscriptionToUpgrade = null;
+        // Store all possible candidates (subscriptions with payment) for later evaluation. Some of the candidate
+        // subscriptions might not be upgradeable yet, so we want to evaluate other options if possible.
+        $candidates = [];
+        $lastCheckedSubscription = null;
 
         foreach ($subscriptions as $subscription) {
-            $subscriptionToUpgrade = $subscription;
+            $subscriptionToUpgrade = $lastCheckedSubscription = $subscription;
             $basePayment = $this->paymentsRepository->subscriptionPayment($subscription);
             if ($basePayment) {
-                // TODO: handle two subscriptions with base payment
-                // What if there are two subscriptions with base payment? This one might not be upgradeable but the
-                // other one could be.
-                break;
+                $candidates[] = [
+                    'basePayment' => $basePayment,
+                    'subscriptionToUpgrade' => $subscriptionToUpgrade,
+                ];
             }
         }
-        if (!$basePayment) {
+        if (!count($candidates)) {
             $this->userActionsLogRepository->add($userId, 'upgrade.cannot_upgrade', [
-                'subscription_id' => $subscriptionToUpgrade->id,
-                'subscription_type_id' => $subscriptionToUpgrade->subscription_type_id,
+                'subscription_id' => $lastCheckedSubscription->id,
+                'subscription_type_id' => $lastCheckedSubscription->subscription_type_id,
             ]);
             $this->error = self::ERROR_NO_BASE_PAYMENT;
             return [];
         }
 
-        $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($subscriptionToUpgrade->subscription_type);
+        $basePayment = null;
+        $subscriptionToUpgrade = null;
+
         $availableOptions = [];
-        foreach ($schemas as $schema) {
-            $availableOptions += $schema->related('upgrade_options')->fetchAll();
+        foreach ($candidates as $candidate) {
+            $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($candidate['subscriptionToUpgrade']->subscription_type);
+            if ($schemas->count()) {
+                foreach ($schemas as $schema) {
+                    $availableOptions += $schema->related('upgrade_options')->fetchAll();
+                }
+                if (count($availableOptions)) {
+                    $basePayment = $candidate['basePayment'];
+                    $subscriptionToUpgrade = $candidate['subscriptionToUpgrade'];
+                    break;
+                }
+            }
         }
 
         $upgraders = [];
@@ -134,9 +148,10 @@ class AvailableUpgraders
             }
 
             $config = Json::decode($option->config, Json::FORCE_ARRAY);
-            if (isset($config['required_tags'])) {
-                if (count($config['required_tags']) !== count($requiredUpgradeOptionTags) ||
-                    array_diff($config['required_tags'], $requiredUpgradeOptionTags) !== array_diff($requiredUpgradeOptionTags, $config['required_tags'])) {
+            if (count($requiredUpgradeOptionTags)) {
+                $optionTags = $config['require_tags'] ?? [];
+                if (count($optionTags) !== count($requiredUpgradeOptionTags) ||
+                    array_diff($optionTags, $requiredUpgradeOptionTags) !== array_diff($requiredUpgradeOptionTags, $optionTags)) {
                     // required tags were not met
                     continue;
                 }

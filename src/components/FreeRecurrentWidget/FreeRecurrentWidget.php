@@ -58,7 +58,7 @@ class FreeRecurrentWidget extends BaseWidget
         }
 
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
-        $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags']));
+        $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags'] ?? null));
         $this['upgradeForm']['content_access']->setValue(Json::encode($params['content_access']));
         $this['upgradeForm']['serialized_tracking_params']->setValue(
             Json::encode($this->presenter->trackingParams())
@@ -84,7 +84,7 @@ class FreeRecurrentWidget extends BaseWidget
     public function upgrade($form, $values)
     {
         $targetContentAccess = Json::decode($values->content_access);
-        $requiredTags = Json::decode($values->upgrade_option_tags);
+        $requiredTags = Json::decode($values->upgrade_option_tags) ?? [];
 
         $upgraders = $this->availableUpgraders->all($this->user->getId(), $targetContentAccess, $requiredTags);
         if (!isset($upgraders[$values->upgrader_idx])) {
