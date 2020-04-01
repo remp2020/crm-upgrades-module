@@ -82,7 +82,8 @@ class PaymentStatusChangeHandler extends AbstractListener
             // fallback in case meta value was not set by upgrader; use actual subscription
             Debugger::log(
                 'Upgrade payment without meta information about upgraded subscription: ' . $payment->id . '. ' .
-                'Did you set "upgraded_subscription_id" payment meta tag in your upgrader implementation?', ILogger::WARNING
+                'Did you set "upgraded_subscription_id" payment meta tag in your upgrader implementation?',
+                ILogger::WARNING
             );
             $upgradedSubscription = $this->subscriptionsRepository->actualUserSubscription($payment->user->id);
         }
