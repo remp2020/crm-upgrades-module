@@ -158,6 +158,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             'upgrade_type' => $this->getType(),
         ]);
         $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
+        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
 
         $newPayment = $this->paymentsRepository->find($newPayment->id);
 

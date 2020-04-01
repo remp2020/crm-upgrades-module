@@ -135,6 +135,7 @@ class PaidExtendUpgrade implements UpgraderInterface
             'modified_at' => new DateTime(),
         ]);
         $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
+        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
 
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
             'type' => 'payment',

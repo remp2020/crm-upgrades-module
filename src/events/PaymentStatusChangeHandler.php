@@ -2,6 +2,7 @@
 
 namespace Crm\UpgradesModule\Events;
 
+use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Events\SubscriptionStartsEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
@@ -10,6 +11,8 @@ use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
 use League\Event\EventInterface;
+use Tracy\Debugger;
+use Tracy\ILogger;
 
 class PaymentStatusChangeHandler extends AbstractListener
 {
@@ -19,17 +22,21 @@ class PaymentStatusChangeHandler extends AbstractListener
 
     private $subscriptionUpgradesRepository;
 
+    private $paymentMetaRepository;
+
     private $emitter;
 
     public function __construct(
         SubscriptionsRepository $subscriptionsRepository,
         PaymentsRepository $paymentsRepository,
         SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
+        PaymentMetaRepository $paymentMetaRepository,
         Emitter $emitter
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
+        $this->paymentMetaRepository = $paymentMetaRepository;
         $this->emitter = $emitter;
     }
 
@@ -63,28 +70,43 @@ class PaymentStatusChangeHandler extends AbstractListener
 
     public function upgradeSubscriptionFromPayment($payment, $event)
     {
-        $actualSubscription = $this->subscriptionsRepository->actualUserSubscription($payment->user->id);
-        if (!$actualSubscription) {
-            // Subscription ended since upgrade was requested, do nothing here and let Payment module handler to
-            // create a new subscription.
+        $upgradedSubscription = null;
+
+        // find upgraded subscription based on the meta value stored during upgrade
+        $upgradedSubscriptionMeta = $this->paymentMetaRepository->findByPaymentAndKey($payment, 'upgraded_subscription_id');
+        if ($upgradedSubscriptionMeta) {
+            $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscriptionMeta->value);
+        }
+
+        if (!$upgradedSubscription) {
+            // fallback in case meta value was not set by upgrader; use actual subscription
+            Debugger::log(
+                'Upgrade payment without meta information about upgraded subscription: ' . $payment->id . '. ' .
+                'Did you set "upgraded_subscription_id" payment meta tag in your upgrader implementation?', ILogger::WARNING
+            );
+            $upgradedSubscription = $this->subscriptionsRepository->actualUserSubscription($payment->user->id);
+        }
+
+        if (!$upgradedSubscription) {
+            // do nothing here and let PaymentModule handler to create a new subscription
             return;
         }
 
         $changeTime = new \DateTime();
         $newSubscriptionEndTime = null;
 
-        if ($payment->upgrade_type == PaidRecurrentUpgrade::TYPE) {
+        if ($payment->upgrade_type === PaidRecurrentUpgrade::TYPE) {
             // Paid recurrent lets you pay the amount for upgrade against current subscription. In this case the upgraded
             // subscription should not have standard length, but it should end at the end time of original subscription.
-            $newSubscriptionEndTime = $actualSubscription->end_time;
+            $newSubscriptionEndTime = $upgradedSubscription->end_time;
         }
 
         $this->subscriptionsRepository->setExpired(
-            $actualSubscription,
+            $upgradedSubscription,
             $changeTime,
-            '[upgrade] Previously ended on ' . $actualSubscription->end_time
+            '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
         );
-        $actualUserSubscription = $this->subscriptionsRepository->find(($actualSubscription->id));
+        $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
 
         $newSubscription = $this->subscriptionsRepository->add(
             $payment->subscription_type,
@@ -96,14 +118,14 @@ class PaymentStatusChangeHandler extends AbstractListener
         );
         $this->subscriptionsRepository->update($newSubscription, [
             'internal_status' => SubscriptionsRepository::INTERNAL_STATUS_ACTIVE,
-            'note' => "Upgrade from {$actualUserSubscription->subscription_type->name} to {$payment->subscription_type->name}",
+            'note' => "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}",
         ]);
 
         $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
-        $this->subscriptionsRepository->update($actualSubscription, ['next_subscription_id' => $newSubscription->id]);
+        $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
 
         $this->subscriptionUpgradesRepository->add(
-            $actualSubscription,
+            $upgradedSubscription,
             $newSubscription,
             $payment->upgrade_type
         );
