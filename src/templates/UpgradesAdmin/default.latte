@@ -64,7 +64,7 @@
 		      	<code>{$payment->variable_symbol}</code>
 		      	<i n:if="$payment->note" class="fa fa-info-circle text-danger fa-wh" data-toggle="tooltip" data-placement="top" title="{$payment->note|breaklines}"></i>
 		      </td>
-		      <td><a href="{link :Users:UsersAdmin:Show $payment->user_id}">{$payment->user->email}</a></td>
+		      <td><a href="{link :Users:UsersAdmin:Show $payment->user_id}">{$payment->user->public_name}</a></td>
 		      <td>{$payment->amount|price}</td>
 		      <td><a href="{plink :Payments:PaymentGatewaysAdmin:Show $payment->payment_gateway_id}">{$payment->payment_gateway->name}</a></td>
 		      <td>{if $payment->subscription_type_id}<a href="{plink :Subscriptions:SubscriptionTypesAdmin:Show $payment->subscription_type_id}">{$payment->subscription_type->name}</a>{/if}</td>
