@@ -218,6 +218,7 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         return $this->subscriptionsRepository->add(
             $st,
             false,
+            true,
             $user,
             SubscriptionsRepository::TYPE_REGULAR,
             $startTime,
