@@ -8,6 +8,9 @@ use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use DateTime;
 
+/**
+ * @property SubscriptionsRepository $subscriptionsRepository
+ */
 trait SplitSubscriptionTrait
 {
     private function splitSubscription(DateTime $newSubscriptionEndTime, DateTime $newSubscriptionStartTime = null)
@@ -20,6 +23,7 @@ trait SplitSubscriptionTrait
         $newSubscription = $this->subscriptionsRepository->add(
             $this->targetSubscriptionType,
             $this->basePayment->payment_gateway->is_recurrent,
+            true,
             $this->basePayment->user,
             SubscriptionsRepository::TYPE_UPGRADE,
             $newSubscriptionStartTime,
