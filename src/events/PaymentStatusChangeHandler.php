@@ -102,13 +102,6 @@ class PaymentStatusChangeHandler extends AbstractListener
             $newSubscriptionEndTime = $upgradedSubscription->end_time;
         }
 
-        $this->subscriptionsRepository->setExpired(
-            $upgradedSubscription,
-            $changeTime,
-            '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
-        );
-        $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
-
         $newSubscription = $this->subscriptionsRepository->add(
             $payment->subscription_type,
             $payment->payment_gateway->is_recurrent,
@@ -122,6 +115,16 @@ class PaymentStatusChangeHandler extends AbstractListener
             'internal_status' => SubscriptionsRepository::INTERNAL_STATUS_ACTIVE,
             'note' => "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}",
         ]);
+
+        // First create new subscription and then expire the former subscription
+        // E.g. in case bonus subscription is added after each finished subscription, the bonus subscription won't detect there is an extending subscription
+        // In such case, we do not want to add a bonus subscription
+        $this->subscriptionsRepository->setExpired(
+            $upgradedSubscription,
+            $changeTime,
+            '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
+        );
+        $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
 
         $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
         $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
