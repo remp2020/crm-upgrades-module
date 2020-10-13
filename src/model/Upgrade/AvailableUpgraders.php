@@ -148,10 +148,10 @@ class AvailableUpgraders
             }
 
             $config = Json::decode($option->config, Json::FORCE_ARRAY);
-            if (count($requiredUpgradeOptionTags)) {
-                $optionTags = $config['require_tags'] ?? [];
-                if (count($optionTags) !== count($requiredUpgradeOptionTags) ||
-                    array_diff($optionTags, $requiredUpgradeOptionTags) !== array_diff($requiredUpgradeOptionTags, $optionTags)) {
+            $configOptionTags = $config['require_tags'] ?? [];
+            if (count($requiredUpgradeOptionTags) || count($configOptionTags)) {
+                if (count($configOptionTags) !== count($requiredUpgradeOptionTags) ||
+                    array_diff($configOptionTags, $requiredUpgradeOptionTags) !== array_diff($requiredUpgradeOptionTags, $configOptionTags)) {
                     // required tags were not met
                     continue;
                 }
