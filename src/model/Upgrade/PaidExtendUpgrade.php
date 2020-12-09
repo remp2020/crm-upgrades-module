@@ -71,6 +71,7 @@ class PaidExtendUpgrade implements UpgraderInterface
                 return false;
             }
         }
+
         $shortenedEndTime = $this->calculateShortenedEndTime();
         if ($this->now()->diff($shortenedEndTime)->days >= 14) {
             return false;

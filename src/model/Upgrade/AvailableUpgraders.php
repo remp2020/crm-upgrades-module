@@ -3,6 +3,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\NowTrait;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
 use Crm\UpgradesModule\Repository\UpgradeSchemasRepository;
@@ -11,6 +12,8 @@ use Nette\Utils\Json;
 
 class AvailableUpgraders
 {
+    use NowTrait;
+
     const ERROR_NO_BASE_PAYMENT = 'no_base_payment';
 
     const ERROR_NO_SUBSCRIPTION = 'no_subscription';
@@ -28,8 +31,6 @@ class AvailableUpgraders
     private $contentAccessRepository;
 
     private $upgradeableSubscriptions;
-
-    private $now;
 
     private $error;
 
@@ -93,6 +94,12 @@ class AvailableUpgraders
 
         foreach ($subscriptions as $subscription) {
             $subscriptionToUpgrade = $lastCheckedSubscription = $subscription;
+
+            // Cannot upgrade subscription ending in the past
+            if ($subscription->end_time < $this->getNow()) {
+                continue;
+            }
+
             $basePayment = $this->paymentsRepository->subscriptionPayment($subscription);
             if ($basePayment) {
                 $candidates[] = [
@@ -225,10 +232,5 @@ class AvailableUpgraders
     public function setUpgradeableSubscriptions(UpgradeableSubscriptionsInterface $usi)
     {
         $this->upgradeableSubscriptions = clone $usi;
-    }
-
-    public function setNow(\DateTime $now)
-    {
-        $this->now = $now;
     }
 }

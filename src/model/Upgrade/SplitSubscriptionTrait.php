@@ -3,7 +3,6 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
-use Crm\SubscriptionsModule\Events\SubscriptionUpdatedEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use DateTime;
@@ -41,13 +40,6 @@ trait SplitSubscriptionTrait
         ]);
 
         $this->emitter->emit(new SubscriptionShortenedEvent($this->getBaseSubscription(), $originalEndTime, $newSubscription));
-        $this->emitter->emit(new SubscriptionUpdatedEvent($this->baseSubscription));
-
-        if ($newSubscriptionStartTime <= new DateTime()) {
-            $this->subscriptionsRepository->setExpired($this->baseSubscription);
-            $this->subscriptionsRepository->setStarted($newSubscription);
-        }
-
         $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
         return $newSubscription;
     }

@@ -4,7 +4,6 @@ namespace Crm\UpgradesModule\Events;
 
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\SubscriptionsModule\Events\SubscriptionStartsEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
@@ -109,32 +108,25 @@ class PaymentStatusChangeHandler extends AbstractListener
             $payment->user,
             SubscriptionsRepository::TYPE_UPGRADE,
             $changeTime,
-            $newSubscriptionEndTime
+            $newSubscriptionEndTime,
+            "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}"
         );
-        $this->subscriptionsRepository->update($newSubscription, [
-            'internal_status' => SubscriptionsRepository::INTERNAL_STATUS_ACTIVE,
-            'note' => "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}",
-        ]);
+        $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
+        $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
 
         // First create new subscription and then expire the former subscription
         // E.g. in case bonus subscription is added after each finished subscription, the bonus subscription won't detect there is an extending subscription
         // In such case, we do not want to add a bonus subscription
-        $this->subscriptionsRepository->setExpired(
-            $upgradedSubscription,
-            $changeTime,
-            '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
-        );
+        $this->subscriptionsRepository->update($upgradedSubscription, [
+            'end_time' => $changeTime,
+            'note' => '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
+        ]);
         $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
-
-        $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
-        $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
 
         $this->subscriptionUpgradesRepository->add(
             $upgradedSubscription,
             $newSubscription,
             $payment->upgrade_type
         );
-
-        $this->emitter->emit(new SubscriptionStartsEvent($newSubscription));
     }
 }
