@@ -20,6 +20,8 @@ trait UpgraderTrait
 
     private $trackingParams = [];
 
+    private $commerceSessionId;
+
     public function setBaseSubscription(IRow $baseSubscription): UpgraderInterface
     {
         $this->baseSubscription = $baseSubscription;
@@ -80,6 +82,17 @@ trait UpgraderTrait
     {
         $this->trackingParams = $trackingParams;
         return $this;
+    }
+
+    public function setCommerceSessionId(?string $commerceSessionId): UpgraderInterface
+    {
+        $this->commerceSessionId = $commerceSessionId;
+        return $this;
+    }
+
+    public function getCommerceSessionId(): ?string
+    {
+        return $this->commerceSessionId;
     }
 
     /**

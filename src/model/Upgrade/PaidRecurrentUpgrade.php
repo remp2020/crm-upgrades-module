@@ -157,8 +157,13 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         $this->paymentsRepository->update($newPayment, [
             'upgrade_type' => $this->getType(),
         ]);
-        $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
-        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
+
+        $paymentMeta = [
+            'upgraded_subscription_id' => $this->getBaseSubscription()->id,
+            'browser_id' => $this->getBrowserId(),
+            'commerce_session_id' => $this->getCommerceSessionId(),
+        ];
+        $this->paymentsRepository->addMeta($newPayment, array_merge(array_filter($paymentMeta), $this->trackingParams));
 
         $newPayment = $this->paymentsRepository->find($newPayment->id);
 
@@ -168,13 +173,14 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
             'type' => 'payment',
             'user_id' => $newPayment->user_id,
-            'browser_id' => $this->browserId,
+            'browser_id' => $this->getBrowserId(),
             'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => $newPayment->variable_symbol,
-            'product_ids' => [strval($newPayment->subscription_type_id)],
+            'product_ids' => [(string)$newPayment->subscription_type_id],
             'payment_id' => $newPayment->id,
             'revenue' => $newPayment->amount,
+            'commerce_session_id' => $this->getCommerceSessionId()
         ]));
 
         try {

@@ -108,12 +108,13 @@ class FreeRecurrentUpgrade implements UpgraderInterface
 
         $eventParams = [
             'user_id' => $this->basePayment->user_id,
-            'browser_id' => $this->browserId,
+            'browser_id' => $this->getBrowserId(),
             'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => self::TYPE,
-            'product_ids' => [strval($this->basePayment->subscription_type_id)],
+            'product_ids' => [(string)$this->basePayment->subscription_type_id],
             'revenue' => 0,
+            'commerce_session_id' => $this->getCommerceSessionId(),
         ];
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', array_merge(['type' => 'payment'], $eventParams)));
 
