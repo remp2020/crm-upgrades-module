@@ -135,25 +135,19 @@ class PaidExtendUpgrade implements UpgraderInterface
             'note' => "Paid extend upgrade from subscription type '{$this->baseSubscription->subscription_type->name}' to '{$this->targetSubscriptionType->name}'",
             'modified_at' => new DateTime(),
         ]);
-
-        $paymentMeta = [
-            'upgraded_subscription_id' => $this->getBaseSubscription()->id,
-            'browser_id' => $this->getBrowserId(),
-            'commerce_session_id' => $this->getCommerceSessionId(),
-        ];
-        $this->paymentsRepository->addMeta($newPayment, array_merge(array_filter($paymentMeta), $this->trackingParams));
+        $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
+        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
 
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
             'type' => 'payment',
             'user_id' => $newPayment->user_id,
-            'browser_id' => $this->getBrowserId(),
+            'browser_id' => $this->browserId,
             'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => $newPayment->variable_symbol,
             'product_ids' => [(string)$newPayment->subscription_type_id],
             'payment_id' => $newPayment->id,
             'revenue' => $newPayment->amount,
-            'commerce_session_id' => $this->getCommerceSessionId(),
         ]));
 
         return $newPayment;

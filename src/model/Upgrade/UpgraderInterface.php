@@ -28,10 +28,6 @@ interface UpgraderInterface
 
     public function getBrowserId(): ?string;
 
-    public function setCommerceSessionId(string $commerceSessionId): UpgraderInterface;
-
-    public function getCommerceSessionId(): ?string;
-
     /**
      * setNow sets the base date for upgrade calculation that should be used instead of current time.
      *

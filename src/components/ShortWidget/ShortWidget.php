@@ -109,9 +109,6 @@ class ShortWidget extends BaseWidget
             $upgrader->setTrackingParams(Json::decode($values->serialized_tracking_params, Json::FORCE_ARRAY));
         }
 
-        $upgrader->setBrowserId($_COOKIE['browser_id'] ?? null);
-        $upgrader->setCommerceSessionId($_COOKIE['commerce_session_id'] ?? null);
-
         $result = null;
         try {
             $result = $upgrader->upgrade();

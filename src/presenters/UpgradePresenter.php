@@ -122,7 +122,7 @@ class UpgradePresenter extends FrontendPresenter
         $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
             'type' => 'checkout',
             'user_id' => $user->id,
-            'browser_id' => $_COOKIE['browser_id'] ?? null,
+            'browser_id' => (isset($_COOKIE['browser_id']) ? $_COOKIE['browser_id'] : null),
             'source' => $this->trackingParams(),
             'sales_funnel_id' => self::SALES_FUNNEL_UPGRADE,
         ]));
