@@ -2,6 +2,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
@@ -31,13 +32,16 @@ class FreeRecurrentUpgrade implements UpgraderInterface
 
     private $monthlyFix;
 
+    private $dataProviderManager;
+
     public function __construct(
         RecurrentPaymentsRepository $recurrentPaymentsRepository,
         PaymentsRepository $paymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
         Emitter $emitter,
-        \Tomaj\Hermes\Emitter $hermesEmitter
+        \Tomaj\Hermes\Emitter $hermesEmitter,
+        DataProviderManager $dataProviderManager
     ) {
         $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->paymentsRepository = $paymentsRepository;
@@ -45,6 +49,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface
         $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
         $this->emitter = $emitter;
         $this->hermesEmitter = $hermesEmitter;
+        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string
@@ -108,14 +113,20 @@ class FreeRecurrentUpgrade implements UpgraderInterface
 
         $eventParams = [
             'user_id' => $this->basePayment->user_id,
-            'browser_id' => $this->browserId,
-            'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => self::TYPE,
-            'product_ids' => [strval($this->basePayment->subscription_type_id)],
+            'product_ids' => [(string)$this->basePayment->subscription_type_id],
             'revenue' => 0,
         ];
-        $this->hermesEmitter->emit(new HermesMessage('sales-funnel', array_merge(['type' => 'payment'], $eventParams)));
+
+        $eventParams = array_merge($eventParams, $this->getTrackerParams());
+
+        $this->hermesEmitter->emit(
+            new HermesMessage(
+                'sales-funnel',
+                array_merge(['type' => 'payment'], $eventParams)
+            )
+        );
 
         $this->paymentsRepository->update($this->basePayment, [
             'note' => $this->basePayment->note ? $this->basePayment->note . "\n" . $note : $note,

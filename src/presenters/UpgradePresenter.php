@@ -2,7 +2,6 @@
 
 namespace Crm\UpgradesModule\Presenters;
 
-use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\UpgradeException;
@@ -61,6 +60,8 @@ class UpgradePresenter extends FrontendPresenter
             }
         }
 
+        $this->template->queryString = $_SERVER['QUERY_STRING'];
+
         $this->setLayout($this->getLayoutName());
     }
 
@@ -86,6 +87,7 @@ class UpgradePresenter extends FrontendPresenter
             $this->redirect('subscription');
         }
         $this->template->upgraders = $upgraders;
+        $this->template->queryString = $_SERVER['QUERY_STRING'] ? "&{$_SERVER['QUERY_STRING']}" : '';
     }
 
     public function renderSubscription($upgraderId = null)
@@ -113,19 +115,10 @@ class UpgradePresenter extends FrontendPresenter
 
         if (count($upgraders) > 1) {
             if ($upgraderId === null) {
-                $this->redirect('select');
+                $this->redirect('select', $this->getHttpRequest()->getQuery());
             }
             $this->template->upgrader = $upgraders[$upgraderId];
         }
-
-        $user = $this->getUser();
-        $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
-            'type' => 'checkout',
-            'user_id' => $user->id,
-            'browser_id' => (isset($_COOKIE['browser_id']) ? $_COOKIE['browser_id'] : null),
-            'source' => $this->trackingParams(),
-            'sales_funnel_id' => self::SALES_FUNNEL_UPGRADE,
-        ]));
 
         $this->template->upgraderId = $upgraderId ?? 0;
         $this->template->contentAccess = $this->contentAccess;

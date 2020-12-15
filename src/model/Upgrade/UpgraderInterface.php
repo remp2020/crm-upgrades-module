@@ -24,10 +24,6 @@ interface UpgraderInterface
 
     public function getTargetSubscriptionType(): ?IRow;
 
-    public function setBrowserId(string $browserId): UpgraderInterface;
-
-    public function getBrowserId(): ?string;
-
     /**
      * setNow sets the base date for upgrade calculation that should be used instead of current time.
      *

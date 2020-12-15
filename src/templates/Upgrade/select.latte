@@ -21,7 +21,7 @@
                         {_upgrades.frontend.upgrade.select.upgraded_to} <b>{$upgrader->getTargetSubscriptionType()->user_label}</b>
                     </td>
                     <td style="padding: 0.5em; vertical-align: top;">
-                        <a n:href="subscription upgraderId => $i" class="pay-button btn btn-primary">{_upgrades.frontend.upgrade.select.show_conditions}</a>
+                        <a href="{plink subscription upgraderId => $i}{$queryString}" class="pay-button btn btn-primary">{_upgrades.frontend.upgrade.select.show_conditions}</a>
                     </td>
                 </tr>
             {/foreach}

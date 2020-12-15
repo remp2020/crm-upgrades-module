@@ -2,6 +2,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
@@ -40,7 +41,7 @@ class PaidExtendUpgrade implements UpgraderInterface
 
     private $gateway;
 
-    private $trackingParams = [];
+    private $dataProviderManager;
 
     public function __construct(
         PaymentsRepository $paymentsRepository,
@@ -48,7 +49,8 @@ class PaidExtendUpgrade implements UpgraderInterface
         PaymentGatewaysRepository $paymentGatewaysRepository,
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionTypesRepository $subscriptionTypesRepository,
-        Emitter $hermesEmitter
+        Emitter $hermesEmitter,
+        DataProviderManager $dataProviderManager
     ) {
         $this->paymentGatewaysRepository = $paymentGatewaysRepository;
         $this->paymentsRepository = $paymentsRepository;
@@ -56,6 +58,7 @@ class PaidExtendUpgrade implements UpgraderInterface
         $this->hermesEmitter = $hermesEmitter;
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
+        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string
@@ -98,11 +101,6 @@ class PaidExtendUpgrade implements UpgraderInterface
         return $this;
     }
 
-    public function setTrackingParams($trackingParams)
-    {
-        $this->trackingParams = $trackingParams;
-    }
-
     public function profitability(): float
     {
         return 1 / $this->calculateChargePrice();
@@ -135,20 +133,32 @@ class PaidExtendUpgrade implements UpgraderInterface
             'note' => "Paid extend upgrade from subscription type '{$this->baseSubscription->subscription_type->name}' to '{$this->targetSubscriptionType->name}'",
             'modified_at' => new DateTime(),
         ]);
-        $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
-        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
 
-        $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
+        $paymentMeta = [
+            'upgraded_subscription_id' => $this->getBaseSubscription()->id,
+        ];
+        $trackerParams = $this->getTrackerParams();
+        $paymentMeta = array_merge($paymentMeta, $trackerParams['source'] ?? [], $trackerParams);
+        unset($paymentMeta['source']);
+
+        $this->paymentsRepository->addMeta($newPayment, $paymentMeta);
+
+        $eventParams = [
             'type' => 'payment',
             'user_id' => $newPayment->user_id,
-            'browser_id' => $this->browserId,
-            'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => $newPayment->variable_symbol,
             'product_ids' => [(string)$newPayment->subscription_type_id],
             'payment_id' => $newPayment->id,
             'revenue' => $newPayment->amount,
-        ]));
+        ];
+
+        $this->hermesEmitter->emit(
+            new HermesMessage(
+                'sales-funnel',
+                array_merge($eventParams, $trackerParams)
+            )
+        );
 
         return $newPayment;
     }

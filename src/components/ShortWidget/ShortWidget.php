@@ -65,9 +65,6 @@ class ShortWidget extends BaseWidget
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
         $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags'] ?? null));
         $this['upgradeForm']['content_access']->setValue(Json::encode($params['content_access']));
-        $this['upgradeForm']['serialized_tracking_params']->setValue(
-            Json::encode($this->presenter->trackingParams())
-        );
 
         $this->template->upgrader = $params['upgrader'];
         $this->template->cmsUrl = $this->applicationConfig->get('cms_url');
@@ -81,7 +78,6 @@ class ShortWidget extends BaseWidget
         $form->addHidden('upgrader_idx')->setRequired();
         $form->addHidden('upgrade_option_tags');
         $form->addHidden('content_access');
-        $form->addHidden('serialized_tracking_params')->setRequired();
         $form->onSuccess[] = [$this, 'upgrade'];
         return $form;
     }
@@ -105,14 +101,11 @@ class ShortWidget extends BaseWidget
             $this->presenter->redirect('error');
         }
 
-        if ($values->serialized_tracking_params) {
-            $upgrader->setTrackingParams(Json::decode($values->serialized_tracking_params, Json::FORCE_ARRAY));
-        }
-
         $result = null;
         try {
             $result = $upgrader->upgrade();
         } catch (\Exception $e) {
+            Debugger::log($e->getMessage(), ILogger::EXCEPTION);
             $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.payment_gateway_timeout'), 'error');
             $this->presenter->redirect('error');
         }

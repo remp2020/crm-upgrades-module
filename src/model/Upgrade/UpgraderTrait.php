@@ -2,8 +2,13 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\DataProvider\DataProviderManager;
+use Crm\UpgradesModule\DataProvider\TrackerDataProviderInterface;
 use Nette\Database\Table\IRow;
 
+/**
+ * @property DataProviderManager $dataProviderManager
+ */
 trait UpgraderTrait
 {
     private $baseSubscription;
@@ -14,11 +19,7 @@ trait UpgraderTrait
 
     private $targetSubscriptionType;
 
-    private $browserId;
-
     private $now;
-
-    private $trackingParams = [];
 
     public function setBaseSubscription(IRow $baseSubscription): UpgraderInterface
     {
@@ -65,23 +66,6 @@ trait UpgraderTrait
         return $this->targetSubscriptionType;
     }
 
-    public function setBrowserId(?string $browserId): UpgraderInterface
-    {
-        $this->browserId = $browserId;
-        return $this;
-    }
-
-    public function getBrowserId(): ?string
-    {
-        return $this->browserId;
-    }
-
-    public function setTrackingParams($trackingParams)
-    {
-        $this->trackingParams = $trackingParams;
-        return $this;
-    }
-
     /**
      * getToSubscriptionTypeItem returns subscription type item to be used within upgrade
      *
@@ -111,5 +95,20 @@ trait UpgraderTrait
     public function now(): \DateTime
     {
         return $this->now ? clone $this->now : new \DateTime();
+    }
+
+    public function getTrackerParams(): array
+    {
+        $trackerParams = [];
+        /** @var TrackerDataProviderInterface[] $providers */
+        $providers = $this->dataProviderManager->getProviders(
+            'upgrades.dataprovider.tracker',
+            TrackerDataProviderInterface::class
+        );
+        foreach ($providers as $provider) {
+            $trackerParams[] = $provider->provide();
+        }
+
+        return array_merge([], ...$trackerParams);
     }
 }

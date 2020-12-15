@@ -2,6 +2,7 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\GatewayFactory;
 use Crm\PaymentsModule\Gateways\PaymentInterface;
@@ -38,6 +39,8 @@ class PaidRecurrentUpgrade implements UpgraderInterface
 
     private $paymentsRepository;
 
+    private $dataProviderManager;
+
     /** @var float
      *
      * Fix upgrade price which will alter the calculation of charge price. Instead of standard calculation based on
@@ -61,7 +64,8 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         GatewayFactory $gatewayFactory,
         Emitter $emitter,
         \Tomaj\Hermes\Emitter $hermesEmitter,
-        PaymentLogsRepository $paymentLogsRepository
+        PaymentLogsRepository $paymentLogsRepository,
+        DataProviderManager $dataProviderManager
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
@@ -71,6 +75,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         $this->emitter = $emitter;
         $this->hermesEmitter = $hermesEmitter;
         $this->paymentLogsRepository = $paymentLogsRepository;
+        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string
@@ -157,25 +162,36 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         $this->paymentsRepository->update($newPayment, [
             'upgrade_type' => $this->getType(),
         ]);
-        $this->paymentsRepository->addMeta($newPayment, $this->trackingParams);
-        $this->paymentsRepository->addMeta($newPayment, ['upgraded_subscription_id' => $this->getBaseSubscription()->id]);
+
+        $trackerParams = $this->getTrackerParams();
+
+        $paymentMetaData = ['upgraded_subscription_id' => $this->getBaseSubscription()->id];
+        $paymentMetaData = array_merge($paymentMetaData, $trackerParams['source'] ?? [], $trackerParams);
+        unset($paymentMetaData['source']);
+
+        $this->paymentsRepository->addMeta($newPayment, $paymentMetaData);
 
         $newPayment = $this->paymentsRepository->find($newPayment->id);
 
-        /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
-        $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
-
-        $this->hermesEmitter->emit(new HermesMessage('sales-funnel', [
+        $eventParams = [
             'type' => 'payment',
             'user_id' => $newPayment->user_id,
-            'browser_id' => $this->browserId,
-            'source' => $this->trackingParams,
             'sales_funnel_id' => 'upgrade',
             'transaction_id' => $newPayment->variable_symbol,
-            'product_ids' => [strval($newPayment->subscription_type_id)],
+            'product_ids' => [(string)$newPayment->subscription_type_id],
             'payment_id' => $newPayment->id,
             'revenue' => $newPayment->amount,
-        ]));
+        ];
+
+        $this->hermesEmitter->emit(
+            new HermesMessage(
+                'sales-funnel',
+                array_merge($eventParams, $trackerParams)
+            )
+        );
+
+        /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
+        $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
 
         try {
             $gateway->charge($newPayment, $recurrentPayment->cid);
