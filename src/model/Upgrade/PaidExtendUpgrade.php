@@ -168,9 +168,14 @@ class PaidExtendUpgrade implements UpgraderInterface
         foreach ($this->paymentsRepository->getPaymentItemsByType($this->basePayment, SubscriptionTypePaymentItem::TYPE) as $paymentItem) {
             $totalSubscriptionAmount += SubscriptionTypePaymentItem::fromPaymentItem($paymentItem)->totalPrice();
         }
-        $dayPrice = $totalSubscriptionAmount / $subscriptionDays;
-        $saveFromActual = $this->now()->diff($this->baseSubscription->end_time)->days * $dayPrice;
-        $saveFromActual = round($saveFromActual, 2);
+
+        if ($subscriptionDays > 0) {
+            $dayPrice = $totalSubscriptionAmount / $subscriptionDays;
+            $saveFromActual = $this->now()->diff($this->baseSubscription->end_time)->days * $dayPrice;
+            $saveFromActual = round($saveFromActual, 2);
+        } else {
+            $saveFromActual = 0;
+        }
 
         // get full price of upgraded subscription
         if ($this->monthlyFix) {
