@@ -33,9 +33,9 @@ frontend:
 			message: "Vaše předplatné se nepodařilo změnit. Prosím, kontaktujte zákaznickou podporu."
 			my_subscriptions: Moje předplatné
 			not_available: 'Aktuálně nemáte žádné předplatné, nebo nejste přihlášeni. Prosím, <a target="_top" href="/sign/in">přihlašte se</a>, nebo si vyberte z naší <a href="/" target="_top">nabídky předplatných</a>.'
-			no_base_payment: 'Přechod na vyšší balíček předplatného z účtu nelze provést automaticky, prosím, napište nám na info@denikn.cz a rádi vám pomůžeme.'
+			no_base_payment: 'Váš aktuální typ předplatného nelze změnit na vyšší typ. <br><strong>Prosím, napište nám na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a rádi to uděláme ručně dle vašeho požadavku.'
 			already_upgraded: 'Tento vyšší balíček předplatného už teď máte aktivní, upgrade přes tuto stránku tedy není nutný.'
-			no_upgrade_possible: 'Váš aktuální typ předplatného nelze změnit na vyšší typ.'
+			no_upgrade_possible: 'Váš aktuální typ předplatného nelze změnit na vyšší typ. <br><strong>Prosím, napište nám na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a rádi to uděláme ručně dle vašeho požadavku.'
 			card_expiring: 'Vaše karta ma blízkou dobu expirace. Nelze změnit na vyšší typ. '
 			choose_gateway: Pro pokračování musíte zvolit způsob platby.
 		success: Vaše předplatné bylo úspěšně změněno

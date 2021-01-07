@@ -33,9 +33,9 @@ frontend:
 			message: Vaše predplatné sa nepodarilo zmeniť. Prosím kontaktujte zákaznícku podporu.
 			my_subscriptions: Moje predplatné
 			not_available: 'Aktuálne nemáte žiadne predplatné alebo nie ste prihlásený. Prosím, <a target="_top" href="/sign/in">prihláste sa</a> alebo si vyberte z našej <a href="/" target="_top">ponuky predplatných</a>.'
-			no_base_payment: 'Prechod na vyšší balíček predplatného z vášho konta nie je možné vykonať automaticky, prosím, napíšte nám na info@dennikn.sk a radi vám pomôžeme.'
+			no_base_payment: 'Bohužiaľ, váš typ predplatného nevieme zmeniť na vyšší typ automaticky. <br><strong>Prosím, napíšte na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a radi to urobíme ručne podľa vašej požiadavky.'
 			already_upgraded: 'Tento vyšší balíček predplatného už teraz máte aktívny, upgrade cez túto stránku teda nie je potrebný.'
-			no_upgrade_possible: 'Váš aktuálny typ predplatného nie je možné zmeniť na vyšší typ.'
+			no_upgrade_possible: 'Bohužiaľ, váš typ predplatného nevieme zmeniť na vyšší typ automaticky. <br><strong>Prosím, napíšte na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a radi to urobíme ručne podľa vašej požiadavky.'
 			card_expiring: 'Vaša karta ma blízku dobu expirácie. Nie je možné zmeniť na vyšší typ.'
 			choose_gateway: Pre pokračovanie musíte vybrať spôsob platby.
 		success: Vaše predplatné bolo úspešne zmenené

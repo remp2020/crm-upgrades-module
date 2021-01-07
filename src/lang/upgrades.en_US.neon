@@ -33,9 +33,9 @@ frontend:
 			message: We couldn't upgrade your subscription. Please contact our customer support.
 			my_subscriptions: My subscriptions
 			not_available: 'You have no active subscription or you are not signed in. Please, <a target="_top" href="/sign/in">sign in</a> or choose from our <a href="/" target="_top">subscription offerings</a>.'
-			no_base_payment: 'System cannot perform and upgrade automatically. Please contact use at info@dennikn.sk and we will gladly help you.'
+			no_upgrade_possible: 'Your current subscription is not upgradeable automatically. <br><strong>Please, send us a message at <a href="mailto:%contactEmail%">%contactEmail%</a></strong> and we will try to assist you with your request.'
 			already_upgraded: 'You already have the upgraded package, no further upgrade is necessary.'
-			no_upgrade_possible: 'Your current type of subscription is not upgradeable.'
+			no_upgrade_possible: 'Your current subscription is not upgradeable automatically. <br><strong>Please, send us a message at <a href="mailto:%contactEmail%">%contactEmail%</a></strong> and we will try to assist you with your request.'
 			card_expiring: 'Upgrade is not possible, your card is expiring soon.'
 			choose_gateway: You must choose a form of payment to continue.
 		success: Your subscription has successfully been upgraded
