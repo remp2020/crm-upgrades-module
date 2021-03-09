@@ -93,15 +93,27 @@ Options define which upgrader can be used for which kind of content-access-based
   ```json5
   {
     /*
-     * Required. Array of strings. Content access you want to upgrade to. UpgradesModule will find all subscription types with
-     * content access "content_access_AA" and calculates profitability of upgrade to each one of them. The most
+     * Required. Array of strings. Content access you want to upgrade to. UpgradesModule will search for the default
+     * subscription type with the same length, and content access of:
+     *
+     *   - currently active subscription type, and
+     *   - content_access_CC (or whatever is set within "require_content" property
+     * 
+     * When module finds all available options, it calculates profitability of upgrade to each one of them. The most
      * profitable is offered to user as an option to upgrade.
      */
-    "require_content": ["content_access_AA"],
+    "require_content": ["content_access_CC"],
   
     /*
-     * Optional. Array of strings. Content access you don't want to upgrade to. UpgradesModule will find all subscription types with
-     * content access defined in the "require_content" property, but without ones within this property ("content_access_BB").
+     * Optional. Array of strings. Content access you don't want to upgrade to. UpgradesModule will find the default
+     * subscription type with the same length, and content access defined by the "require_content" property, but
+     * without ones defined within this property ("content_access_BB").
+     * 
+     * Since upgrades module always tries to find subscription types with the same content access (plus the ones required)
+     * as the current subscription, you can use this property to achieve following:
+     *
+     *   - Current subscription content access: ["content_access_AA, "content_access_BB"]
+     *   - Content access we want to upgrade to: ["content_access_AA", "content_access_CC"]
      */
     "omit_content": ["content_access_BB"],
   
