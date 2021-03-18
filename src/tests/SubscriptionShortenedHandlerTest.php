@@ -10,6 +10,7 @@ use Crm\SubscriptionsModule\Repository\SubscriptionTypesMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Seeders\SubscriptionExtensionMethodsSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionLengthMethodSeeder;
+use Crm\SubscriptionsModule\Seeders\SubscriptionTypeNamesSeeder;
 use Crm\UpgradesModule\Events\SubscriptionShortenedEvent;
 use Crm\UpgradesModule\Events\SubscriptionShortenedHandler;
 use Crm\UpgradesModule\Seeders\TestSeeder;
@@ -49,6 +50,7 @@ class SubscriptionShortenedHandlerTest extends DatabaseTestCase
         return [
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
+            SubscriptionTypeNamesSeeder::class,
             TestSeeder::class,
         ];
     }
