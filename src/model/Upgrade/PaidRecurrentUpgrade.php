@@ -149,8 +149,8 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         // create new payment and charge it right away
         $newPayment = $this->paymentsRepository->add(
             $this->targetSubscriptionType,
-            $this->basePayment->payment_gateway,
-            $this->basePayment->user,
+            $recurrentPayment->payment_gateway,
+            $recurrentPayment->user,
             $paymentItemContainer,
             '',
             null,
