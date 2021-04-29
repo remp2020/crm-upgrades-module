@@ -5,6 +5,7 @@ namespace Crm\UpgradesModule\Presenters;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\UpgradeException;
+use Nette\Application\BadRequestException;
 use Nette\Http\Url;
 use Nette\Utils\Strings;
 use Tomaj\Hermes\Emitter;
@@ -124,12 +125,29 @@ class UpgradePresenter extends FrontendPresenter
         $this->template->contentAccess = $this->contentAccess;
     }
 
-    public function renderSuccess()
+    public function renderSuccess(int $subscriptionId, bool $embedded = true)
     {
+        $this->onlyLoggedIn();
+
         $section = $this->getSession('upgrade');
         if ($section->referer) {
             $this->template->redirect = $section->referer;
         }
+
+        if (!$embedded) {
+            $this->setLayout($this->getLayoutName());
+        }
+
+        $subscriptionRow = $this->subscriptionsRepository->getTable()
+            ->where('id', $subscriptionId)
+            ->where('user_id', $this->getUser()->getId())
+            ->fetch();
+
+        if (!$subscriptionRow) {
+            throw new BadRequestException("No subscription found ({$subscriptionId}) for user: {$this->getUser()->getId()}");
+        }
+
+        $this->template->subscription = $subscriptionRow;
     }
 
     public function renderNotAvailable($error)

@@ -111,6 +111,13 @@ class FreeRecurrentWidget extends BaseWidget
         }
 
         $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.success'));
-        $this->presenter->redirect('success');
+
+        $subscriptionUpgradeRow = $upgrader->getBaseSubscription()
+            ->related('subscription_upgrades', 'base_subscription_id')
+            ->fetch();
+
+        $this->presenter->redirect('success', [
+            'subscriptionId' => $subscriptionUpgradeRow->upgraded_subscription_id,
+        ]);
     }
 }
