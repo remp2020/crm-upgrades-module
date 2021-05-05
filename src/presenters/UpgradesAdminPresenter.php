@@ -18,6 +18,9 @@ class UpgradesAdminPresenter extends AdminPresenter
     /** @var UpgraderFactory @inject */
     public $upgraderFactory;
 
+    /**
+     * @admin-access-level read
+     */
     public function renderDefault($type = null)
     {
         $where = ['upgrade_type IS NOT NULL'];
