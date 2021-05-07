@@ -53,10 +53,5 @@ class UpgradesModule extends CrmModule
             $this->getInstance(\Crm\UpgradesModule\Events\PaymentStatusChangeHandler::class),
             1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
         );
-
-        $emitter->addListener(
-            \Crm\UpgradesModule\Events\SubscriptionShortenedEvent::class,
-            $this->getInstance(\Crm\UpgradesModule\Events\SubscriptionShortenedHandler::class)
-        );
     }
 }
