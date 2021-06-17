@@ -187,7 +187,8 @@ class PaidRecurrentUpgrade implements UpgraderInterface
             new HermesMessage(
                 'sales-funnel',
                 array_merge($eventParams, $trackerParams)
-            )
+            ),
+            HermesMessage::PRIORITY_DEFAULT
         );
 
         /** @var PaymentInterface|RecurrentPaymentInterface $gateway */

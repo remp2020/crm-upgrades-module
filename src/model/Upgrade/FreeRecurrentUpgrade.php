@@ -125,7 +125,8 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             new HermesMessage(
                 'sales-funnel',
                 array_merge(['type' => 'payment'], $eventParams)
-            )
+            ),
+            HermesMessage::PRIORITY_DEFAULT
         );
 
         $this->paymentsRepository->update($this->basePayment, [
@@ -151,7 +152,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             $this->getType()
         );
 
-        $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams));
+        $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams), HermesMessage::PRIORITY_DEFAULT);
         return true;
     }
 

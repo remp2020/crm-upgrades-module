@@ -104,7 +104,8 @@ class ShortUpgrade implements UpgraderInterface
             new HermesMessage(
                 'sales-funnel',
                 array_merge(['type' => 'payment'], $eventParams, $this->getTrackerParams())
-            )
+            ),
+            HermesMessage::PRIORITY_DEFAULT
         );
 
         $startTime = $this->calculateShortenedStartTime();
@@ -127,7 +128,8 @@ class ShortUpgrade implements UpgraderInterface
             new HermesMessage(
                 'subscription-split',
                 array_merge($eventParams, $this->getTrackerParams())
-            )
+            ),
+            HermesMessage::PRIORITY_DEFAULT
         );
         return true;
     }

@@ -157,7 +157,8 @@ class PaidExtendUpgrade implements UpgraderInterface
             new HermesMessage(
                 'sales-funnel',
                 array_merge($eventParams, $trackerParams)
-            )
+            ),
+            HermesMessage::PRIORITY_DEFAULT
         );
 
         return $newPayment;
