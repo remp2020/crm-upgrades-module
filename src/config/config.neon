@@ -18,7 +18,7 @@ services:
 	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
 
 	paidExtendWidget:
-		class: Crm\UpgradesModule\Components\PaidExtendWidget
+		factory: Crm\UpgradesModule\Components\PaidExtendWidget
 		setup:
 			- addPaymentGateway(cardpay, "Platobná karta - jednorázová platba")
 			- addPaymentGateway(csob, "Platební karta - jednorázová platba")
@@ -27,7 +27,7 @@ services:
 			- addPaymentGateway(proforma_invoice, "Platba predfaktúrou")
 
 	upgraderFactory:
-		class: Crm\UpgradesModule\Upgrade\UpgraderFactory
+		factory: Crm\UpgradesModule\Upgrade\UpgraderFactory
 		setup:
 			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade())
 			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidExtendUpgrade())
