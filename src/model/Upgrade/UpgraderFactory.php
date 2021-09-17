@@ -2,14 +2,20 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
+use Crm\ApplicationModule\NowTrait;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Nette\Database\Table\IRow;
 use Nette\Utils\Json;
 
 class UpgraderFactory
 {
+    use NowTrait;
+
     /** @var UpgraderInterface[] */
     private $upgraders = [];
+
+    /** @var UpgraderInterface|null */
+    private $subsequentUpgrader;
 
     private $subscriptionTypesRepository;
 
@@ -24,12 +30,26 @@ class UpgraderFactory
         $this->upgraders[$upgrader->getType()] = $upgrader;
     }
 
+    public function setSubsequentUpgrader(?UpgraderInterface $subsequentUpgrader)
+    {
+        $this->subsequentUpgrader = $subsequentUpgrader;
+    }
+
     /**
      * @return UpgraderInterface[]
      */
     public function getUpgraders(): array
     {
-        return $this->upgraders;
+        $result = [];
+        foreach ($this->upgraders as $type => $upgrader) {
+            $u = clone $upgrader;
+            $u->setNow($this->getNow());
+            if ($u instanceof SubsequentUpgradeInterface) {
+                $u->setSubsequentUpgrader($this->subsequentUpgrader);
+            }
+            $result[$type] = $u;
+        }
+        return $result;
     }
 
     public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType): ?UpgraderInterface
@@ -38,6 +58,10 @@ class UpgraderFactory
             throw new \Exception('Upgrader with given type is not registered: ' . $upgradeOption->type);
         }
         $upgrader = clone $this->upgraders[$upgradeOption->type];
+        $upgrader->setNow($this->getNow());
+        if ($this->subsequentUpgrader && $upgrader instanceof SubsequentUpgradeInterface) {
+            $upgrader->setSubsequentUpgrader($this->subsequentUpgrader);
+        }
 
         if ($upgradeOption->subscription_type_id) {
             $subscriptionType = $this->subscriptionTypesRepository->find($upgradeOption->subscription_type_id);

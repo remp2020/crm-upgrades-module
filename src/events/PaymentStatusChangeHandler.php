@@ -2,11 +2,16 @@
 
 namespace Crm\UpgradesModule\Events;
 
+use Crm\ApplicationModule\NowTrait;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
+use Crm\UpgradesModule\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
+use Crm\UpgradesModule\Upgrade\SubsequentUpgradeInterface;
+use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
 use League\Event\EventInterface;
@@ -15,6 +20,8 @@ use Tracy\ILogger;
 
 class PaymentStatusChangeHandler extends AbstractListener
 {
+    use NowTrait;
+
     private $subscriptionsRepository;
 
     private $paymentsRepository;
@@ -23,6 +30,10 @@ class PaymentStatusChangeHandler extends AbstractListener
 
     private $paymentMetaRepository;
 
+    private $upgraderFactory;
+
+    private $recurrentPaymentsRepository;
+
     private $emitter;
 
     public function __construct(
@@ -30,12 +41,16 @@ class PaymentStatusChangeHandler extends AbstractListener
         PaymentsRepository $paymentsRepository,
         SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
         PaymentMetaRepository $paymentMetaRepository,
+        UpgraderFactory $upgraderFactory,
+        RecurrentPaymentsRepository $recurrentPaymentsRepository,
         Emitter $emitter
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
         $this->paymentMetaRepository = $paymentMetaRepository;
+        $this->upgraderFactory = $upgraderFactory;
+        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->emitter = $emitter;
     }
 
@@ -92,41 +107,114 @@ class PaymentStatusChangeHandler extends AbstractListener
             return;
         }
 
-        $changeTime = new \DateTime();
+        $changeTime = $this->getNow();
+
+        // check if the subscription we upgrade has any following subscriptions; we might alter them here too
+        $followingSubscriptions = $this->paymentsRepository->followingSubscriptions(
+            $upgradedSubscription,
+            [$payment->subscription_type_id] // we want to include following subscriptions also with upgraded subscription type
+        );
         $newSubscriptionEndTime = null;
+
+        $useTransaction = false; // transaction should already be started by UpgraderInterface::upgrade()
 
         if ($payment->upgrade_type === PaidRecurrentUpgrade::TYPE) {
             // Paid recurrent lets you pay the amount for upgrade against current subscription. In this case the upgraded
             // subscription should not have standard length, but it should end at the end time of original subscription.
             $newSubscriptionEndTime = $upgradedSubscription->end_time;
+        } elseif ($payment->upgrade_type === PaidExtendUpgrade::TYPE) {
+            // PaidExtend couldn't have started the transaction because it redirected user away to the gateway.
+            // We need to initiate it now to safely create everything.
+            $useTransaction = true;
         }
 
-        $newSubscription = $this->subscriptionsRepository->add(
-            $payment->subscription_type,
-            $payment->payment_gateway->is_recurrent,
-            true,
-            $payment->user,
-            SubscriptionsRepository::TYPE_UPGRADE,
-            $changeTime,
-            $newSubscriptionEndTime,
-            "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}"
-        );
-        $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
-        $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
+        try {
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->beginTransaction();
+            }
 
-        // First create new subscription and then expire the former subscription
-        // E.g. in case bonus subscription is added after each finished subscription, the bonus subscription won't detect there is an extending subscription
-        // In such case, we do not want to add a bonus subscription
-        $this->subscriptionsRepository->update($upgradedSubscription, [
-            'end_time' => $changeTime,
-            'note' => '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
-        ]);
-        $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
+            $newSubscription = $this->subscriptionsRepository->add(
+                $payment->subscription_type,
+                $payment->payment_gateway->is_recurrent,
+                true,
+                $payment->user,
+                SubscriptionsRepository::TYPE_UPGRADE,
+                $changeTime,
+                $newSubscriptionEndTime,
+                "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}"
+            );
 
-        $this->subscriptionUpgradesRepository->add(
-            $upgradedSubscription,
-            $newSubscription,
-            $payment->upgrade_type
-        );
+            $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
+            $this->subscriptionsRepository->update($upgradedSubscription, ['next_subscription_id' => $newSubscription->id]);
+
+            // First create new subscription and then expire the former subscription
+            // E.g. in case bonus subscription is added after each finished subscription, the bonus subscription won't detect there is an extending subscription
+            // In such case, we do not want to add a bonus subscription
+            $this->subscriptionsRepository->update($upgradedSubscription, [
+                'end_time' => $changeTime,
+                'note' => '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
+            ]);
+            $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
+
+            $this->subscriptionUpgradesRepository->add(
+                $upgradedSubscription,
+                $newSubscription,
+                $payment->upgrade_type
+            );
+
+            if ($payment->upgrade_type === PaidExtendUpgrade::TYPE) {
+                $basePayment = $this->paymentsRepository->subscriptionPayment($upgradedSubscription);
+                $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($basePayment);
+                if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+                    $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment->id);
+                }
+
+                // If this is a "paid extend" upgrade, move following subscriptions of upgraded subscription to the future,
+                // so they don't overlap with newly created subscription.
+                $endTime = clone $newSubscription->end_time;
+                foreach ($followingSubscriptions as $followingSubscription) {
+                    $movedSubscription = $this->subscriptionsRepository->moveSubscription($followingSubscription, $endTime);
+                    $endTime = clone $movedSubscription->end_time;
+                }
+
+                $this->subsequentUpgrade($upgradedSubscription, $payment->subscription_type);
+
+                if ($useTransaction) {
+                    $this->paymentsRepository->getDatabase()->commit();
+                }
+            }
+        } catch (\Exception $e) {
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    protected function subsequentUpgrade($upgradedSubscription, $targetSubscriptionType)
+    {
+        // PaidExtend upgrade is special, because it redirects user away and then back to confirm the payment.
+        // Because of that, we need to prepare upgrader again, so we can do subsequent upgrades.
+        $basePayment = $this->paymentsRepository->subscriptionPayment($upgradedSubscription);
+        if (!$basePayment) {
+            Debugger::log(
+                "Unable to upgrade subsequent subscriptions, could not find base payment for subscription: " . $upgradedSubscription->id,
+                Debugger::ERROR
+            );
+            return;
+        }
+
+        $upgrader = $this->upgraderFactory->getUpgraders()[PaidExtendUpgrade::TYPE] ?? null;
+        if (!($upgrader instanceof SubsequentUpgradeInterface)) {
+            return;
+        }
+
+        $upgrader
+            ->setTargetSubscriptionType($targetSubscriptionType)
+            ->setBaseSubscription($upgradedSubscription)
+            ->setBasePayment($basePayment)
+            ->applyConfig([]); // TODO: pass and apply config from the original paid_extend upgrade
+
+        $upgrader->subsequentUpgrade();
     }
 }

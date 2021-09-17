@@ -19,7 +19,7 @@
 {/capture}
 
 <div class="buttons row">
-    <div class="col-md-8 col-sm-8 col-xs-12 text-right">
+    <div class="col-md-12 text-center">
 
         {form upgradeForm}
 
@@ -50,10 +50,8 @@
         <button type="button" class="btn btn-large btn-buy" data-toggle="modal" data-target="#modal-{$upgrader->getType()}" style="padding: 15px 25px;">
             {_upgrades.frontend.upgrade.subscription.confirm_modal.submit}
         </button>
-    </div>
-    <div class="col-md-4 col-sm-4 col-xs-12">
-        <a href="{$cmsUrl}" class="btn btn-outline"
-           target="_top">{_upgrades.frontend.upgrade.subscription.back}</a>
+
+        <a href="{$cmsUrl}" class="btn btn-outline" target="_top">{_upgrades.frontend.upgrade.subscription.back}</a>
     </div>
 </div>
 

@@ -11,7 +11,7 @@ use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
 use League\Event\Emitter;
 use Nette\Utils\DateTime;
 
-class FreeRecurrentUpgrade implements UpgraderInterface
+class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
     const TYPE = 'free_recurrent';
 
@@ -90,10 +90,11 @@ class FreeRecurrentUpgrade implements UpgraderInterface
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
-                throw new \Exception('Invalid value provided in ShortUpgrade config "monthly_fix": ' . $config['monthly_fix']);
+                throw new \Exception('Invalid value provided in FreeRecurrentUpgrade config "monthly_fix": ' . $config['monthly_fix']);
             }
             $this->monthlyFix = $monthlyFix;
         }
+        $this->config = $config;
         return $this;
     }
 
@@ -102,7 +103,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface
         return 1 / $this->getFutureChargePrice();
     }
 
-    public function upgrade(): bool
+    public function upgrade(bool $useTransaction = true): bool
     {
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrentPayment) {
@@ -129,30 +130,46 @@ class FreeRecurrentUpgrade implements UpgraderInterface
             HermesMessage::PRIORITY_DEFAULT
         );
 
-        $this->paymentsRepository->update($this->basePayment, [
-            'note' => $this->basePayment->note ? $this->basePayment->note . "\n" . $note : $note,
-            'modified_at' => new DateTime(),
-            'upgrade_type' => self::TYPE,
-        ]);
+        try {
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->beginTransaction();
+            }
+            $this->paymentsRepository->update($this->basePayment, [
+                'note' => $this->basePayment->note ? $this->basePayment->note . "\n" . $note : $note,
+                'modified_at' => new DateTime(),
+                'upgrade_type' => self::TYPE,
+            ]);
 
-        $customAmount = $this->getFutureChargePrice();
-        if ($customAmount === $this->targetSubscriptionType->price) {
-            $customAmount = null;
+            $customAmount = $this->getFutureChargePrice();
+            if ($customAmount === $this->targetSubscriptionType->price) {
+                $customAmount = null;
+            }
+            $this->recurrentPaymentsRepository->update($recurrentPayment, [
+                'next_subscription_type_id' => $this->targetSubscriptionType->id,
+                'custom_amount' => $customAmount,
+                'note' => $note . "\n(" . time() . ')',
+            ]);
+
+            $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
+            $this->subscriptionUpgradesRepository->add(
+                $this->getBaseSubscription(),
+                $upgradedSubscription,
+                $this->getType()
+            );
+
+            $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams), HermesMessage::PRIORITY_DEFAULT);
+
+            $this->subsequentUpgrade();
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->commit();
+            }
+        } catch (\Exception $e) {
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->rollBack();
+            }
+            throw $e;
         }
-        $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            'next_subscription_type_id' => $this->targetSubscriptionType->id,
-            'custom_amount' => $customAmount,
-            'note' => $note . "\n(" . time() . ')',
-        ]);
 
-        $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
-        $this->subscriptionUpgradesRepository->add(
-            $this->getBaseSubscription(),
-            $upgradedSubscription,
-            $this->getType()
-        );
-
-        $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams), HermesMessage::PRIORITY_DEFAULT);
         return true;
     }
 

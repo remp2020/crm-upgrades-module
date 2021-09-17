@@ -16,7 +16,7 @@ use Nette\Database\Table\IRow;
 use Nette\Utils\DateTime;
 use Tomaj\Hermes\Emitter;
 
-class PaidExtendUpgrade implements UpgraderInterface
+class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
     const TYPE = 'paid_extend';
 
@@ -88,10 +88,11 @@ class PaidExtendUpgrade implements UpgraderInterface
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
-                throw new \Exception('Invalid value provided in ShortUpgrade config "monthly_fix": ' . $config['monthly_fix']);
+                throw new \Exception('Invalid value provided in PaidExtendUpgrade config "monthly_fix": ' . $config['monthly_fix']);
             }
             $this->monthlyFix = $monthlyFix;
         }
+        $this->config = $config;
         return $this;
     }
 
@@ -106,7 +107,7 @@ class PaidExtendUpgrade implements UpgraderInterface
         return 1 / $this->calculateChargePrice();
     }
 
-    public function upgrade(): ActiveRow
+    public function upgrade(bool $useTransaction = true): ActiveRow
     {
         $upgradedItem = $this->getTargetSubscriptionTypeItem();
 

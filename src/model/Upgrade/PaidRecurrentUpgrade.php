@@ -17,7 +17,7 @@ use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Exception;
 use League\Event\Emitter;
 
-class PaidRecurrentUpgrade implements UpgraderInterface
+class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
     const TYPE = 'paid_recurrent';
 
@@ -116,10 +116,11 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         if (isset($config['monthly_fix'])) {
             $monthlyFix = filter_var($config['monthly_fix'], FILTER_VALIDATE_FLOAT);
             if ($monthlyFix === false) {
-                throw new \Exception('Invalid value provided in ShortUpgrade config "monthly_fix": ' . $config['monthly_fix']);
+                throw new \Exception('Invalid value provided in PaidRecurrentUpgrade config "monthly_fix": ' . $config['monthly_fix']);
             }
             $this->monthlyFix = $monthlyFix;
         }
+        $this->config = $config;
         return $this;
     }
 
@@ -128,7 +129,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         return 1 / $this->calculateChargePrice();
     }
 
-    public function upgrade(): bool
+    public function upgrade(bool $useTransaction = true): bool
     {
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrentPayment) {
@@ -146,84 +147,100 @@ class PaidRecurrentUpgrade implements UpgraderInterface
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
-        // create new payment and charge it right away
-        $newPayment = $this->paymentsRepository->add(
-            $this->targetSubscriptionType,
-            $recurrentPayment->payment_gateway,
-            $recurrentPayment->user,
-            $paymentItemContainer,
-            '',
-            null,
-            null,
-            null,
-            "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}"
-        );
-
-        $this->paymentsRepository->update($newPayment, [
-            'upgrade_type' => $this->getType(),
-        ]);
-
-        $trackerParams = $this->getTrackerParams();
-
-        $paymentMetaData = ['upgraded_subscription_id' => $this->getBaseSubscription()->id];
-        $paymentMetaData = array_merge($paymentMetaData, $trackerParams['source'] ?? [], $trackerParams);
-        unset($paymentMetaData['source']);
-
-        $this->paymentsRepository->addMeta($newPayment, $paymentMetaData);
-
-        $newPayment = $this->paymentsRepository->find($newPayment->id);
-
-        $eventParams = [
-            'type' => 'payment',
-            'user_id' => $newPayment->user_id,
-            'sales_funnel_id' => 'upgrade',
-            'transaction_id' => $newPayment->variable_symbol,
-            'product_ids' => [(string)$newPayment->subscription_type_id],
-            'payment_id' => $newPayment->id,
-            'revenue' => $newPayment->amount,
-        ];
-
-        $this->hermesEmitter->emit(
-            new HermesMessage(
-                'sales-funnel',
-                array_merge($eventParams, $trackerParams)
-            ),
-            HermesMessage::PRIORITY_DEFAULT
-        );
-
-        /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
-        $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
-
         try {
-            $gateway->charge($newPayment, $recurrentPayment->cid);
-        } catch (Exception $e) {
-            $this->paymentsRepository->updateStatus(
-                $newPayment,
-                PaymentsRepository::STATUS_FAIL,
-                false,
-                $newPayment->note . '; failed: ' . $gateway->getResultCode()
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->beginTransaction();
+            }
+            // create new payment and charge it right away
+            $newPayment = $this->paymentsRepository->add(
+                $this->targetSubscriptionType,
+                $recurrentPayment->payment_gateway,
+                $recurrentPayment->user,
+                $paymentItemContainer,
+                '',
+                null,
+                null,
+                null,
+                "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}"
             );
+
+            $this->paymentsRepository->update($newPayment, [
+                'upgrade_type' => $this->getType(),
+            ]);
+
+            $trackerParams = $this->getTrackerParams();
+
+            $paymentMetaData = ['upgraded_subscription_id' => $this->getBaseSubscription()->id];
+            $paymentMetaData = array_merge($paymentMetaData, $trackerParams['source'] ?? [], $trackerParams);
+            unset($paymentMetaData['source']);
+
+            $this->paymentsRepository->addMeta($newPayment, $paymentMetaData);
+
+            $newPayment = $this->paymentsRepository->find($newPayment->id);
+
+            $eventParams = [
+                'type' => 'payment',
+                'user_id' => $newPayment->user_id,
+                'sales_funnel_id' => 'upgrade',
+                'transaction_id' => $newPayment->variable_symbol,
+                'product_ids' => [(string)$newPayment->subscription_type_id],
+                'payment_id' => $newPayment->id,
+                'revenue' => $newPayment->amount,
+            ];
+
+            $this->hermesEmitter->emit(
+                new HermesMessage(
+                    'sales-funnel',
+                    array_merge($eventParams, $trackerParams)
+                ),
+                HermesMessage::PRIORITY_DEFAULT
+            );
+
+            /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
+            $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
+
+            try {
+                $gateway->charge($newPayment, $recurrentPayment->cid);
+            } catch (Exception $e) {
+                $this->paymentsRepository->updateStatus(
+                    $newPayment,
+                    PaymentsRepository::STATUS_FAIL,
+                    false,
+                    $newPayment->note . '; failed: ' . $gateway->getResultCode()
+                );
+            }
+
+            $this->paymentLogsRepository->add(
+                $gateway->isSuccessful() ? 'OK' : 'ERROR',
+                json_encode($gateway->getResponseData()),
+                'recurring-payment-manual-charge',
+                $newPayment->id
+            );
+            if (!$gateway->isSuccessful()) {
+                return false;
+            }
+
+            $this->paymentsRepository->updateStatus($newPayment, PaymentsRepository::STATUS_PAID);
+
+            // TODO: move this to some event handler; if someone confirmed the $newPayment via admin, this step wouldn't happen
+            $this->recurrentPaymentsRepository->update($recurrentPayment, [
+                'next_subscription_type_id' => $this->targetSubscriptionType->id,
+                'custom_amount' => $this->futureChargePrice,
+                'parent_payment_id' => $newPayment->id,
+                'note' => "Paid recurrent upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}\n(" . time() . ')',
+            ]);
+
+            $this->subsequentUpgrade();
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->commit();
+            }
+        } catch (\Exception $e) {
+            if ($useTransaction) {
+                $this->paymentsRepository->getDatabase()->rollBack();
+            }
+            throw $e;
         }
 
-        $this->paymentLogsRepository->add(
-            $gateway->isSuccessful() ? 'OK' : 'ERROR',
-            json_encode($gateway->getResponseData()),
-            'recurring-payment-manual-charge',
-            $newPayment->id
-        );
-        if (!$gateway->isSuccessful()) {
-            return false;
-        }
-
-        $this->paymentsRepository->updateStatus($newPayment, PaymentsRepository::STATUS_PAID);
-
-        // TODO: move this to some event handler; if someone confirmed the $newPayment via admin, this step wouldn't happen
-        $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            'next_subscription_type_id' => $this->targetSubscriptionType->id,
-            'custom_amount' => $this->futureChargePrice,
-            'parent_payment_id' => $newPayment->id,
-            'note' => "Paid recurrent upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}\n(" . time() . ')',
-        ]);
 
         return true;
     }

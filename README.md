@@ -80,6 +80,26 @@ services:
 			- registerUpgrader(\Crm\FooModule\Models\Upgrades\FooUpgrade())
 ```
 
+### Subsequent upgrades
+
+CRM provides support to upgrade subscriptions following currently upgraded subscription. Subsequent upgrades allow upgrade of subscriptions:
+
+- Having the same subscription type as the original subscription before upgrade.
+- Having the same subscription type as the subscription after the upgrade.
+
+Subsequent upgrades currently don't support cross-subscription-type upgrade. That means, that if user has monthly subscription followed by yearly subscription, the yearly still wouldn't be upgraded.
+
+This feature is still experimental and disabled by default. To enable it, add this to your configuration:
+
+```neon
+services:
+	upgraderFactory:
+		setup:
+			- setSubsequentUpgrader(\Crm\UpgradesModule\Upgrade\ShortUpgrade())
+```
+
+This config says, that to execute subsequent upgrades, CRM should use `short` upgrader. Even if user used `paid_recurrent` upgrade to do the actual upgrade, all of the following subscriptions will be shortened. This is to simplify the process and provide universal way of subsequent upgrades.
+
 ### Upgrade scenarios
 
 At this moment there's no UI to configure the upgrades within CRM admin. You need to seed your configuration from within your internal modules.

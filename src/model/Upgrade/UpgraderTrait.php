@@ -3,6 +3,8 @@
 namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\DataProvider\TrackerDataProviderInterface;
 use Nette\Database\Table\IRow;
 
@@ -12,6 +14,13 @@ use Nette\Database\Table\IRow;
 trait UpgraderTrait
 {
     private $baseSubscription;
+
+    private $followingSubscriptions = [];
+
+    /** @var UpgraderInterface|null */
+    private $subsequentUpgrader;
+
+    private $config;
 
     private $basePayment;
 
@@ -31,6 +40,19 @@ trait UpgraderTrait
             $this->nextSubscriptionType = $baseSubscription->subscription_type;
         }
 
+        // get chain of following subscriptions; include those possibly already upgraded
+        $fs = $this->paymentsRepository->followingSubscriptions(
+            $baseSubscription,
+            [$this->targetSubscriptionType->id]
+        );
+
+        foreach ($fs as $followingSubscription) {
+            if ($followingSubscription->type !== SubscriptionsRepository::TYPE_UPGRADE // ignore already upgraded
+                && $followingSubscription->subscription_type_id !== $this->targetSubscriptionType->id // ignore those with upgraded subscription type
+            ) {
+                $this->followingSubscriptions[] = $followingSubscription;
+            }
+        }
         return $this;
     }
 
@@ -64,6 +86,70 @@ trait UpgraderTrait
     public function getTargetSubscriptionType(): ?IRow
     {
         return $this->targetSubscriptionType;
+    }
+
+    public function setSubsequentUpgrader(?UpgraderInterface $subsequentUpgrader)
+    {
+        $this->subsequentUpgrader = $subsequentUpgrader;
+    }
+
+    public function getSubsequentUpgrader(): ?UpgraderInterface
+    {
+        return $this->subsequentUpgrader;
+    }
+
+    public function subsequentUpgrade()
+    {
+        if (!$this->subsequentUpgrader) {
+            return;
+        }
+        if (!count($this->followingSubscriptions)) {
+            return;
+        }
+
+        $recurrentPayments = [];
+        foreach ($this->followingSubscriptions as $subscription) {
+            $upgrader = clone $this->subsequentUpgrader;
+            $subscription = $this->subscriptionsRepository->find($subscription->id); // force refresh
+            $originalEndTime = clone $subscription->end_time;
+            $payment = $this->paymentsRepository->subscriptionPayment($subscription);
+
+            $upgrader
+                ->setTargetSubscriptionType($this->getTargetSubscriptionType())
+                ->setBaseSubscription($subscription)
+                ->setBasePayment($payment)
+                ->applyConfig($this->config);
+
+            if ($this->now) {
+                $upgrader->setNow($this->now);
+            }
+            if ($upgrader instanceof SubsequentUpgradeInterface) {
+                // Don't let subsequent upgrader to run subsequent upgrades, we don't need to go deeper.
+                $upgrader->setSubsequentUpgrader(null);
+            }
+
+            // Intentional disable of transaction. It should be started by parent upgrader; we don't want to nest them.
+            $upgrader->upgrade(false);
+
+            $rp = $this->recurrentPaymentsRepository->recurrent($payment);
+            $statesToHandle = [
+                RecurrentPaymentsRepository::STATE_ACTIVE,
+                RecurrentPaymentsRepository::STATE_USER_STOP,
+            ];
+            if ($rp && in_array($rp->state, $statesToHandle, true)) {
+                $subscriptionUpgrade = $subscription->related('subscription_upgrades')->fetch();
+                $diff = $originalEndTime->diff($subscriptionUpgrade->upgraded_subscription->end_time);
+                $recurrentPayments[$rp->id] = $diff;
+            }
+        }
+
+        foreach ($recurrentPayments as $rpId => $diff) {
+            $rp = $this->recurrentPaymentsRepository->find($rpId);
+            $this->recurrentPaymentsRepository->update($rp, [
+                'charge_at' => (clone $rp->charge_at)->add($diff),
+                'next_subscription_type_id' => $this->getTargetSubscriptionType()->id,
+            ]);
+        }
     }
 
     /**
