@@ -147,46 +147,47 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
+        // create new payment and charge it right away
+        $newPayment = $this->paymentsRepository->add(
+            $this->targetSubscriptionType,
+            $recurrentPayment->payment_gateway,
+            $recurrentPayment->user,
+            $paymentItemContainer,
+            '',
+            null,
+            null,
+            null,
+            "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}"
+        );
+
+        $this->paymentsRepository->update($newPayment, [
+            'upgrade_type' => $this->getType(),
+        ]);
+
+        $trackerParams = $this->getTrackerParams();
+
+        $paymentMetaData = ['upgraded_subscription_id' => $this->getBaseSubscription()->id];
+        $paymentMetaData = array_merge($paymentMetaData, $trackerParams['source'] ?? [], $trackerParams);
+        unset($paymentMetaData['source']);
+
+        $this->paymentsRepository->addMeta($newPayment, $paymentMetaData);
+
+        $newPayment = $this->paymentsRepository->find($newPayment->id);
+
+        $eventParams = [
+            'type' => 'payment',
+            'user_id' => $newPayment->user_id,
+            'sales_funnel_id' => 'upgrade',
+            'transaction_id' => $newPayment->variable_symbol,
+            'product_ids' => [(string)$newPayment->subscription_type_id],
+            'payment_id' => $newPayment->id,
+            'revenue' => $newPayment->amount,
+        ];
+
         try {
             if ($useTransaction) {
                 $this->paymentsRepository->getDatabase()->beginTransaction();
             }
-            // create new payment and charge it right away
-            $newPayment = $this->paymentsRepository->add(
-                $this->targetSubscriptionType,
-                $recurrentPayment->payment_gateway,
-                $recurrentPayment->user,
-                $paymentItemContainer,
-                '',
-                null,
-                null,
-                null,
-                "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}"
-            );
-
-            $this->paymentsRepository->update($newPayment, [
-                'upgrade_type' => $this->getType(),
-            ]);
-
-            $trackerParams = $this->getTrackerParams();
-
-            $paymentMetaData = ['upgraded_subscription_id' => $this->getBaseSubscription()->id];
-            $paymentMetaData = array_merge($paymentMetaData, $trackerParams['source'] ?? [], $trackerParams);
-            unset($paymentMetaData['source']);
-
-            $this->paymentsRepository->addMeta($newPayment, $paymentMetaData);
-
-            $newPayment = $this->paymentsRepository->find($newPayment->id);
-
-            $eventParams = [
-                'type' => 'payment',
-                'user_id' => $newPayment->user_id,
-                'sales_funnel_id' => 'upgrade',
-                'transaction_id' => $newPayment->variable_symbol,
-                'product_ids' => [(string)$newPayment->subscription_type_id],
-                'payment_id' => $newPayment->id,
-                'revenue' => $newPayment->amount,
-            ];
 
             $this->hermesEmitter->emit(
                 new HermesMessage(
