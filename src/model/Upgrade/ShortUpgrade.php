@@ -92,7 +92,7 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         return $this->calculateShortenedEndTime()->getTimestamp() - $this->now()->getTimestamp();
     }
 
-    public function upgrade(bool $useTransaction = true): bool
+    public function upgrade(): bool
     {
         $eventParams = [
             'user_id' => $this->basePayment->user_id,
@@ -112,47 +112,33 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $startTime = $this->calculateShortenedStartTime();
         $endTime = $this->calculateShortenedEndTime();
 
-        try {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->beginTransaction();
-            }
-            $upgradedSubscription = $this->splitSubscription($endTime, $startTime);
+        $upgradedSubscription = $this->splitSubscription($endTime, $startTime);
 
-            $this->paymentsRepository->update($this->basePayment, [
-                'upgrade_type' => self::TYPE,
-                'modified_at' => new DateTime(),
-            ]);
+        $this->paymentsRepository->update($this->basePayment, [
+            'upgrade_type' => self::TYPE,
+            'modified_at' => new DateTime(),
+        ]);
 
-            $this->subscriptionUpgradesRepository->add(
-                $this->getBaseSubscription(),
-                $upgradedSubscription,
-                self::TYPE
-            );
+        $this->subscriptionUpgradesRepository->add(
+            $this->getBaseSubscription(),
+            $upgradedSubscription,
+            self::TYPE
+        );
 
-            $this->hermesEmitter->emit(
-                new HermesMessage(
-                    'subscription-split',
-                    array_merge($eventParams, $this->getTrackerParams())
-                ),
-                HermesMessage::PRIORITY_DEFAULT
-            );
+        $this->hermesEmitter->emit(
+            new HermesMessage(
+                'subscription-split',
+                array_merge($eventParams, $this->getTrackerParams())
+            ),
+            HermesMessage::PRIORITY_DEFAULT
+        );
 
-            $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
-            if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
-                $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment->id);
-            }
-
-            $this->subsequentUpgrade();
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->commit();
-            }
-        } catch (\Exception $e) {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->rollBack();
-            }
-            throw $e;
+        $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+        if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+            $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment->id);
         }
 
+        $this->subsequentUpgrade();
         return true;
     }
 

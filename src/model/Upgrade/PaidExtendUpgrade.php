@@ -107,7 +107,7 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         return 1 / $this->calculateChargePrice();
     }
 
-    public function upgrade(bool $useTransaction = true): ActiveRow
+    public function upgrade(): ActiveRow
     {
         $upgradedItem = $this->getTargetSubscriptionTypeItem();
 

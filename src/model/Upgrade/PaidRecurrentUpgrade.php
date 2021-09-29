@@ -129,7 +129,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         return 1 / $this->calculateChargePrice();
     }
 
-    public function upgrade(bool $useTransaction = true): bool
+    public function upgrade(): bool
     {
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrentPayment) {
@@ -184,65 +184,49 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             'revenue' => $newPayment->amount,
         ];
 
+        $this->hermesEmitter->emit(
+            new HermesMessage(
+                'sales-funnel',
+                array_merge($eventParams, $trackerParams)
+            ),
+            HermesMessage::PRIORITY_DEFAULT
+        );
+
+        /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
+        $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
+
         try {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->beginTransaction();
-            }
-
-            $this->hermesEmitter->emit(
-                new HermesMessage(
-                    'sales-funnel',
-                    array_merge($eventParams, $trackerParams)
-                ),
-                HermesMessage::PRIORITY_DEFAULT
+            $gateway->charge($newPayment, $recurrentPayment->cid);
+        } catch (Exception $e) {
+            $this->paymentsRepository->updateStatus(
+                $newPayment,
+                PaymentsRepository::STATUS_FAIL,
+                false,
+                $newPayment->note . '; failed: ' . $gateway->getResultCode()
             );
-
-            /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
-            $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
-
-            try {
-                $gateway->charge($newPayment, $recurrentPayment->cid);
-            } catch (Exception $e) {
-                $this->paymentsRepository->updateStatus(
-                    $newPayment,
-                    PaymentsRepository::STATUS_FAIL,
-                    false,
-                    $newPayment->note . '; failed: ' . $gateway->getResultCode()
-                );
-            }
-
-            $this->paymentLogsRepository->add(
-                $gateway->isSuccessful() ? 'OK' : 'ERROR',
-                json_encode($gateway->getResponseData()),
-                'recurring-payment-manual-charge',
-                $newPayment->id
-            );
-            if (!$gateway->isSuccessful()) {
-                return false;
-            }
-
-            $this->paymentsRepository->updateStatus($newPayment, PaymentsRepository::STATUS_PAID);
-
-            // TODO: move this to some event handler; if someone confirmed the $newPayment via admin, this step wouldn't happen
-            $this->recurrentPaymentsRepository->update($recurrentPayment, [
-                'next_subscription_type_id' => $this->targetSubscriptionType->id,
-                'custom_amount' => $this->futureChargePrice,
-                'parent_payment_id' => $newPayment->id,
-                'note' => "Paid recurrent upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}\n(" . time() . ')',
-            ]);
-
-            $this->subsequentUpgrade();
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->commit();
-            }
-        } catch (\Exception $e) {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->rollBack();
-            }
-            throw $e;
         }
 
+        $this->paymentLogsRepository->add(
+            $gateway->isSuccessful() ? 'OK' : 'ERROR',
+            json_encode($gateway->getResponseData()),
+            'recurring-payment-manual-charge',
+            $newPayment->id
+        );
+        if (!$gateway->isSuccessful()) {
+            return false;
+        }
 
+        $this->paymentsRepository->updateStatus($newPayment, PaymentsRepository::STATUS_PAID);
+
+        // TODO: move this to some event handler; if someone confirmed the $newPayment via admin, this step wouldn't happen
+        $this->recurrentPaymentsRepository->update($recurrentPayment, [
+            'next_subscription_type_id' => $this->targetSubscriptionType->id,
+            'custom_amount' => $this->futureChargePrice,
+            'parent_payment_id' => $newPayment->id,
+            'note' => "Paid recurrent upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}\n(" . time() . ')',
+        ]);
+
+        $this->subsequentUpgrade();
         return true;
     }
 

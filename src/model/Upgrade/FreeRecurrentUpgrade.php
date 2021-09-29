@@ -103,7 +103,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         return 1 / $this->getFutureChargePrice();
     }
 
-    public function upgrade(bool $useTransaction = true): bool
+    public function upgrade(): bool
     {
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrentPayment) {
@@ -130,46 +130,32 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             HermesMessage::PRIORITY_DEFAULT
         );
 
-        try {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->beginTransaction();
-            }
-            $this->paymentsRepository->update($this->basePayment, [
-                'note' => $this->basePayment->note ? $this->basePayment->note . "\n" . $note : $note,
-                'modified_at' => new DateTime(),
-                'upgrade_type' => self::TYPE,
-            ]);
+        $this->paymentsRepository->update($this->basePayment, [
+            'note' => $this->basePayment->note ? $this->basePayment->note . "\n" . $note : $note,
+            'modified_at' => new DateTime(),
+            'upgrade_type' => self::TYPE,
+        ]);
 
-            $customAmount = $this->getFutureChargePrice();
-            if ($customAmount === $this->targetSubscriptionType->price) {
-                $customAmount = null;
-            }
-            $this->recurrentPaymentsRepository->update($recurrentPayment, [
-                'next_subscription_type_id' => $this->targetSubscriptionType->id,
-                'custom_amount' => $customAmount,
-                'note' => $note . "\n(" . time() . ')',
-            ]);
-
-            $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
-            $this->subscriptionUpgradesRepository->add(
-                $this->getBaseSubscription(),
-                $upgradedSubscription,
-                $this->getType()
-            );
-
-            $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams), HermesMessage::PRIORITY_DEFAULT);
-
-            $this->subsequentUpgrade();
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->commit();
-            }
-        } catch (\Exception $e) {
-            if ($useTransaction) {
-                $this->paymentsRepository->getDatabase()->rollBack();
-            }
-            throw $e;
+        $customAmount = $this->getFutureChargePrice();
+        if ($customAmount === $this->targetSubscriptionType->price) {
+            $customAmount = null;
         }
+        $this->recurrentPaymentsRepository->update($recurrentPayment, [
+            'next_subscription_type_id' => $this->targetSubscriptionType->id,
+            'custom_amount' => $customAmount,
+            'note' => $note . "\n(" . time() . ')',
+        ]);
 
+        $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
+        $this->subscriptionUpgradesRepository->add(
+            $this->getBaseSubscription(),
+            $upgradedSubscription,
+            $this->getType()
+        );
+
+        $this->hermesEmitter->emit(new HermesMessage('subscription-split', $eventParams), HermesMessage::PRIORITY_DEFAULT);
+
+        $this->subsequentUpgrade();
         return true;
     }
 

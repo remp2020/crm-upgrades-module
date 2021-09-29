@@ -35,12 +35,9 @@ interface UpgraderInterface
     public function now(): \DateTime;
 
     /**
-     * @param bool $useTransaction Defines whether the implementation should use a transaction or not. Implementing
-     * class should honor the flag to avoid nested transactions in case of subsequent upgrades.
-     *
      * @return boolean|IRow
      */
-    public function upgrade(bool $useTransaction = true);
+    public function upgrade();
 
     /**
      * Profitability should generate float that indicates how much value for money user gets. Higher the result, more
