@@ -898,8 +898,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         foreach ($subscriptionResult as $i => $expectedSubscription) {
             $this->assertEquals($expectedSubscription['type'], $subscriptions[$i]->subscription_type->code);
-            $this->assertEquals(Datetime::from($expectedSubscription['start']), $subscriptions[$i]->start_time);
-            $this->assertEquals(Datetime::from($expectedSubscription['end']), $subscriptions[$i]->end_time);
+            $this->assertEquals(DateTime::from($expectedSubscription['start']), $subscriptions[$i]->start_time);
+            $this->assertEquals(DateTime::from($expectedSubscription['end']), $subscriptions[$i]->end_time);
         }
 
         foreach ($recurrentResult as $expectedRecurrent) {
