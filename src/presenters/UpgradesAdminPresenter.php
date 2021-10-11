@@ -2,11 +2,11 @@
 
 namespace Crm\UpgradesModule\Presenters;
 
+use Crm\AdminModule\Presenters\AdminPresenter;
 use Crm\ApplicationModule\Components\Graphs\GoogleLineGraphGroupControlFactoryInterface;
 use Crm\ApplicationModule\Components\VisualPaginator;
 use Crm\ApplicationModule\Graphs\Criteria;
 use Crm\ApplicationModule\Graphs\GraphDataItem;
-use Crm\AdminModule\Presenters\AdminPresenter;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 
