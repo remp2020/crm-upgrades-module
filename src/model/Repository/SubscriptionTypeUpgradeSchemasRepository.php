@@ -3,13 +3,13 @@
 namespace Crm\UpgradesModule\Repository;
 
 use Crm\ApplicationModule\Repository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 class SubscriptionTypeUpgradeSchemasRepository extends Repository
 {
     protected $tableName = 'subscription_type_upgrade_schemas';
 
-    final public function add(IRow $subscriptionType, IRow $upgradeSchema)
+    final public function add(ActiveRow $subscriptionType, ActiveRow $upgradeSchema)
     {
         $data = [
             'subscription_type_id' => $subscriptionType->id,

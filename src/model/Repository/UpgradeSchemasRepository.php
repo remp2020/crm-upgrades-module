@@ -3,7 +3,7 @@
 namespace Crm\UpgradesModule\Repository;
 
 use Crm\ApplicationModule\Repository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 class UpgradeSchemasRepository extends Repository
 {
@@ -26,7 +26,7 @@ class UpgradeSchemasRepository extends Repository
         return $this->getTable()->where(['name' => $name])->fetch();
     }
 
-    final public function allForSubscriptionType(IRow $subscriptionType)
+    final public function allForSubscriptionType(ActiveRow $subscriptionType)
     {
         return $this->getTable()->where([
             ':subscription_type_upgrade_schemas.subscription_type_id' => $subscriptionType->id

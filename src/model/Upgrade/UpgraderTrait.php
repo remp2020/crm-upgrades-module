@@ -6,7 +6,7 @@ use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\DataProvider\TrackerDataProviderInterface;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 /**
  * @property DataProviderManager $dataProviderManager
@@ -30,7 +30,7 @@ trait UpgraderTrait
 
     private $now;
 
-    public function setBaseSubscription(IRow $baseSubscription): UpgraderInterface
+    public function setBaseSubscription(ActiveRow $baseSubscription): UpgraderInterface
     {
         $this->baseSubscription = $baseSubscription;
 
@@ -56,34 +56,34 @@ trait UpgraderTrait
         return $this;
     }
 
-    public function getBaseSubscription(): ?IRow
+    public function getBaseSubscription(): ?ActiveRow
     {
         return $this->baseSubscription;
     }
 
-    public function getNextSubscriptionType(): ?IRow
+    public function getNextSubscriptionType(): ?ActiveRow
     {
         return $this->nextSubscriptionType;
     }
 
-    public function setBasePayment(IRow $basePayment): UpgraderInterface
+    public function setBasePayment(ActiveRow $basePayment): UpgraderInterface
     {
         $this->basePayment = $basePayment;
         return $this;
     }
 
-    public function getBasePayment(): ?IRow
+    public function getBasePayment(): ?ActiveRow
     {
         return $this->basePayment;
     }
 
-    public function setTargetSubscriptionType(IRow $targetSubscriptionType): UpgraderInterface
+    public function setTargetSubscriptionType(ActiveRow $targetSubscriptionType): UpgraderInterface
     {
         $this->targetSubscriptionType = $targetSubscriptionType;
         return $this;
     }
 
-    public function getTargetSubscriptionType(): ?IRow
+    public function getTargetSubscriptionType(): ?ActiveRow
     {
         return $this->targetSubscriptionType;
     }
@@ -159,7 +159,7 @@ trait UpgraderTrait
      * This feature expects that upgrade always adds just club to the existing subscription, not print.
      * Worst case scenario is that we pay more VAT than we should if something is misconfigured.
      *
-     * @return bool|\Nette\Database\Table\ActiveRow|null
+     * @return bool|ActiveRow|null
      */
     public function getTargetSubscriptionTypeItem()
     {

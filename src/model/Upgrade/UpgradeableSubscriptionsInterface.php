@@ -2,13 +2,13 @@
 
 namespace Crm\UpgradesModule\Upgrade;
 
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 interface UpgradeableSubscriptionsInterface
 {
     /**
      * @param $userId
-     * @return IRow[]
+     * @return ActiveRow[]
      */
     public function getSubscriptions($userId): array;
 }

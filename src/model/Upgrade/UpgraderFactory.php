@@ -4,7 +4,7 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\NowTrait;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 
 class UpgraderFactory
@@ -52,7 +52,7 @@ class UpgraderFactory
         return $result;
     }
 
-    public function fromUpgradeOption(IRow $upgradeOption, IRow $baseSubscriptionType): ?UpgraderInterface
+    public function fromUpgradeOption(ActiveRow $upgradeOption, ActiveRow $baseSubscriptionType): ?UpgraderInterface
     {
         if (!isset($this->upgraders[$upgradeOption->type])) {
             throw new \Exception('Upgrader with given type is not registered: ' . $upgradeOption->type);
@@ -108,7 +108,7 @@ class UpgraderFactory
         return $upgrader;
     }
 
-    private function getDefaultSubscriptionType(IRow $baseSubscriptionType, $currentContent, $length, $config)
+    private function getDefaultSubscriptionType(ActiveRow $baseSubscriptionType, $currentContent, $length, $config)
     {
         $subscriptionType = $this->subscriptionTypesRepository->getTable()
             ->where([

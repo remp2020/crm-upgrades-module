@@ -3,7 +3,7 @@
 namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 class SpecificUserSubscriptions implements UpgradeableSubscriptionsInterface
 {
@@ -16,7 +16,7 @@ class SpecificUserSubscriptions implements UpgradeableSubscriptionsInterface
         $this->subscriptionsRepository = $subscriptionsRepository;
     }
 
-    public function setSpecificSubscriptions($userId, IRow ...$subscriptions): self
+    public function setSpecificSubscriptions($userId, ActiveRow ...$subscriptions): self
     {
         $this->subscriptions[$userId] = $subscriptions;
         return $this;

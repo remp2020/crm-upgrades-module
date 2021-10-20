@@ -3,14 +3,14 @@
 namespace Crm\UpgradesModule\Repository;
 
 use Crm\ApplicationModule\Repository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 
 class UpgradeOptionsRepository extends Repository
 {
     protected $tableName = 'upgrade_options';
 
-    final public function add(IRow $upgradeSchema, string $type, array $config, ?IRow $subscriptionType = null)
+    final public function add(ActiveRow $upgradeSchema, string $type, array $config, ?ActiveRow $subscriptionType = null)
     {
         return $this->insert([
             'upgrade_schema_id' => $upgradeSchema->id,

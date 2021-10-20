@@ -42,7 +42,7 @@ use Crm\UsersModule\Auth\UserManager;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use League\Event\Emitter;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 
 class SubsequentShortUpgradeTest extends DatabaseTestCase
@@ -970,7 +970,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         }
     }
 
-    private function getUser($email) : IRow
+    private function getUser($email) : ActiveRow
     {
         $user = $this->userManager->loadUserByEmail($email);
         if (!$user) {

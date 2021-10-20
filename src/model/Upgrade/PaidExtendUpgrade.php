@@ -12,7 +12,6 @@ use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Database\Table\ActiveRow;
-use Nette\Database\Table\IRow;
 use Nette\Utils\DateTime;
 use Tomaj\Hermes\Emitter;
 
@@ -96,7 +95,7 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         return $this;
     }
 
-    public function setGateway(IRow $gateway): UpgraderInterface
+    public function setGateway(ActiveRow $gateway): UpgraderInterface
     {
         $this->gateway = $gateway;
         return $this;
