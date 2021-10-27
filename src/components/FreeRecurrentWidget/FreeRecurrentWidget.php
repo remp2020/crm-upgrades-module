@@ -9,7 +9,7 @@ use Crm\ApplicationModule\Widget\WidgetManager;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade;
 use Nette\Application\UI\Form;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
 use Nette\Security\User;
 use Nette\Utils\Json;
 use Tracy\Debugger;
@@ -31,7 +31,7 @@ class FreeRecurrentWidget extends BaseWidget
     public function __construct(
         WidgetManager $widgetManager,
         ApplicationConfig $applicationConfig,
-        ITranslator $translator,
+        Translator $translator,
         AvailableUpgraders $availableUpgraders,
         User $user
     ) {

@@ -10,7 +10,7 @@ use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\ShortUpgrade;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 use Nette\Application\UI\Form;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
 use Nette\Security\User;
 use Nette\Utils\Json;
 use Tracy\Debugger;
@@ -35,7 +35,7 @@ class ShortWidget extends BaseWidget
         WidgetManager $widgetManager,
         ApplicationConfig $applicationConfig,
         UpgraderFactory $upgraderFactory,
-        ITranslator $translator,
+        Translator $translator,
         AvailableUpgraders $availableUpgraders,
         User $user
     ) {

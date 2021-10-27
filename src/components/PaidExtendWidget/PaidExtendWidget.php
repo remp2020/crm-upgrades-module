@@ -15,7 +15,7 @@ use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 use Nette\Application\UI\Form;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
 use Nette\Security\User;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\Json;
@@ -51,7 +51,7 @@ class PaidExtendWidget extends BaseWidget
         WidgetManager $widgetManager,
         ApplicationConfig $applicationConfig,
         UpgraderFactory $upgraderFactory,
-        ITranslator $translator,
+        Translator $translator,
         PaymentProcessor $paymentProcessor,
         PaymentGatewaysRepository $paymentGatewaysRepository,
         AvailableUpgraders $availableUpgraders,
