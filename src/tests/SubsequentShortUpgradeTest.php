@@ -16,6 +16,7 @@ use Crm\PaymentsModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Tests\Gateways\TestRecurrentGateway;
 use Crm\PaymentsModule\UnknownPaymentMethodCode;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
+use Crm\SubscriptionsModule\Extension\ExtendActualExtension;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
@@ -107,7 +108,10 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         $now = DateTime::from('2021-04-05');
         $this->availableUpgraders->setNow($now);
+        $this->subscriptionsRepository->setNow($now);
         $this->recurrentPaymentsRepository->setNow($now);
+        $extension = $this->inject(ExtendActualExtension::class);
+        $extension->setNow($now);
         $upgradeStatusChangeHandler->setNow($now);
         $upgraderFactory->setNow($now);
 
@@ -155,6 +159,19 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
             );
         }
+    }
+
+    public function tearDown(): void
+    {
+        $this->availableUpgraders->setNow(null);
+        $this->subscriptionsRepository->setNow(null);
+        $this->recurrentPaymentsRepository->setNow(null);
+
+        $this->inject(ExtendActualExtension::class)->setNow(null);
+        $this->inject(PaymentStatusChangeHandler::class)->setNow(null);
+        $this->inject(UpgraderFactory::class)->setNow(null);
+
+        parent::tearDown();
     }
 
     protected function requiredRepositories(): array
