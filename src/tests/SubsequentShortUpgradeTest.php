@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Crm\UpgradesModule\Tests;
 
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
@@ -10,6 +9,7 @@ use Crm\PaymentsModule\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentItemsRepository;
+use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\PaymentsModule\Seeders\PaymentGatewaysSeeder;
@@ -52,6 +52,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
     private const ST_BASIC = 'basic';
     private const ST_PREMIUM = 'premium';
+
+    private bool $initialized = false;
 
     /** @var AvailableUpgraders */
     private $availableUpgraders;
@@ -136,8 +138,13 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         $this->configureUpgradeOption('default', $basic, $premium);
 
-        // bind necessary event handlers
-        if (!$emitter->hasListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class)) {
+        if (!$this->initialized) {
+            // clear initialized handlers (we do not want duplicated listeners)
+            $emitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
+            $emitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
+            $emitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
+
+            // bind necessary event handlers
             $emitter->addListener(
                 \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
@@ -148,16 +155,18 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
                 500
             );
-        }
-        if (!$emitter->hasListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class)) {
+
             $emitter->addListener(
                 \Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class,
                 $this->inject(\Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler::class),
             );
+
             $emitter->addListener(
                 \Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
             );
+
+            $this->initialized = true;
         }
     }
 
@@ -203,6 +212,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             UserMetaRepository::class,
             SubscriptionsRepository::class,
             PaymentsRepository::class,
+            PaymentMetaRepository::class,
             PaymentItemsRepository::class,
             PaymentItemMetaRepository::class,
             PaymentGatewaysRepository::class,
