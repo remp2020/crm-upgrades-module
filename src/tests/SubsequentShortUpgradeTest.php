@@ -171,6 +171,28 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $this->inject(PaymentStatusChangeHandler::class)->setNow(null);
         $this->inject(UpgraderFactory::class)->setNow(null);
 
+        /** @var Emitter $emitter */
+        $emitter = $this->inject(Emitter::class);
+
+        $emitter->removeListener(
+            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
+            $this->inject(PaymentStatusChangeHandler::class),
+        );
+        $emitter->removeListener(
+            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
+            $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
+        );
+
+        $emitter->removeListener(
+            \Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class,
+            $this->inject(\Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler::class),
+        );
+
+        $emitter->removeListener(
+            \Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class,
+            $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
+        );
+
         parent::tearDown();
     }
 
