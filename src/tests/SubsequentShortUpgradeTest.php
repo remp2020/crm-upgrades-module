@@ -974,7 +974,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         $user = $this->userManager->loadUserByEmail($email);
         if (!$user) {
-            $user = $this->usersRepository->add($email, 'secret', '', '');
+            $user = $this->usersRepository->add($email, 'secret');
         }
         return $user;
     }
