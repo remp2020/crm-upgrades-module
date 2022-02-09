@@ -4,8 +4,8 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Crm\UpgradesModule\DataProvider\TrackerDataProviderInterface;
+use Crm\UpgradesModule\UpgradesModule;
 use Nette\Database\Table\IRow;
 
 /**
@@ -47,7 +47,7 @@ trait UpgraderTrait
         );
 
         foreach ($fs as $followingSubscription) {
-            if ($followingSubscription->type !== SubscriptionsRepository::TYPE_UPGRADE // ignore already upgraded
+            if ($followingSubscription->type !== UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE // ignore already upgraded
                 && $followingSubscription->subscription_type_id !== $this->targetSubscriptionType->id // ignore those with upgraded subscription type
             ) {
                 $this->followingSubscriptions[] = $followingSubscription;
