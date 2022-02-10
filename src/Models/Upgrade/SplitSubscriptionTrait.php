@@ -5,6 +5,7 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\UpgradesModule\UpgradesModule;
 use DateTime;
 
 /**
@@ -24,7 +25,7 @@ trait SplitSubscriptionTrait
             $this->basePayment->payment_gateway->is_recurrent,
             true,
             $this->basePayment->user,
-            SubscriptionsRepository::TYPE_UPGRADE,
+            UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE,
             $newSubscriptionStartTime,
             $newSubscriptionEndTime,
             "Split upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}",

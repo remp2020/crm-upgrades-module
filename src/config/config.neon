@@ -3,6 +3,10 @@ services:
 		setup:
 			- addModule(Crm\UpgradesModule\UpgradesModule())
 
+	subscriptionsRepository:
+		setup:
+			- registerType(Crm\UpgradesModule\UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE)
+
 	upgradeSchemasRepository: Crm\UpgradesModule\Repository\UpgradeSchemasRepository
 	upgradeOptionsRepository: Crm\UpgradesModule\Repository\UpgradeOptionsRepository
 	subscriptionTypeUpgradeSchemasRepository: Crm\UpgradesModule\Repository\SubscriptionTypeUpgradeSchemasRepository

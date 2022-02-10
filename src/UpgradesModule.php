@@ -15,6 +15,8 @@ use League\Event\Emitter;
 
 class UpgradesModule extends CrmModule
 {
+    public const SUBSCRIPTION_TYPE_UPGRADE = 'upgrade';
+
     public function registerAdminMenuItems(MenuContainerInterface $menuContainer)
     {
         $menuItem = new MenuItem($this->translator->translate('upgrades.menu.upgrades'), ':Upgrades:UpgradesAdmin:', 'fa fa-arrow-alt-circle-up', 700);

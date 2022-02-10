@@ -12,6 +12,7 @@ use Crm\UpgradesModule\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use Crm\UpgradesModule\Upgrade\SubsequentUpgradeInterface;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
+use Crm\UpgradesModule\UpgradesModule;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
 use League\Event\EventInterface;
@@ -127,7 +128,7 @@ class PaymentStatusChangeHandler extends AbstractListener
             $payment->payment_gateway->is_recurrent,
             true,
             $payment->user,
-            SubscriptionsRepository::TYPE_UPGRADE,
+            UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE,
             $changeTime,
             $newSubscriptionEndTime,
             "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}"
