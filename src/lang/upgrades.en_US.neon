@@ -30,7 +30,7 @@ frontend:
 	upgrade:
 		error:
 			title: Error
-			message: We couldn't upgrade your subscription. Please contact our customer support.
+			message: "We couldn't upgrade your subscription. Please contact our customer support."
 			my_subscriptions: My subscriptions
 			not_available: 'You have no active subscription or you are not signed in. Please, <a target="_top" href="/sign/in">sign in</a> or choose from our <a href="/" target="_top">subscription offerings</a>.'
 			no_base_payment: 'Your current subscription is not upgradeable automatically. <br><strong>Please, send us a message at <a href="mailto:%contactEmail%">%contactEmail%</a></strong> and we will try to assist you with your request.'
@@ -54,7 +54,7 @@ frontend:
 			short_confirmation: "If you confirm the upgrade to <b>%subscription_type%</b>, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
 			paid_extend_confirmation: "When upgrading, you'll be asked for a new payment. The payment amount will be discounted based on your current subscription price and remaining days. Your new subscription would be valid to"
 			special_confirmation: "You need to pay 1 eur to upgrade a subscription."
-			actual_price: You're currently having access for
+			actual_price: "You're currently having access for"
 			payment_period: every <strong>%count%</strong> days
 			new_price: "Your new price for <b>%subscription_type%</b> will be since next charging"
 			less_than_5_days: "You'll get an upgrade immediatelly and price of the higher package will be charged when your subscription ends."
