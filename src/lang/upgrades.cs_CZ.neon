@@ -36,7 +36,7 @@ frontend:
 			no_base_payment: 'Váš aktuální typ předplatného nelze změnit na vyšší typ. <br><strong>Prosím, napište nám na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a rádi to uděláme ručně dle vašeho požadavku.'
 			already_upgraded: 'Tento vyšší balíček předplatného už teď máte aktivní, upgrade přes tuto stránku tedy není nutný.'
 			no_upgrade_possible: 'Váš aktuální typ předplatného nelze změnit na vyšší typ. <br><strong>Prosím, napište nám na <a href="mailto:%contactEmail%">%contactEmail%</a></strong> a rádi to uděláme ručně dle vašeho požadavku.'
-			card_expiring: 'Vaše karta ma blízkou dobu expirace. Nelze změnit na vyšší typ. '
+			card_expiring: 'Vaše karta ma blízkou dobu expirace. Nelze změnit na vyšší typ.'
 			choose_gateway: Pro pokračování musíte zvolit způsob platby.
 		success: Vaše předplatné bylo úspěšně změněno
 		payment_gateway_timeout: Platební brána je dočasně nedostupná. Prosím opakujte akci později.
