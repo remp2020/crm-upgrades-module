@@ -1,0 +1,66 @@
+menu:
+    upgrades: Upgrades
+
+admin:
+    upgrades:
+        all_upgrades: All upgrades
+        paid_upgrades: Paid upgrades
+        title: Upgrades
+        upgrades_in_time: Upgrades in time
+        all: All
+        type: Type
+        time_of_upgrade: Time of upgrade
+        variable_symbol: Variable symbol
+        user: User
+        amount: Amount
+        gateway: Payment gateway
+        subscription_type: Subscription type
+        status: Status
+        paid_at: Paid at
+        created_at: Created at
+        actions: Actions
+        edit: Edit
+        no_records: "No records match selected filter"
+        recurrent_free: "Recurrent without payment"
+        recurrent: "Recurrent with payment"
+        short: "Subscription shortening"
+        paid_extend: "Non-recurrent with payment"
+
+frontend:
+    upgrade:
+        error:
+            title: Error
+            message: "We couldn't upgrade your subscription. Please contact our customer support."
+            my_subscriptions: My subscriptions
+            not_available: 'You have no active subscription or you are not signed in. Please, <a target="_top" href="/sign/in">sign in</a> or choose from our <a href="/" target="_top">subscription offerings</a>.'
+            no_base_payment: 'Your current subscription is not upgradeable automatically. <br><strong>Please, send us a message at <a href="mailto:%contactEmail%">%contactEmail%</a></strong> and we will try to assist you with your request.'
+            already_upgraded: 'You already have the upgraded package, no further upgrade is necessary.'
+            no_upgrade_possible: 'Your current subscription is not upgradeable automatically. <br><strong>Please, send us a message at <a href="mailto:%contactEmail%">%contactEmail%</a></strong> and we will try to assist you with your request.'
+            card_expiring: 'Upgrade is not possible, your card is expiring soon.'
+            choose_gateway: You must choose a form of payment to continue.
+        success: Your subscription has successfully been upgraded
+        payment_gateway_timeout: Payment gateways is temporarily unavailable. Please try again later.
+        subscription:
+            confirm_modal:
+                title: Do you really want to upgrade?
+                submit: "Yes, please, upgrade my subscription"
+                close: Close
+            select_payment_gateway: Select payment method
+            back: Back
+            actual_subscription: Your actual subscription grants you access to
+        subscription_info:
+            actual_subscription: You currently have <b>%subscription_type%</b> for
+            valid_to: valid to
+            short_confirmation: "If you confirm the upgrade to <b>%subscription_type%</b>, your current subscription will be changed to more expensive subscription – you don't have to pay anything, we just shorten the remaining time of your subscription. Your new subscription would be valid to"
+            paid_extend_confirmation: "When upgrading, you'll be asked for a new payment. The payment amount will be discounted based on your current subscription price and remaining days. Your new subscription would be valid to"
+            special_confirmation: "You need to pay 1 eur to upgrade a subscription."
+            actual_price: "You're currently having access for"
+            payment_period: every <strong>%count%</strong> days
+            new_price: "Your new price for <b>%subscription_type%</b> will be since next charging"
+            less_than_5_days: "You'll get an upgrade immediatelly and price of the higher package will be charged when your subscription ends."
+            more_than_5_days: "Now you'll pay proportional amount of money based on your remaining days and price of subscription you're upgrading to."
+        select:
+            select_upgrade: Select upgrade option
+            current_subscription_type: "Currently you have <b>%subscription_type%</b>. There are more options to upgrade your subscription. Please, select one."
+            upgraded_to: Upgrade to
+            show_conditions: Show conditions
