@@ -1,5 +1,7 @@
 # CRM Upgrades Module
 
+[![Translation status @ Weblate](https://hosted.weblate.org/widgets/remp-crm/-/upgrades-module/svg-badge.svg)](https://hosted.weblate.org/projects/remp-crm/upgrades-module/)
+
 Module provides a way to upgrade user's subscriptions. It utilizes current subscription price, target subscription price, and number of remaining days of user's subscription to calculate "credit" which is used to provide different ways of upgrade.
 
 ## Installation
