@@ -58,7 +58,7 @@ frontend:
             payment_period: každých <strong>%count%</strong> dní
             new_price: "Vaše nová cena za <b>%subscription_type%</b> bude od následujícího obnovení"
             less_than_5_days: "Při požadavku na upgrade získáte přístup k výhodám vyššího předplatného okamžitě a cenu vyššího balíčku zaplatíte až při nejbližším obnovení předplatného."
-            more_than_5_days: "Teď zaplatíte jen poměrnou část doplatku za období, které zůstává do konce Vašeho předplatného"
+            more_than_5_days: "Teď zaplatíte jen poměrnou část doplatku za období, které zůstává do konce Vašeho předplatného."
         select:
             select_upgrade: Vyberte upgrade
             current_subscription_type: "Momentálně máte <b>%subscription_type%</b>. Z vašeho předplatného je více možností upgradu. Zvolte si prosím."
