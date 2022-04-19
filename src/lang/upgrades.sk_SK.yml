@@ -53,7 +53,6 @@ frontend:
             valid_to: platné do
             short_confirmation: "Ak potvrdíte prechod na <b>%subscription_type%</b>, dnešné predplatné vám „rozmeníme“ na drahšie predplatné – nemusíte teraz nič doplácať, len sa skráti čas, dokedy vaše predplatné potrvá. Váše predplatné bude platné do"
             paid_extend_confirmation: "Pri prechode na vyšší balíček Vás požiadame o novú platbu. Jej výška sa zníži o sumu vášho doteraz nevyčerpaného aktuálneho predplatného. Nové predplatné bude platiť do"
-            special_confirmation: "Pre prechod na vyšší balíček je potrebné doplatiť 1 eur."
             actual_price: Momentálne platíte za prístup
             payment_period: každých <strong>%count%</strong> dní
             new_price: "Vaša nová cena za <b>%subscription_type%</b> bude od nasledujúceho obnovenia"
