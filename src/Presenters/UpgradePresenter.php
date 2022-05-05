@@ -61,8 +61,6 @@ class UpgradePresenter extends FrontendPresenter
             }
         }
 
-        $this->template->queryString = $_SERVER['QUERY_STRING'];
-
         $this->setLayout($this->getLayoutName());
     }
 
