@@ -8,6 +8,7 @@ use Crm\ApplicationModule\Widget\BaseWidget;
 use Crm\ApplicationModule\Widget\WidgetManager;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade;
+use Crm\UpgradesModule\Upgrade\SubsequentUpgradeInterface;
 use Nette\Application\UI\Form;
 use Nette\Localization\Translator;
 use Nette\Security\User;
@@ -57,10 +58,15 @@ class FreeRecurrentWidget extends BaseWidget
             return;
         }
 
+        $subsequentUpgrades = $params['upgrader'] instanceof SubsequentUpgradeInterface
+            && $params['upgrader']->getSubsequentUpgrader()
+            && $params['upgrader']->getFollowingSubscriptions();
+
         $this['upgradeForm']['upgrader_idx']->setValue($params['upgrader_idx']);
         $this['upgradeForm']['upgrade_option_tags']->setValue(Json::encode($params['upgrade_option_tags'] ?? null));
         $this['upgradeForm']['content_access']->setValue(Json::encode($params['content_access']));
 
+        $this->template->subsequentUpgrades = $subsequentUpgrades;
         $this->template->upgrader = $params['upgrader'];
         $this->template->cmsUrl = $this->applicationConfig->get('cms_url');
         $this->template->setFile(__DIR__ . '/free_recurrent_widget.latte');

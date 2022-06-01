@@ -9,13 +9,18 @@
         <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_price}
             <strong>{$subscriptionType->price|price}</strong>
             {_upgrades.frontend.upgrade.subscription_info.payment_period, ['count' => intval($extendingLength)]|noescape}
-            .</span>
+            .
+        </span>
 
         {_upgrades.frontend.upgrade.subscription_info.new_price, ['subscription_type' => ($upgrader->getTargetSubscriptionType()->user_label)]|noescape}
         <strong>{$upgrader->getFutureChargePrice()|price}</strong>.
 
         <br>
         {_upgrades.frontend.upgrade.subscription_info.more_than_5_days}<br>
+
+        {if $subsequentUpgrades}
+            {_upgrades.frontend.upgrade.subscription_info.subsequent_upgrade}
+        {/if}
     </p>
 {/capture}
 

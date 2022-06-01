@@ -1,21 +1,29 @@
+<style>
+    .modal-text {
+        margin-top: 0.5em;
+    }
+</style>
+
 {var $upgradeSubscriptionType = $upgrader->getTargetSubscriptionType()}
 
 {capture $infotext}
-    <p class="text-muted">
-        {var $subscriptionType = $upgrader->getNextSubscriptionType()}
-        {var $extendingLength = !empty($subscriptionType->extending_length) ? $subscriptionType->extending_length : $subscriptionType->length}
+    {var $subscriptionType = $upgrader->getNextSubscriptionType()}
+    {var $extendingLength = !empty($subscriptionType->extending_length) ? $subscriptionType->extending_length : $subscriptionType->length}
 
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_price}
-            <strong>{$subscriptionType->price|price}</strong>
-            {_upgrades.frontend.upgrade.subscription_info.payment_period, ['count' => intval($extendingLength)]|noescape}
-            .</span>
-
+    <div class="modal-text text-muted">{_upgrades.frontend.upgrade.subscription_info.actual_price}
+        <strong>{$subscriptionType->price|price}</strong>
+        {_upgrades.frontend.upgrade.subscription_info.payment_period, ['count' => intval($extendingLength)]|noescape}.
+        <br>
         {_upgrades.frontend.upgrade.subscription_info.new_price, ['subscription_type' => ($upgrader->getTargetSubscriptionType()->user_label)]|noescape}
         <strong>{$upgrader->getFutureChargePrice()|price}</strong>.
+    </div>
 
-        <br>
-        {_upgrades.frontend.upgrade.subscription_info.less_than_5_days}
-    </p>
+    <div class="modal-text text-muted">
+    {_upgrades.frontend.upgrade.subscription_info.less_than_5_days}
+    {if $subsequentUpgrades}
+        {_upgrades.frontend.upgrade.subscription_info.subsequent_upgrade}
+    {/if}
+    </div>
 {/capture}
 
 <div class="buttons row">

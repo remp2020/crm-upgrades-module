@@ -1,14 +1,23 @@
+<style>
+    .modal-text {
+        margin-top: 0.5em;
+    }
+</style>
+
 {var $upgradeSubscriptionType = $upgrader->getTargetSubscriptionType()}
 {var $price = $upgrader->calculateChargePrice()}
 
 {capture $infotext}
     <p class="text-muted">
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.actual_subscription, ['subscription_type' => ($upgrader->getBaseSubscription()->subscription_type->user_label)]|noescape}
+        <div class="modal-text text-muted">{_upgrades.frontend.upgrade.subscription_info.actual_subscription, ['subscription_type' => ($upgrader->getBaseSubscription()->subscription_type->user_label)]|noescape}
             <strong>{$upgrader->getBaseSubscription()->subscription_type->price|price}</strong> {_upgrades.frontend.upgrade.subscription_info.valid_to}
-            <strong>{$upgrader->getBaseSubscription()->end_time|userDate}</strong>.</span>
-        <br>
-        <span class="modal-text">{_upgrades.frontend.upgrade.subscription_info.paid_extend_confirmation}
-            <strong>{$upgrader->calculateUpgradedEndTime()|userDate}</strong>.</span>
+            <strong>{$upgrader->getBaseSubscription()->end_time|userDate}</strong>.</div>
+        <div class="modal-text text-muted">{_upgrades.frontend.upgrade.subscription_info.paid_extend_confirmation}
+            <strong>{$upgrader->calculateUpgradedEndTime()|userDate}</strong>.
+            {if $subsequentUpgrades}
+                {_upgrades.frontend.upgrade.subscription_info.subsequent_upgrade}
+            {/if}
+        </div>
     </p>
 {/capture}
 

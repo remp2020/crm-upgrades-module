@@ -98,6 +98,11 @@ trait UpgraderTrait
         return $this->subsequentUpgrader;
     }
 
+    public function getFollowingSubscriptions(): array
+    {
+        return $this->followingSubscriptions;
+    }
+
     public function subsequentUpgrade()
     {
         if (!$this->subsequentUpgrader) {
