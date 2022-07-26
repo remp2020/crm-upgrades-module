@@ -4,7 +4,7 @@ namespace Crm\UpgradesModule\Presenters;
 
 use Crm\AdminModule\Presenters\AdminPresenter;
 use Crm\ApplicationModule\Components\Graphs\GoogleLineGraphGroupControlFactoryInterface;
-use Crm\ApplicationModule\Components\VisualPaginator;
+use Crm\ApplicationModule\Components\PreviousNextPaginator;
 use Crm\ApplicationModule\Graphs\Criteria;
 use Crm\ApplicationModule\Graphs\GraphDataItem;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
@@ -24,31 +24,28 @@ class UpgradesAdminPresenter extends AdminPresenter
     public function renderDefault($type = null)
     {
         $where = ['upgrade_type IS NOT NULL'];
-        $totalCount = $this->paymentsRepository->all()->where($where)->count('*');
         if ($type) {
             $where['upgrade_type'] = $type;
         }
 
-        $typesCounts = [];
+        $availableTypes = [];
         foreach ($this->upgraderFactory->getUpgraders() as $upgraderType => $upgrader) {
-            $typesCounts[$upgraderType] = $this->paymentsRepository->all()->where(['upgrade_type' => $upgraderType])->count('*');
+            $availableTypes[] = $upgraderType;
         }
-        $this->template->typesCounts = $typesCounts;
 
         $payments = $this->paymentsRepository->all()->where($where)->order('modified_at DESC');
-        $filteredCount = $payments->count('*');
 
-        $vp = new VisualPaginator();
-        $this->addComponent($vp, 'vp');
-        $paginator = $vp->getPaginator();
-        $paginator->setItemCount($filteredCount);
+        $pnp = new PreviousNextPaginator();
+        $this->addComponent($pnp, 'paginator');
+        $paginator = $pnp->getPaginator();
         $paginator->setItemsPerPage($this->onPage);
-        $this->template->vp = $vp;
-        $this->template->payments = $payments->limit($paginator->getLength(), $paginator->getOffset());
-        $this->template->totalPayments = $totalCount;
-        $this->template->filteredCount = $filteredCount;
+
+        $payments = $payments->limit($paginator->getLength(), $paginator->getOffset())->fetchAll();
+        $pnp->setActualItemCount(count($payments));
+
+        $this->template->payments = $payments;
         $this->template->type = $type;
-        $this->template->availableTypes = array_keys($typesCounts);
+        $this->template->availableTypes = $availableTypes;
     }
 
     protected function createComponentUpgradesGraph(GoogleLineGraphGroupControlFactoryInterface $factory)
