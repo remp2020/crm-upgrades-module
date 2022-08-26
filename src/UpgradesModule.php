@@ -5,7 +5,7 @@ namespace Crm\UpgradesModule;
 use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Menu\MenuItem;
-use Crm\ApplicationModule\Widget\WidgetManagerInterface;
+use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget;
 use Crm\UpgradesModule\Components\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget;
@@ -23,28 +23,28 @@ class UpgradesModule extends CrmModule
         $menuContainer->attachMenuItemToForeignModule('#payments', $menuItem, $menuItem);
     }
 
-    public function registerWidgets(WidgetManagerInterface $widgetManager)
+    public function registerLazyWidgets(LazyWidgetManagerInterface $widgetManager)
     {
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            $this->getInstance(PaidRecurrentWidget::class)
+            PaidRecurrentWidget::class
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            $this->getInstance(PaidExtendWidget::class)
+            PaidExtendWidget::class
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            $this->getInstance(ShortWidget::class)
+            ShortWidget::class
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            $this->getInstance(FreeRecurrentWidget::class)
+            FreeRecurrentWidget::class
         );
 
         $widgetManager->registerWidget(
             'admin.payments.user_payments_listing.badge',
-            $this->getInstance(UserPaymentsListingBadge::class)
+            UserPaymentsListingBadge::class
         );
     }
 

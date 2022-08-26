@@ -4,8 +4,8 @@ namespace Crm\UpgradesModule\Components;
 
 use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
-use Crm\ApplicationModule\Widget\BaseWidget;
-use Crm\ApplicationModule\Widget\WidgetManager;
+use Crm\ApplicationModule\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Widget\LazyWidgetManager;
 use Crm\PaymentsModule\CannotProcessPayment;
 use Crm\PaymentsModule\PaymentProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
@@ -26,7 +26,7 @@ use Tracy\ILogger;
 /**
  * @property FrontendPresenter $presenter
  */
-class PaidExtendWidget extends BaseWidget
+class PaidExtendWidget extends BaseLazyWidget
 {
     private $applicationConfig;
 
@@ -49,7 +49,7 @@ class PaidExtendWidget extends BaseWidget
     private $subscriptionTypesRepository;
 
     public function __construct(
-        WidgetManager $widgetManager,
+        LazyWidgetManager $lazyWidgetManager,
         ApplicationConfig $applicationConfig,
         UpgraderFactory $upgraderFactory,
         Translator $translator,
@@ -60,7 +60,7 @@ class PaidExtendWidget extends BaseWidget
         UpgradeOptionsRepository $upgradeOptionsRepository,
         SubscriptionTypesRepository $subscriptionTypesRepository
     ) {
-        parent::__construct($widgetManager);
+        parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;
         $this->upgraderFactory = $upgraderFactory;
         $this->translator = $translator;

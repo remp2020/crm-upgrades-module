@@ -4,8 +4,8 @@ namespace Crm\UpgradesModule\Components;
 
 use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
-use Crm\ApplicationModule\Widget\BaseWidget;
-use Crm\ApplicationModule\Widget\WidgetManager;
+use Crm\ApplicationModule\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Widget\LazyWidgetManager;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use Crm\UpgradesModule\Upgrade\SubsequentUpgradeInterface;
@@ -19,7 +19,7 @@ use Tracy\ILogger;
 /**
  * @property FrontendPresenter $presenter
  */
-class PaidRecurrentWidget extends BaseWidget
+class PaidRecurrentWidget extends BaseLazyWidget
 {
     private $applicationConfig;
 
@@ -30,13 +30,13 @@ class PaidRecurrentWidget extends BaseWidget
     private $user;
 
     public function __construct(
-        WidgetManager $widgetManager,
+        LazyWidgetManager $lazyWidgetManager,
         ApplicationConfig $applicationConfig,
         Translator $translator,
         AvailableUpgraders $availableUpgraders,
         User $user
     ) {
-        parent::__construct($widgetManager);
+        parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;
         $this->translator = $translator;
         $this->availableUpgraders = $availableUpgraders;
