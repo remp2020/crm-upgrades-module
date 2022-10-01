@@ -15,8 +15,7 @@ class UpgraderFactory
     /** @var UpgraderInterface[] */
     private array $upgraders = [];
 
-    /** @var UpgraderInterface|null */
-    private ?UpgraderInterface $subsequentUpgrader;
+    private ?UpgraderInterface $subsequentUpgrader = null;
 
     private SubscriptionTypesRepository $subscriptionTypesRepository;
 
