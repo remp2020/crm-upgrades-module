@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\NowTrait;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Nette\Caching\Storage;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 
@@ -12,17 +13,21 @@ class UpgraderFactory
     use NowTrait;
 
     /** @var UpgraderInterface[] */
-    private $upgraders = [];
+    private array $upgraders = [];
 
     /** @var UpgraderInterface|null */
-    private $subsequentUpgrader;
+    private ?UpgraderInterface $subsequentUpgrader;
 
-    private $subscriptionTypesRepository;
+    private SubscriptionTypesRepository $subscriptionTypesRepository;
+
+    private Storage $cacheStorage;
 
     public function __construct(
-        SubscriptionTypesRepository $subscriptionTypesRepository
+        SubscriptionTypesRepository $subscriptionTypesRepository,
+        Storage $cacheStorage
     ) {
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
+        $this->cacheStorage = $cacheStorage;
     }
 
     public function registerUpgrader(UpgraderInterface $upgrader)
@@ -119,22 +124,30 @@ class UpgraderFactory
             ->order('price')
             ->limit(1);
 
+        $requiredContentAccess = array_unique(array_merge($currentContent, $config->require_content));
+        sort($requiredContentAccess);
+
         // query to filter only subscription types with all the current and target contents
         foreach (array_unique(array_merge($currentContent, $config->require_content)) as $content) {
             if (isset($config->omit_content) && in_array($content, $config->omit_content)) {
                 continue;
             }
 
+            $stcaAlias = "stca_$content";
+            $contentAccessAlias = "ca_$content";
+            $subscriptionType
+                ->alias(":subscription_type_content_access", $stcaAlias)
+                ->alias(".$stcaAlias.content_access", $contentAccessAlias)
+                ->joinWhere($contentAccessAlias, "{$contentAccessAlias}.name = ?", $content)
+                ->where("{$contentAccessAlias}.id IS NOT NULL");
+        }
+
+        if (isset($config->omit_content)) {
             $typesWithContent = $this->subscriptionTypesRepository->getTable()
                 ->select('subscription_types.id')
-                ->where([
-                    ':subscription_type_content_access.content_access.name' => $content,
-                ])
-                ->fetchAll();
+                ->where(':subscription_type_content_access.content_access.name IN ?', $config->omit_content);
 
-            $subscriptionType->where([
-                'id' => $typesWithContent,
-            ]);
+            $subscriptionType->where('subscription_types.id NOT ?', $typesWithContent);
         }
 
         return $subscriptionType->fetch();
