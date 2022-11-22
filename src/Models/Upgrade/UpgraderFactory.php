@@ -88,12 +88,12 @@ class UpgraderFactory
                 return null;
             }
 
-            $subscriptionType = $this->getDefaultSubscriptionType($baseSubscriptionType, $currentContent, $baseSubscriptionType->length, $config);
+            $subscriptionType = $this->resolveDefaultSubscriptionType($currentContent, $baseSubscriptionType->length, $config);
             if (!$subscriptionType) {
                 // If baseSubscriptionType uses nonstandard initial length, this might happen. Let's try to use extending_length
                 // (if it's set) to search for default subscription type.
                 if ($baseSubscriptionType->extending_length) {
-                    $subscriptionType = $this->getDefaultSubscriptionType($baseSubscriptionType, $currentContent, $baseSubscriptionType->extending_length, $config);
+                    $subscriptionType = $this->resolveDefaultSubscriptionType($currentContent, $baseSubscriptionType->extending_length, $config);
                 }
 
                 if (!$subscriptionType) {
@@ -112,7 +112,7 @@ class UpgraderFactory
         return $upgrader;
     }
 
-    private function getDefaultSubscriptionType(ActiveRow $baseSubscriptionType, $currentContent, $length, $config)
+    private function resolveDefaultSubscriptionType(array $currentContentAccess, int $length, \stdClass $config): ActiveRow
     {
         $subscriptionType = $this->subscriptionTypesRepository->getTable()
             ->where([
@@ -123,11 +123,11 @@ class UpgraderFactory
             ->order('price')
             ->limit(1);
 
-        $requiredContentAccess = array_unique(array_merge($currentContent, $config->require_content));
+        $requiredContentAccess = array_unique(array_merge($currentContentAccess, $config->require_content));
         sort($requiredContentAccess);
 
-        // query to filter only subscription types with all the current and target contents
-        foreach (array_unique(array_merge($currentContent, $config->require_content)) as $content) {
+        // add conditions to filter only subscription types with all the current and target contents
+        foreach ($requiredContentAccess as $content) {
             if (isset($config->omit_content) && in_array($content, $config->omit_content)) {
                 continue;
             }
@@ -141,12 +141,15 @@ class UpgraderFactory
                 ->where("{$contentAccessAlias}.id IS NOT NULL");
         }
 
-        if (isset($config->omit_content)) {
-            $typesWithContent = $this->subscriptionTypesRepository->getTable()
-                ->select('subscription_types.id')
-                ->where(':subscription_type_content_access.content_access.name IN ?', $config->omit_content);
-
-            $subscriptionType->where('subscription_types.id NOT ?', $typesWithContent);
+        // add conditions to exclude all the content accesses defined within omit_content configuration
+        foreach ($config->omit_content ?? [] as $forbiddenContent) {
+            $stcaAlias = "stca_$forbiddenContent";
+            $contentAccessAlias = "ca_$forbiddenContent";
+            $subscriptionType
+                ->alias(":subscription_type_content_access", $stcaAlias)
+                ->alias(".$stcaAlias.content_access", $contentAccessAlias)
+                ->joinWhere($contentAccessAlias, "{$contentAccessAlias}.name = ?", $forbiddenContent)
+                ->where("{$contentAccessAlias}.id IS NULL");
         }
 
         return $subscriptionType->fetch();
