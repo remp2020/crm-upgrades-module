@@ -112,7 +112,7 @@ class UpgraderFactory
         return $upgrader;
     }
 
-    private function resolveDefaultSubscriptionType(array $currentContentAccess, int $length, \stdClass $config): ActiveRow
+    private function resolveDefaultSubscriptionType(array $currentContentAccess, int $length, \stdClass $config): ?ActiveRow
     {
         $subscriptionType = $this->subscriptionTypesRepository->getTable()
             ->where([
