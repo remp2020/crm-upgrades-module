@@ -169,7 +169,7 @@ trait UpgraderTrait
     public function getTargetSubscriptionTypeItem()
     {
         $upgradedItem = null;
-        foreach ($this->targetSubscriptionType->related('subscription_type_items') as $item) {
+        foreach ($this->targetSubscriptionType->related('subscription_type_items')->where('deleted_at', null) as $item) {
             if (!$upgradedItem || $upgradedItem->vat < $item->vat) {
                 $upgradedItem = $item;
             }

@@ -112,10 +112,11 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 
         $chargePrice = $this->calculateChargePrice();
         $item = new SubscriptionTypePaymentItem(
-            $this->targetSubscriptionType->id,
-            $upgradedItem->name,
-            $chargePrice,
-            $upgradedItem->vat
+            subscriptionTypeId: $this->targetSubscriptionType->id,
+            name: $upgradedItem->name,
+            price: $chargePrice,
+            vat: $upgradedItem->vat,
+            subscriptionTypeItemId: $upgradedItem->id
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
