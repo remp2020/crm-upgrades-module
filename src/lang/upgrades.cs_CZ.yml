@@ -51,13 +51,13 @@ frontend:
         subscription_info:
             actual_subscription: Aktuálně máte <b>%subscription_type%</b> za
             valid_to: platné do
-            short_confirmation: "Pokud potvrdíte přechod na <b>%subscription_type%</b>, dnešní předplatné vám „rozměníme“ na dražší předplatné – nyní nemusíte nic doplácet jen se Vám zkrátí doba, do kdy potrvá Vaše předplatné. Váše předplatné bude platné do"
+            short_confirmation: "Pokud potvrdíte přechod na <b>%subscription_type%</b>, dnešní předplatné vám „rozměníme“ na dražší předplatné – nyní nemusíte nic doplácet jen se Vám zkrátí doba, do kdy potrvá Vaše předplatné. Vaše aktuální předplatné bude platné do"
             paid_extend_confirmation: "Při přechodu na vyšší balíček Vás požádáme o novou platbu. Její výše se sníží o sumu Vašeho doposud aktuálního předplatného. Nové předplatné bude platit do"
             actual_price: Momentálně platíte za přístup
             payment_period: každých <strong>%count%</strong> dní
             new_price: "Vaše nová cena za <b>%subscription_type%</b> bude od následujícího obnovení"
             less_than_5_days: "Při požadavku na upgrade získáte přístup k výhodám vyššího předplatného okamžitě a cenu vyššího balíčku zaplatíte až při nejbližším obnovení předplatného."
-            more_than_5_days: "Teď zaplatíte jen poměrnou část doplatku za období, které zůstává do konce Vašeho předplatného."
+            more_than_5_days: "Teď zaplatíte jen poměrnou část doplatku za období, které zůstává do konce Vašeho aktuálního předplatného."
             subsequent_upgrade: "Vyšší balíček vám aplikujeme i na všechny již existující následující předplatné stejného typu."
         select:
             select_upgrade: Vyberte upgrade
