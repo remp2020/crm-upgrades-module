@@ -134,7 +134,7 @@ trait UpgraderTrait
             }
 
             // Intentional disable of transaction. It should be started by parent upgrader; we don't want to nest them.
-            $upgrader->upgrade(false);
+            $upgrader->upgrade();
 
             $rp = $this->recurrentPaymentsRepository->recurrent($payment);
             $statesToHandle = [
