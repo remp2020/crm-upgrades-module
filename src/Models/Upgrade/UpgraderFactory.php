@@ -3,7 +3,9 @@
 namespace Crm\UpgradesModule\Upgrade;
 
 use Crm\ApplicationModule\NowTrait;
+use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Nette\Caching\Cache;
 use Nette\Caching\Storage;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
@@ -12,21 +14,18 @@ class UpgraderFactory
 {
     use NowTrait;
 
+    private const CACHE_KEY = 'upgrader_content_access_pairs';
+
     /** @var UpgraderInterface[] */
     private array $upgraders = [];
 
     private ?UpgraderInterface $subsequentUpgrader = null;
 
-    private SubscriptionTypesRepository $subscriptionTypesRepository;
-
-    private Storage $cacheStorage;
-
     public function __construct(
-        SubscriptionTypesRepository $subscriptionTypesRepository,
-        Storage $cacheStorage
+        private SubscriptionTypesRepository $subscriptionTypesRepository,
+        private Storage $cacheStorage,
+        private ContentAccessRepository $contentAccessRepository
     ) {
-        $this->subscriptionTypesRepository = $subscriptionTypesRepository;
-        $this->cacheStorage = $cacheStorage;
     }
 
     public function registerUpgrader(UpgraderInterface $upgrader)
@@ -123,6 +122,12 @@ class UpgraderFactory
             ->order('price')
             ->limit(1);
 
+        $contentAccessPairs = $this->cacheStorage->read(self::CACHE_KEY);
+        if (!$contentAccessPairs) {
+            $contentAccessPairs = $this->contentAccessRepository->getTable()->fetchPairs('name', 'id');
+            $this->cacheStorage->write(self::CACHE_KEY, $contentAccessPairs, [Cache::EXPIRE => 300]);
+        }
+
         $requiredContentAccess = array_unique(array_merge($currentContentAccess, $config->require_content));
         sort($requiredContentAccess);
 
@@ -133,23 +138,19 @@ class UpgraderFactory
             }
 
             $stcaAlias = "stca_$content";
-            $contentAccessAlias = "ca_$content";
             $subscriptionType
                 ->alias(":subscription_type_content_access", $stcaAlias)
-                ->alias(".$stcaAlias.content_access", $contentAccessAlias)
-                ->joinWhere($contentAccessAlias, "{$contentAccessAlias}.name = ?", $content)
-                ->where("{$contentAccessAlias}.id IS NOT NULL");
+                ->joinWhere($stcaAlias, "{$stcaAlias}.content_access_id = ?", $contentAccessPairs[$content])
+                ->where("{$stcaAlias}.id IS NOT NULL");
         }
 
         // add conditions to exclude all the content accesses defined within omit_content configuration
         foreach ($config->omit_content ?? [] as $forbiddenContent) {
             $stcaAlias = "stca_$forbiddenContent";
-            $contentAccessAlias = "ca_$forbiddenContent";
             $subscriptionType
                 ->alias(":subscription_type_content_access", $stcaAlias)
-                ->alias(".$stcaAlias.content_access", $contentAccessAlias)
-                ->joinWhere($contentAccessAlias, "{$contentAccessAlias}.name = ?", $forbiddenContent)
-                ->where("{$contentAccessAlias}.id IS NULL");
+                ->joinWhere($stcaAlias, "{$stcaAlias}.content_access_id = ?", $contentAccessPairs[$forbiddenContent])
+                ->where("{$stcaAlias}.id IS NULL");
         }
 
         return $subscriptionType->fetch();
