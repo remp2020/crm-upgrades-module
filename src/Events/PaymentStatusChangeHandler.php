@@ -3,6 +3,7 @@
 namespace Crm\UpgradesModule\Events;
 
 use Crm\ApplicationModule\NowTrait;
+use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
@@ -57,6 +58,10 @@ class PaymentStatusChangeHandler extends AbstractListener
 
     public function handle(EventInterface $event)
     {
+        if (!$event instanceof PaymentEventInterface) {
+            throw new \Exception("Invalid type of event received, 'PaymentEventInterface' expected: " . get_class($event));
+        }
+
         $payment = $event->getPayment();
 
         if ($payment->subscription_id) {
