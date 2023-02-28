@@ -65,16 +65,23 @@ class AvailableUpgraders
      *
      * List of upgraders is sorted based on profitability (best value for money) starting with the most profitable.
      *
-     * @param $userId
+     * @param int $userId
      * @param array $targetContentAccessNames Filters only upgrade options with target subscription types which give
      * access to all specified content access names.
      * @param array $requiredUpgradeOptionTags Filters only upgrade options with specific tags within their config
+     * @param bool $enforceUpgradeOptionRequireContent Filters only upgrade options with $targetContentAccessNames in
+     * config's require_content. Some upgrade options could offer subscription types with targeted content access
+     * but are not primarily targeted at it. This forces return of these upgraders.
      * object.
      * @return UpgraderInterface[]
      * @throws \Nette\Utils\JsonException
      */
-    public function all($userId, array $targetContentAccessNames = [], array $requiredUpgradeOptionTags = [])
-    {
+    public function all(
+        int $userId,
+        array $targetContentAccessNames = [],
+        array $requiredUpgradeOptionTags = [],
+        bool $enforceUpgradeOptionRequireContent = false
+    ) {
         $this->error = null;
         if (!$userId) {
             $this->error = self::ERROR_NOT_LOGGED_IN;
@@ -176,6 +183,19 @@ class AvailableUpgraders
             // skip upgrader if it's not usable (upgraders know when they can be used)
             if (!$upgrader->isUsable()) {
                 continue;
+            }
+
+            // skip upgrade options which do not specifically target required content access
+            if ($enforceUpgradeOptionRequireContent) {
+                if (empty($config['require_content'])) {
+                    continue;
+                }
+
+                // require_content has to contain all content accesses from $targetContentAccessNames
+                $matched = array_intersect($targetContentAccessNames, $config['require_content']);
+                if (!(count($matched) === count($targetContentAccessNames))) {
+                    continue;
+                }
             }
 
             // if we aim for specific content access, check if it's supported by target subscription type

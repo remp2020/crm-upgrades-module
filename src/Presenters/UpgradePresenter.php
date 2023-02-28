@@ -61,7 +61,11 @@ class UpgradePresenter extends FrontendPresenter
 
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all($this->user->getId(), $this->contentAccess);
+            $upgraders = $this->availableUpgraders->all(
+                userId: $this->user->getId(),
+                targetContentAccessNames: $this->contentAccess,
+                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1)
+            );
         } catch (UpgradeException $e) {
             Debugger::log($e);
         }
@@ -83,10 +87,14 @@ class UpgradePresenter extends FrontendPresenter
     public function renderSubscription($upgraderId = null)
     {
         $this->onlyLoggedIn();
-        
+
         $upgraders = [];
         try {
-            $upgraders = $this->availableUpgraders->all($this->user->getId(), $this->contentAccess);
+            $upgraders = $this->availableUpgraders->all(
+                userId: $this->user->getId(),
+                targetContentAccessNames: $this->contentAccess,
+                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1)
+            );
         } catch (UpgradeException $e) {
             Debugger::log($e);
         }
