@@ -13,6 +13,7 @@ use Crm\UpgradesModule\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade;
 use Crm\UpgradesModule\Upgrade\SubsequentUpgradeInterface;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
+use Crm\UpgradesModule\Upgrade\UpgraderInterface;
 use Crm\UpgradesModule\UpgradesModule;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
@@ -190,7 +191,7 @@ class PaymentStatusChangeHandler extends AbstractListener
         }
 
         $upgrader = $this->upgraderFactory->getUpgraders()[PaidExtendUpgrade::TYPE] ?? null;
-        if (!($upgrader instanceof SubsequentUpgradeInterface)) {
+        if (!($upgrader instanceof SubsequentUpgradeInterface) || !($upgrader instanceof UpgraderInterface)) {
             return;
         }
 

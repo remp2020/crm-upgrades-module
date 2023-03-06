@@ -6,7 +6,7 @@ use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Events\BeforeRecurrentPaymentChargeEvent;
 use Crm\PaymentsModule\GatewayFactory;
-use Crm\PaymentsModule\Gateways\PaymentInterface;
+use Crm\PaymentsModule\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Gateways\RecurrentPaymentInterface;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentLogsRepository;
@@ -197,7 +197,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         $this->emitter->emit(new BeforeRecurrentPaymentChargeEvent($newPayment, $recurrentPayment->cid)); // ability to modify payment
         $newPayment = $this->paymentsRepository->find($newPayment->id); // reload
 
-        /** @var PaymentInterface|RecurrentPaymentInterface $gateway */
+        /** @var GatewayAbstract|RecurrentPaymentInterface $gateway */
         $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
 
         try {
