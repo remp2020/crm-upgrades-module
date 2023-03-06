@@ -76,7 +76,7 @@ class PaymentStatusChangeHandler extends AbstractListener
             return;
         }
 
-        if (!in_array($payment->status, [PaymentsRepository::STATUS_PAID, PaymentsRepository::STATUS_PREPAID])) {
+        if (!in_array($payment->status, [PaymentsRepository::STATUS_PAID, PaymentsRepository::STATUS_PREPAID], true)) {
             return;
         }
 

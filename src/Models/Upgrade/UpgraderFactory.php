@@ -133,7 +133,7 @@ class UpgraderFactory
 
         // add conditions to filter only subscription types with all the current and target contents
         foreach ($requiredContentAccess as $content) {
-            if (isset($config->omit_content) && in_array($content, $config->omit_content)) {
+            if (isset($config->omit_content) && in_array($content, $config->omit_content, true)) {
                 continue;
             }
 
