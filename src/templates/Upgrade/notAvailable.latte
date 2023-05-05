@@ -119,7 +119,7 @@
     <div class="col-md-12 text-center">
         <div class="alert alert-danger text-center">
             {if in_array($error, [\Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NOT_LOGGED_IN, \Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NO_SUBSCRIPTION])}
-                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.not_available|noescape}</p>
+                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.not_available, ['contactEmail' => $contactEmail]|noescape}</p>
             {elseif in_array($error, [\Crm\UpgradesModule\Upgrade\AvailableUpgraders::ERROR_NO_BASE_PAYMENT])}
                 <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.no_base_payment, ['contactEmail' => $contactEmail]|noescape}</p>
             {else}
