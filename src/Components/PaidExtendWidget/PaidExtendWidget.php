@@ -7,6 +7,7 @@ use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\ApplicationModule\Widget\BaseLazyWidget;
 use Crm\ApplicationModule\Widget\LazyWidgetManager;
 use Crm\PaymentsModule\CannotProcessPayment;
+use Crm\PaymentsModule\Gateways\ProcessResponse;
 use Crm\PaymentsModule\PaymentProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
@@ -173,7 +174,16 @@ class PaidExtendWidget extends BaseLazyWidget
         if ($result) {
             try {
                 $url = $this->paymentProcessor->begin($result);
-                $this->presenter->redirectUrl($url);
+                if ($url) {
+                    if (is_string($url)) { // backward compatibility
+                        $redirectUrl = $url;
+                    } elseif ($url instanceof ProcessResponse && $url->getType() === 'url') {
+                        $redirectUrl = $url->getData();
+                    } else {
+                        throw new CannotProcessPayment("Missing redirect url for upgrade payment [{$result->id}].");
+                    }
+                    $this->presenter->redirectUrl($redirectUrl);
+                }
             } catch (CannotProcessPayment $err) {
                 $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'));
                 $this->presenter->redirect('error');
