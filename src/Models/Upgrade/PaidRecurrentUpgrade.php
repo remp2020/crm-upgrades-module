@@ -24,24 +24,6 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
 
     use UpgraderTrait;
 
-    private $subscriptionsRepository;
-
-    private $subscriptionTypesRepository;
-
-    private $recurrentPaymentsRepository;
-
-    private $emitter;
-
-    private $gatewayFactory;
-
-    private $hermesEmitter;
-
-    private $paymentLogsRepository;
-
-    private $paymentsRepository;
-
-    private $dataProviderManager;
-
     /** @var float
      *
      * Fix upgrade price which will alter the calculation of charge price. Instead of standard calculation based on
@@ -58,25 +40,17 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
     protected $futureChargePrice;
 
     public function __construct(
-        SubscriptionsRepository $subscriptionsRepository,
-        SubscriptionTypesRepository $subscriptionTypesRepository,
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        PaymentsRepository $paymentsRepository,
-        GatewayFactory $gatewayFactory,
-        Emitter $emitter,
-        \Tomaj\Hermes\Emitter $hermesEmitter,
-        PaymentLogsRepository $paymentLogsRepository,
-        DataProviderManager $dataProviderManager
+        private SubscriptionsRepository $subscriptionsRepository,
+        private SubscriptionTypesRepository $subscriptionTypesRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private PaymentsRepository $paymentsRepository,
+        private GatewayFactory $gatewayFactory,
+        private Emitter $emitter,
+        private \Tomaj\Hermes\Emitter $hermesEmitter,
+        private PaymentLogsRepository $paymentLogsRepository,
+        private DataProviderManager $dataProviderManager,
+        private UpgraderFactory $upgraderFactory,
     ) {
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->subscriptionTypesRepository = $subscriptionTypesRepository;
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->gatewayFactory = $gatewayFactory;
-        $this->emitter = $emitter;
-        $this->hermesEmitter = $hermesEmitter;
-        $this->paymentLogsRepository = $paymentLogsRepository;
-        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string

@@ -36,10 +36,16 @@ trait ShortenSubscriptionTrait
             $subscriptionAmount = $this->getBasePayment()->amount;
         }
 
-        $subscriptionDays = $this->getBaseSubscription()->start_time->diff($this->getBaseSubscription()->end_time)->days;
+        // We're intentionally not using DateTime::diff()->days, because it would report incorrect number of days
+        // if the subscription is affected by the daylight savings time.
+        // We can go back to DateTime::diff()->days once SubscriptionsRepository::moveSubscription uses day-based
+        // interval instead of seconds-based interval. That caused issues in PHP 8.0.
+        $subscriptionSeconds = $this->getBaseSubscription()->end_time->getTimestamp() - $this->getBaseSubscription()->start_time->getTimestamp();
+        $subscriptionDays = intdiv($subscriptionSeconds, 60 * 60 * 24);
         if ($subscriptionDays === 0) {
             return $this->getBaseSubscription()->end_time;
         }
+
         $dayPrice = $subscriptionAmount / $subscriptionDays;
         $upgradedSubscriptionStart = $this->calculateShortenedStartTime();
         $remainingSeconds = $this->getBaseSubscription()->end_time->getTimestamp() - $upgradedSubscriptionStart->getTimestamp();

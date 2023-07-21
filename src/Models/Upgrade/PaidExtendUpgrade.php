@@ -13,26 +13,18 @@ use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
+use Nette\Utils\Json;
 use Tomaj\Hermes\Emitter;
 
 class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
-    const TYPE = 'paid_extend';
+    public const TYPE = 'paid_extend';
+
+    public const PAYMENT_META_UPGRADED_SUBSCRIPTION_ID = 'upgraded_subscription_id';
+    public const PAYMENT_META_UPGRADE_CONFIG = 'upgrade_config';
 
     use UpgraderTrait;
     use ShortenSubscriptionTrait;
-
-    private $subscriptionsRepository;
-
-    private $subscriptionTypesRepository;
-
-    private $paymentGatewaysRepository;
-
-    private $paymentsRepository;
-
-    private $recurrentPaymentsRepository;
-
-    private $hermesEmitter;
 
     private $monthlyFix;
 
@@ -40,24 +32,16 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 
     private $gateway;
 
-    private $dataProviderManager;
-
     public function __construct(
-        PaymentsRepository $paymentsRepository,
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        PaymentGatewaysRepository $paymentGatewaysRepository,
-        SubscriptionsRepository $subscriptionsRepository,
-        SubscriptionTypesRepository $subscriptionTypesRepository,
-        Emitter $hermesEmitter,
-        DataProviderManager $dataProviderManager
+        private PaymentsRepository $paymentsRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private PaymentGatewaysRepository $paymentGatewaysRepository,
+        private SubscriptionsRepository $subscriptionsRepository,
+        private SubscriptionTypesRepository $subscriptionTypesRepository,
+        private Emitter $hermesEmitter,
+        private DataProviderManager $dataProviderManager,
+        private UpgraderFactory $upgraderFactory,
     ) {
-        $this->paymentGatewaysRepository = $paymentGatewaysRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
-        $this->hermesEmitter = $hermesEmitter;
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->subscriptionTypesRepository = $subscriptionTypesRepository;
-        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string
@@ -136,7 +120,8 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         ]);
 
         $paymentMeta = [
-            'upgraded_subscription_id' => $this->getBaseSubscription()->id,
+            self::PAYMENT_META_UPGRADED_SUBSCRIPTION_ID => $this->getBaseSubscription()->id,
+            self::PAYMENT_META_UPGRADE_CONFIG => Json::encode($this->config),
         ];
         $trackerParams = $this->getTrackerParams();
         $paymentMeta = array_merge($paymentMeta, $trackerParams['source'] ?? [], $trackerParams);

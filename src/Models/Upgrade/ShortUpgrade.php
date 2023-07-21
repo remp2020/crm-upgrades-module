@@ -19,38 +19,18 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     use ShortenSubscriptionTrait;
     use SplitSubscriptionTrait;
 
-    private $paymentsRepository;
-
-    private $recurrentPaymentsRepository;
-
-    private $subscriptionsRepository;
-
-    private $subscriptionUpgradesRepository;
-
-    private $emitter;
-
-    private $hermesEmitter;
-
     private $monthlyFix;
 
-    private $dataProviderManager;
-
     public function __construct(
-        PaymentsRepository $paymentsRepository,
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        SubscriptionsRepository $subscriptionsRepository,
-        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
-        Emitter $emitter,
-        \Tomaj\Hermes\Emitter $hermesEmitter,
-        DataProviderManager $dataProviderManager
+        private PaymentsRepository $paymentsRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private SubscriptionsRepository $subscriptionsRepository,
+        private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
+        private Emitter $emitter,
+        private \Tomaj\Hermes\Emitter $hermesEmitter,
+        private DataProviderManager $dataProviderManager,
+        private UpgraderFactory $upgraderFactory,
     ) {
-        $this->paymentsRepository = $paymentsRepository;
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
-        $this->emitter = $emitter;
-        $this->hermesEmitter = $hermesEmitter;
-        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string

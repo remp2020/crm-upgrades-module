@@ -58,7 +58,7 @@ frontend:
             new_price: "Your new price for <b>%subscription_type%</b> will be since next charging"
             less_than_5_days: "You'll get an upgrade immediatelly and price of the higher package will be charged when your subscription ends."
             more_than_5_days: "Now you'll pay proportional amount of money based on your remaining days and price of subscription you're upgrading to."
-            subsequent_upgrade: "Upgraded package will also be applied to all of your subsequent subscriptions of the same type."
+            subsequent_upgrade: "Upgraded package will also be applied to all of your subsequent subscriptions."
         select:
             select_upgrade: Select upgrade option
             current_subscription_type: "Currently you have <b>%subscription_type%</b>. There are more options to upgrade your subscription. Please, select one."

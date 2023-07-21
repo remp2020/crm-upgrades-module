@@ -58,7 +58,7 @@ frontend:
             new_price: "Vaša nová cena za <b>%subscription_type%</b> bude od nasledujúceho obnovenia"
             less_than_5_days: "Pri upgrade získate prístup k výhodám vyššieho predplatného okamžite a cenu vyššieho balíka zaplatíte až pri najbližšom obnovení predplatného."
             more_than_5_days: "Teraz zaplatíte len pomernú časť doplatku za obdobie, ktoré zostáva do konca vášho aktuálneho predplatného."
-            subsequent_upgrade: "Vyšší balíček vám aplikujeme aj na všetky už existujúce nasledujúce predplatné rovnakého typu."
+            subsequent_upgrade: "Vyšší balíček vám aplikujeme aj na všetky už existujúce nasledujúce predplatné."
         select:
             select_upgrade: Vyberte upgrade
             current_subscription_type: "Momentálne máte <b>%subscription_type%</b>. Z vášho predplatného je viac možností upgradu. Zvoľte si prosím."

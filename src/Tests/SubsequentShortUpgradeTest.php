@@ -19,6 +19,7 @@ use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
 use Crm\SubscriptionsModule\Extension\ExtendActualExtension;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionTypeContentAccessRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
@@ -47,11 +48,16 @@ use Nette\Utils\DateTime;
 
 class SubsequentShortUpgradeTest extends DatabaseTestCase
 {
-    private const GW_RECURRENT = 'recurrent';
-    private const GW_NON_RECURRENT = 'non_recurrent';
+    private const GATEWAY_RECURRENT = 'recurrent';
+    private const GATEWAY_NON_RECURRENT = 'non_recurrent';
 
-    private const ST_BASIC = 'basic';
-    private const ST_PREMIUM = 'premium';
+    private const SUBSCRIPTION_TYPE_BASIC = 'st_basic';
+    private const SUBSCRIPTION_TYPE_BASIC_LONG = 'st_basic_long';
+    private const SUBSCRIPTION_TYPE_PREMIUM = 'st_premium';
+    private const SUBSCRIPTION_TYPE_PREMIUM_LONG = 'st_premium_long';
+
+    private const CONTENT_ACCESS_BASIC = 'basic';
+    private const CONTENT_ACCESS_PREMIUM = 'premium';
 
     private bool $initialized = false;
 
@@ -119,24 +125,37 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         // initialize gateways
         try {
-            $gatewayFactory->getGateway(self::GW_RECURRENT);
+            $gatewayFactory->getGateway(self::GATEWAY_RECURRENT);
         } catch (UnknownPaymentMethodCode $e) {
-            $gatewayFactory->registerGateway(self::GW_RECURRENT, TestRecurrentGateway::class);
+            $gatewayFactory->registerGateway(self::GATEWAY_RECURRENT, TestRecurrentGateway::class);
         }
         try {
-            $gatewayFactory->registerGateway(self::GW_NON_RECURRENT);
+            $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
         } catch (UnknownPaymentMethodCode $e) {
-            $gatewayFactory->registerGateway(self::GW_NON_RECURRENT);
+            $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
         }
 
-        $this->paymentGatewaysRepository->add(self::GW_RECURRENT, self::GW_RECURRENT, 10, true, true);
-        $this->paymentGatewaysRepository->add(self::GW_NON_RECURRENT, self::GW_NON_RECURRENT, 10, true, false);
+        $this->paymentGatewaysRepository->add(self::GATEWAY_RECURRENT, self::GATEWAY_RECURRENT, 10, true, true);
+        $this->paymentGatewaysRepository->add(self::GATEWAY_NON_RECURRENT, self::GATEWAY_NON_RECURRENT, 10, true, false);
 
         // initialize subscription types
-        $basic = $this->getSubscriptionType(self::ST_BASIC, 5);
-        $premium = $this->getSubscriptionType(self::ST_PREMIUM, 10);
+        $basic = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_BASIC, [self::CONTENT_ACCESS_BASIC], 31, 5);
+        $basicLong = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_BASIC_LONG, [self::CONTENT_ACCESS_BASIC], 365, 50);
+        $premium = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_PREMIUM, [self::CONTENT_ACCESS_PREMIUM], 31, 10);
+        $premiumLong = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_PREMIUM_LONG, [self::CONTENT_ACCESS_PREMIUM], 365, 100);
 
-        $this->configureUpgradeOption('default', $basic, $premium);
+        $this->configureUpgradeOption(
+            schema: 'default',
+            baseSubscriptionType: $basic,
+            requireContent: [self::CONTENT_ACCESS_PREMIUM],
+            omitContent: [self::CONTENT_ACCESS_BASIC],
+        );
+        $this->configureUpgradeOption(
+            schema: 'default',
+            baseSubscriptionType: $basicLong,
+            requireContent: [self::CONTENT_ACCESS_PREMIUM],
+            omitContent: [self::CONTENT_ACCESS_BASIC],
+        );
 
         if (!$this->initialized) {
             // clear initialized handlers (we do not want duplicated listeners)
@@ -224,6 +243,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             UpgradeSchemasRepository::class,
             RecurrentPaymentsRepository::class,
             UpgradeOptionsRepository::class,
+            SubscriptionTypeContentAccessRepository::class,
+            ContentAccessRepository::class,
         ];
     }
 
@@ -244,157 +265,198 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                 ],
             ],
             'Short_OneFollowingSubscription_ShouldShortenBoth' => [
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                 ],
             ],
             'Short_TwoFollowingSubscription_ShouldShortenAll' => [
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-06-05',
                         'end' => '2021-07-06',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-05 12:00:00'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-21'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-21'],
                 ],
             ],
             'Short_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04 12:00:00',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04 12:00:00', 'end' => '2021-05-05'], // untouched
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04 12:00:00', 'end' => '2021-05-05'], // untouched
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                 ],
             ],
             'Short_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndMoveSecond' => [
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
                 ],
             ],
             'Short_BaseHasStoppedRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndMoveSecond' => [
                 'upgrade_type' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-06-03',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
                 ],
                 'recurrent_result' => [
                     ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
-                    ['cid' => '2222', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-19'], // keep "2 days before"
+                    ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'], // keep "2 days before"
+                ],
+            ],
+            'Short_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
+                'upgrade_type' => ShortUpgrade::TYPE,
+                'payments' => [
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2021-04-04',
+                        'end' => '2021-05-05',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                        'upgradeable' => true,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
+                        'start' => '2021-05-05',
+                        'end' => '2022-05-05',
+                        'gateway' => self::GATEWAY_RECURRENT,
+                        'cid' => '1111',
+                        'rp_charge_at' => '2022-05-03', // 2 days before end
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2022-05-05',
+                        'end' => '2022-06-05',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                ],
+                // now - 2021-04-05
+                // basic - 5 eur / mesiac; 50 eur / rok
+                // premium - 10 eur / mesiac; 100 eur / rok
+                'subscription_result' => [
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_LONG, 'start' => '2021-04-20', 'end' => '2021-10-19 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-10-19 12:00:00', 'end' => '2021-10-19 12:00:00'],
+                    // 31 days -> 15.5 days, minus one hour for daylight savings happening at the end of October.
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-10-19 12:00:00', 'end' => '2021-11-03 23:00:00'],
+                ],
+                'recurrent_result' => [
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-10-17 12:00:00'], // keep "2 days before" end of "premium long"
                 ],
             ],
         ];
@@ -407,159 +469,195 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 'upgrade_type' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-04-05',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-04-05'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-05'],
                 ],
             ],
             'FreeRecurrent_OneFollowingSubscription_ShouldShortenSecond' => [
                 'upgrade_type' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
                 ],
             ],
             'FreeRecurrent_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
                 'upgrade_type' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-08',
                         'end' => '2021-06-08',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-06-06',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-22 12:00:00', 'end' => '2021-04-22 12:00:00'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-22 12:00:00', 'end' => '2021-05-08'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-22 12:00:00', 'end' => '2021-04-22 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-22 12:00:00', 'end' => '2021-05-08'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-06'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-06'],
                 ],
             ],
             'FreeRecurrent_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
                 'upgrade_type' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-06',
                         'end' => '2022-04-06',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '2222',
                         'rp_charge_at' => '2022-04-04',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-06', 'end' => '2022-04-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-06', 'end' => '2022-04-06'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
-                    ['cid' => '2222', 'type' => self::ST_BASIC, 'charge_at' => '2022-04-04'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
+                    ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_BASIC, 'charge_at' => '2022-04-04'],
                 ],
             ],
             'FreeRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
                 'upgrade_type' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-05-08'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-05-08'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-06'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-06'],
+                ],
+            ],
+            'FreeRecurrent_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
+                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'payments' => [
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2021-03-07',
+                        'end' => '2021-04-07',
+                        'gateway' => self::GATEWAY_RECURRENT,
+                        'cid' => '1111',
+                        'upgradeable' => true,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
+                        'start' => '2021-04-07',
+                        'end' => '2022-04-07',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2022-04-07',
+                        'end' => '2022-05-08',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                ],
+                // now - 2021-04-05
+                // basic - 5 eur / mesiac; 50 eur / rok
+                // premium - 10 eur / mesiac; 100 eur / rok
+                'subscription_result' => [
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-07', 'end' => '2021-04-07'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_LONG, 'start' => '2021-04-07', 'end' => '2021-10-06 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-10-06 12:00:00', 'end' => '2021-10-06 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-10-06 12:00:00', 'end' => '2021-10-22'],
                 ],
             ],
         ];
@@ -572,159 +670,195 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 'upgrade_type' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-04-18',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-04-18'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-18'],
                 ],
             ],
             'PaidRecurrent_OneFollowingSubscription_ShouldShortenSecond' => [
                 'upgrade_type' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
                 ],
             ],
             'PaidRecurrent_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
                 'upgrade_type' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-21',
                         'end' => '2021-06-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-06-19',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-05 12:00:00'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-21'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-21'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-19'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'],
                 ],
             ],
             'PaidRecurrent_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
                 'upgrade_type' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-01',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-01', 'end' => '2021-05-21'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-01', 'end' => '2021-05-21'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
-                    ['cid' => '2222', 'type' => self::ST_BASIC, 'charge_at' => '2021-05-19'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
+                    ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_BASIC, 'charge_at' => '2021-05-19'],
                 ],
             ],
             'PaidRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
                 'upgrade_type' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-05-19'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'],
+                ],
+            ],
+            'PaidRecurrent_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
+                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'payments' => [
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2021-03-20',
+                        'end' => '2021-04-20',
+                        'gateway' => self::GATEWAY_RECURRENT,
+                        'cid' => '1111',
+                        'upgradeable' => true,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
+                        'start' => '2021-04-20',
+                        'end' => '2022-04-20',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2022-04-20',
+                        'end' => '2022-05-21',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                ],
+                // now - 2021-04-05
+                // basic - 5 eur / mesiac; 50 eur / rok
+                // premium - 10 eur / mesiac; 100 eur / rok
+                'subscription_result' => [
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_LONG, 'start' => '2021-04-20', 'end' => '2021-10-19 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-10-19 12:00:00', 'end' => '2021-10-19 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-10-19 12:00:00', 'end' => '2021-11-03 23:00:00'], // daylight savings
                 ],
             ],
         ];
@@ -737,157 +871,194 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                 ],
             ],
             'PaidExtend_OneFollowingSubscription_ShouldShortenSecond' => [
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'], // start was moved before shortened
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'], // start was moved before shortened
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
                 ],
             ],
             'PaidExtend_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-21',
                         'end' => '2021-06-21',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-21 12:00:00', 'end' => '2021-05-21 12:00:00'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-21 12:00:00', 'end' => '2021-06-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-21 12:00:00', 'end' => '2021-05-21 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-21 12:00:00', 'end' => '2021-06-06'],
                 ],
             ],
             'PaidExtend_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-01',
                         'end' => '2021-06-01',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
-                    ['type' => self::ST_BASIC, 'start' => '2021-05-01', 'end' => '2021-06-01'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-05-21 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-01', 'end' => '2021-06-01'],
                 ],
             ],
             'PaidExtend_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_NON_RECURRENT,
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
                 ],
             ],
             'PaidExtend_BaseHasStoppedRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
                 'upgrade_type' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::ST_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '1111',
                         'upgradeable' => true,
                         'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
                     ],
                     [
-                        'type' => self::ST_PREMIUM,
+                        'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GW_RECURRENT,
+                        'gateway' => self::GATEWAY_RECURRENT,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
                 'subscription_result' => [
-                    ['type' => self::ST_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
-                    ['type' => self::ST_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
                 ],
                 'recurrent_result' => [
                     ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
-                    ['cid' => '2222', 'type' => self::ST_PREMIUM, 'charge_at' => '2021-06-04'], // keep "2 days before"
+                    ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-06-04'], // keep "2 days before"
+                ],
+            ],
+            'PaidExtend_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
+                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'payments' => [
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2021-03-20',
+                        'end' => '2021-04-20',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                        'upgradeable' => true,
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
+                        'start' => '2021-04-20',
+                        'end' => '2022-04-20',
+                        'gateway' => self::GATEWAY_RECURRENT,
+                        'cid' => '1111',
+                        'rp_charge_at' => '2022-04-18', // 2 days before end
+                    ],
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'start' => '2022-04-20',
+                        'end' => '2022-05-21',
+                        'gateway' => self::GATEWAY_NON_RECURRENT,
+                    ],
+                ],
+                // now - 2021-04-05
+                // basic - 5 eur / mesiac; 50 eur / rok
+                // premium - 10 eur / mesiac; 100 eur / rok
+                'subscription_result' => [
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-05-06', 'end' => '2021-05-06'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_LONG, 'start' => '2021-05-06', 'end' => '2021-11-04 11:00:00'], // would expect 12:00:00, but daylight savings time kicked in
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-11-04 11:00:00', 'end' => '2021-11-04 11:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-11-04 11:00:00', 'end' => '2021-11-19 23:00:00'], // 15.5 days of subscription
                 ],
             ],
         ];
@@ -930,7 +1101,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         $upgrader = $upgraders[0];
         if ($upgrader instanceof PaidExtendUpgrade) {
-            $upgrader->setGateway($this->paymentGatewaysRepository->findByCode(self::GW_NON_RECURRENT));
+            $upgrader->setGateway($this->paymentGatewaysRepository->findByCode(self::GATEWAY_NON_RECURRENT));
         }
         $result = $upgrader->upgrade();
         if ($upgrader instanceof PaidExtendUpgrade) {
@@ -946,7 +1117,11 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $this->assertCount(count($subscriptionResult), $subscriptions);
 
         foreach ($subscriptionResult as $i => $expectedSubscription) {
-            $this->assertEquals($expectedSubscription['type'], $subscriptions[$i]->subscription_type->code);
+            $this->assertEquals(
+                $expectedSubscription['type'],
+                $subscriptions[$i]->subscription_type->code,
+                'The ' . ($i+1) . '. subscription doesn\'t match the expected subscription type.',
+            );
             $this->assertEquals(DateTime::from($expectedSubscription['start']), $subscriptions[$i]->start_time);
             $this->assertEquals(DateTime::from($expectedSubscription['end']), $subscriptions[$i]->end_time);
         }
@@ -979,12 +1154,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         return $user;
     }
 
-    private function getSubscriptionType($code, $price = null)
+    private function getSubscriptionType(string $code, array $contentAccess, int $length, $price = null)
     {
         /** @var ContentAccessRepository $contentAccessRepository */
         $contentAccessRepository = $this->inject(ContentAccessRepository::class);
-        if (!$contentAccessRepository->exists($code)) {
-            $contentAccessRepository->add($code, $code);
+        foreach ($contentAccess as $caCode) {
+            if (!$contentAccessRepository->exists($caCode)) {
+                $contentAccessRepository->add($caCode, $caCode);
+            }
         }
 
         $subscriptionType = $this->subscriptionTypesRepository->findByCode($code);
@@ -996,18 +1173,22 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ->setUserLabel($code)
                 ->setPrice($price)
                 ->setCode($code)
-                ->setLength(31)
+                ->setLength($length)
                 ->setActive(true)
                 ->setDefault(true)
-                ->setContentAccessOption($code)
+                ->setContentAccessOption(...$contentAccess)
                 ->save();
         }
 
         return $subscriptionType;
     }
 
-    private function configureUpgradeOption($schema, $baseSubscriptionType, $targetSubscriptionType)
-    {
+    private function configureUpgradeOption(
+        string $schema,
+        ActiveRow $baseSubscriptionType,
+        array $requireContent,
+        array $omitContent
+    ) {
         /** @var UpgradeSchemasRepository $upgradeSchemasRepository */
         $upgradeSchemasRepository = $this->inject(UpgradeSchemasRepository::class);
         $schemaRow = $upgradeSchemasRepository->findByName($schema);
@@ -1027,15 +1208,27 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             FreeRecurrentUpgrade::TYPE,
             PaidRecurrentUpgrade::TYPE,
         ];
+
         foreach ($testedUpgradeTypes as $upgradeType) {
-            $upgradeOptionsRepository->add(
-                $schemaRow,
+            $option = $upgradeOptionsRepository->findForSchema(
+                $schemaRow->id,
                 $upgradeType,
                 [
-                    'require_content' => ['premium'],
-                    'omit_content' => ['basic'],
+                    'require_content' => $requireContent,
+                    'omit_content' => $omitContent,
                 ]
             );
+
+            if (!$option) {
+                $upgradeOptionsRepository->add(
+                    $schemaRow,
+                    $upgradeType,
+                    [
+                        'require_content' => $requireContent,
+                        'omit_content' => $omitContent,
+                    ]
+                );
+            }
         }
     }
 

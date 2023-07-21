@@ -62,6 +62,7 @@ class UpgraderFactory
         }
         $upgrader = clone $this->upgraders[$upgradeOption->type];
         $upgrader->setNow($this->getNow());
+
         if ($this->subsequentUpgrader && $upgrader instanceof SubsequentUpgradeInterface) {
             $upgrader->setSubsequentUpgrader($this->subsequentUpgrader);
         }
@@ -71,47 +72,73 @@ class UpgraderFactory
             $upgrader->setTargetSubscriptionType($subscriptionType);
         } else {
             // determine subscription type based on target content type(s) defined in config json
-            $config = Json::decode($upgradeOption->config);
-            if (!isset($config->require_content)) {
+            $config = Json::decode($upgradeOption->config, Json::FORCE_ARRAY);
+            if (!isset($config['require_content'])) {
                 throw new \Exception("Cannot determine target subscription type for upgrade option [{$upgradeOption->id}], config missing");
             }
 
-            // target subscription type should also include all current contents
-            $currentContent = [];
-            foreach ($baseSubscriptionType->related('subscription_type_content_access') as $subscriptionTypeContentAccess) {
-                $currentContent[] = $subscriptionTypeContentAccess->content_access->name;
-            }
+            $subscriptionType = $this->resolveTargetSubscriptionType(
+                baseSubscriptionType: $baseSubscriptionType,
+                config: $config,
+            );
 
-            // check if the upgrade option actually gives us any extra content
-            if (empty(array_diff($config->require_content, $currentContent))) {
+            if (!$subscriptionType) {
+                // upgrade option wouldn't give us any extra content access, we already have what's required
                 return null;
             }
-
-            $subscriptionType = $this->resolveDefaultSubscriptionType($currentContent, $baseSubscriptionType->length, $config);
-            if (!$subscriptionType) {
-                // If baseSubscriptionType uses nonstandard initial length, this might happen. Let's try to use extending_length
-                // (if it's set) to search for default subscription type.
-                if ($baseSubscriptionType->extending_length) {
-                    $subscriptionType = $this->resolveDefaultSubscriptionType($currentContent, $baseSubscriptionType->extending_length, $config);
-                }
-
-                if (!$subscriptionType) {
-                    throw new NoDefaultSubscriptionTypeException(
-                        "Cannot determine target subscription type for upgrade option [{$upgradeOption->id}], default subscription type not set.",
-                        [
-                            'target_content' => array_unique(array_merge($currentContent, $config->require_content)),
-                        ]
-                    );
-                }
-            }
-
             $upgrader->setTargetSubscriptionType($subscriptionType);
         }
 
         return $upgrader;
     }
 
-    private function resolveDefaultSubscriptionType(array $currentContentAccess, int $length, \stdClass $config): ?ActiveRow
+    public function resolveTargetSubscriptionType(
+        ActiveRow $baseSubscriptionType,
+        array $config
+    ): ?ActiveRow {
+        // target subscription type should also include all current contents
+        $currentContent = [];
+        foreach ($baseSubscriptionType->related('subscription_type_content_access') as $subscriptionTypeContentAccess) {
+            $currentContent[] = $subscriptionTypeContentAccess->content_access->name;
+        }
+
+        // check if the upgrade option actually gives us any extra content
+        if (empty(array_diff($config['require_content'], $currentContent))) {
+            return null;
+        }
+
+        $subscriptionType = $this->resolveDefaultSubscriptionType(
+            currentContentAccess: $currentContent,
+            length: $baseSubscriptionType->length,
+            config: $config
+        );
+
+        if (!$subscriptionType) {
+            // If baseSubscriptionType uses nonstandard initial length, this might happen. Let's try to use
+            // extending_length (if it's set) to search for default subscription type.
+            if ($baseSubscriptionType->extending_length) {
+                $subscriptionType = $this->resolveDefaultSubscriptionType(
+                    currentContentAccess: $currentContent,
+                    length: $baseSubscriptionType->extending_length,
+                    config: $config
+                );
+            }
+
+            if (!$subscriptionType) {
+                throw new NoDefaultSubscriptionTypeException(
+                    "Cannot determine target subscription type for base subscription type [{$baseSubscriptionType->code}], default subscription type not set.",
+                    [
+                        'require_content' => array_unique(array_merge($currentContent, $config['require_content'] ?? [])),
+                        'omit_content' => $config['omit_content'] ?? [],
+                    ]
+                );
+            }
+        }
+
+        return $subscriptionType;
+    }
+
+    private function resolveDefaultSubscriptionType(array $currentContentAccess, int $length, array $config): ?ActiveRow
     {
         $subscriptionType = $this->subscriptionTypesRepository->getTable()
             ->where([
@@ -128,12 +155,12 @@ class UpgraderFactory
             $this->cacheStorage->write(self::CACHE_KEY, $contentAccessPairs, [Cache::EXPIRE => 300]);
         }
 
-        $requiredContentAccess = array_unique(array_merge($currentContentAccess, $config->require_content));
+        $requiredContentAccess = array_unique(array_merge($currentContentAccess, $config['require_content']));
         sort($requiredContentAccess);
 
         // add conditions to filter only subscription types with all the current and target contents
         foreach ($requiredContentAccess as $content) {
-            if (isset($config->omit_content) && in_array($content, $config->omit_content, true)) {
+            if (isset($config['omit_content']) && in_array($content, $config['omit_content'], true)) {
                 continue;
             }
 
@@ -145,7 +172,7 @@ class UpgraderFactory
         }
 
         // add conditions to exclude all the content accesses defined within omit_content configuration
-        foreach ($config->omit_content ?? [] as $forbiddenContent) {
+        foreach ($config['omit_content'] ?? [] as $forbiddenContent) {
             $stcaAlias = "stca_$forbiddenContent";
             $subscriptionType
                 ->alias(":subscription_type_content_access", $stcaAlias)

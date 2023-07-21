@@ -18,6 +18,7 @@ use Crm\UpgradesModule\UpgradesModule;
 use League\Event\AbstractListener;
 use League\Event\Emitter;
 use League\Event\EventInterface;
+use Nette\Utils\Json;
 use Tracy\Debugger;
 use Tracy\ILogger;
 
@@ -25,36 +26,15 @@ class PaymentStatusChangeHandler extends AbstractListener
 {
     use NowTrait;
 
-    private $subscriptionsRepository;
-
-    private $paymentsRepository;
-
-    private $subscriptionUpgradesRepository;
-
-    private $paymentMetaRepository;
-
-    private $upgraderFactory;
-
-    private $recurrentPaymentsRepository;
-
-    private $emitter;
-
     public function __construct(
-        SubscriptionsRepository $subscriptionsRepository,
-        PaymentsRepository $paymentsRepository,
-        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
-        PaymentMetaRepository $paymentMetaRepository,
-        UpgraderFactory $upgraderFactory,
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        Emitter $emitter
+        private SubscriptionsRepository $subscriptionsRepository,
+        private PaymentsRepository $paymentsRepository,
+        private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
+        private PaymentMetaRepository $paymentMetaRepository,
+        private UpgraderFactory $upgraderFactory,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private Emitter $emitter,
     ) {
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
-        $this->paymentMetaRepository = $paymentMetaRepository;
-        $this->upgraderFactory = $upgraderFactory;
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
-        $this->emitter = $emitter;
     }
 
     public function handle(EventInterface $event)
@@ -117,10 +97,7 @@ class PaymentStatusChangeHandler extends AbstractListener
         $changeTime = $this->getNow();
 
         // check if the subscription we upgrade has any following subscriptions; we might alter them here too
-        $followingSubscriptions = $this->paymentsRepository->followingSubscriptions(
-            $upgradedSubscription,
-            [$payment->subscription_type_id] // we want to include following subscriptions also with upgraded subscription type
-        );
+        $followingSubscriptions = $this->paymentsRepository->followingSubscriptions($upgradedSubscription);
         $newSubscriptionEndTime = null;
 
         if ($payment->upgrade_type === PaidRecurrentUpgrade::TYPE) {
@@ -173,11 +150,15 @@ class PaymentStatusChangeHandler extends AbstractListener
                 $endTime = clone $movedSubscription->end_time;
             }
 
-            $this->subsequentUpgrade($upgradedSubscription, $payment->subscription_type);
+            $this->subsequentUpgrade(
+                upgradedSubscription: $upgradedSubscription,
+                targetSubscriptionType: $payment->subscription_type,
+                upgradePayment: $payment,
+            );
         }
     }
 
-    protected function subsequentUpgrade($upgradedSubscription, $targetSubscriptionType)
+    protected function subsequentUpgrade($upgradedSubscription, $targetSubscriptionType, $upgradePayment)
     {
         // PaidExtend upgrade is special, because it redirects user away and then back to confirm the payment.
         // Because of that, we need to prepare upgrader again, so we can do subsequent upgrades.
@@ -195,11 +176,16 @@ class PaymentStatusChangeHandler extends AbstractListener
             return;
         }
 
+        $upgradeConfig = Json::decode($this->paymentMetaRepository->findByPaymentAndKey(
+            payment: $upgradePayment,
+            key: PaidExtendUpgrade::PAYMENT_META_UPGRADE_CONFIG,
+        )->value ?? '[]', Json::FORCE_ARRAY);
+
         $upgrader
             ->setTargetSubscriptionType($targetSubscriptionType)
             ->setBaseSubscription($upgradedSubscription)
             ->setBasePayment($basePayment)
-            ->applyConfig([]); // TODO: pass and apply config from the original paid_extend upgrade
+            ->applyConfig($upgradeConfig);
 
         $upgrader->subsequentUpgrade();
     }

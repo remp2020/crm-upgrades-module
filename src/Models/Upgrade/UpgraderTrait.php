@@ -41,10 +41,7 @@ trait UpgraderTrait
         }
 
         // get chain of following subscriptions; include those possibly already upgraded
-        $fs = $this->paymentsRepository->followingSubscriptions(
-            $baseSubscription,
-            [$this->targetSubscriptionType->id]
-        );
+        $fs = $this->paymentsRepository->followingSubscriptions($baseSubscription);
 
         foreach ($fs as $followingSubscription) {
             if ($followingSubscription->type !== UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE // ignore already upgraded
@@ -117,10 +114,15 @@ trait UpgraderTrait
             $upgrader = clone $this->subsequentUpgrader;
             $subscription = $this->subscriptionsRepository->find($subscription->id); // force refresh
             $originalEndTime = clone $subscription->end_time;
+
             $payment = $this->paymentsRepository->subscriptionPayment($subscription);
+            $targetSubscriptionType = $this->upgraderFactory->resolveTargetSubscriptionType(
+                baseSubscriptionType: $subscription->subscription_type,
+                config: $this->config,
+            );
 
             $upgrader
-                ->setTargetSubscriptionType($this->getTargetSubscriptionType())
+                ->setTargetSubscriptionType($targetSubscriptionType)
                 ->setBaseSubscription($subscription)
                 ->setBasePayment($payment)
                 ->applyConfig($this->config);
@@ -133,7 +135,6 @@ trait UpgraderTrait
                 $upgrader->setSubsequentUpgrader(null);
             }
 
-            // Intentional disable of transaction. It should be started by parent upgrader; we don't want to nest them.
             $upgrader->upgrade();
 
             $rp = $this->recurrentPaymentsRepository->recurrent($payment);

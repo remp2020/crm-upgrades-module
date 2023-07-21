@@ -10,7 +10,7 @@ interface SubsequentUpgradeInterface
 
     /**
      * subsequentUpgrade executes the upgrade by previously-set "subsequentUpgrader"
-     * on all of the available "followingSubscriptions".
+     * on all the available "followingSubscriptions".
      */
     public function subsequentUpgrade();
 

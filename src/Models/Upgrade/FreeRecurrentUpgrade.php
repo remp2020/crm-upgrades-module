@@ -18,38 +18,18 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
     use UpgraderTrait;
     use SplitSubscriptionTrait;
 
-    private $recurrentPaymentsRepository;
-
-    private $paymentsRepository;
-
-    private $subscriptionsRepository;
-
-    private $subscriptionUpgradesRepository;
-
-    private $emitter;
-
-    private $hermesEmitter;
-
     private $monthlyFix;
 
-    private $dataProviderManager;
-
     public function __construct(
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        PaymentsRepository $paymentsRepository,
-        SubscriptionsRepository $subscriptionsRepository,
-        SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
-        Emitter $emitter,
-        \Tomaj\Hermes\Emitter $hermesEmitter,
-        DataProviderManager $dataProviderManager
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private PaymentsRepository $paymentsRepository,
+        private SubscriptionsRepository $subscriptionsRepository,
+        private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
+        private Emitter $emitter,
+        private \Tomaj\Hermes\Emitter $hermesEmitter,
+        private DataProviderManager $dataProviderManager,
+        private UpgraderFactory $upgraderFactory,
     ) {
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->subscriptionUpgradesRepository = $subscriptionUpgradesRepository;
-        $this->emitter = $emitter;
-        $this->hermesEmitter = $hermesEmitter;
-        $this->dataProviderManager = $dataProviderManager;
     }
 
     public function getType(): string
