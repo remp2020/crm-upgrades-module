@@ -121,6 +121,11 @@ trait UpgraderTrait
                 config: $this->config,
             );
 
+            if (!$targetSubscriptionType) {
+                // wouldn't be an upgrade, keep the subscription as-is
+                continue;
+            }
+
             $upgrader
                 ->setTargetSubscriptionType($targetSubscriptionType)
                 ->setBaseSubscription($subscription)
