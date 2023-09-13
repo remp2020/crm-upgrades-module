@@ -64,6 +64,11 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             return false;
         }
 
+        // disallow paid upgrade if target subscription type is same price as current remp/novydenik#1098
+        if ($this->targetSubscriptionType->price === $this->baseSubscription->subscription_type->price) {
+            return false;
+        }
+
         $recurrent = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
         if (!$recurrent) {
             return false;

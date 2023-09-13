@@ -58,7 +58,8 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         }
 
         $remainingDiff = $this->now()->diff($this->baseSubscription->end_time);
-        if ($remainingDiff->days >= 5) {
+        // allow free upgrade if target subscription type is same price as current remp/novydenik#1098
+        if ($remainingDiff->days >= 5 && $this->targetSubscriptionType->price !== $this->baseSubscription->subscription_type->price) {
             return false;
         }
 
