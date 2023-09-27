@@ -11,7 +11,6 @@ use Crm\UpgradesModule\Components\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget;
 use Crm\UpgradesModule\Components\ShortWidget;
 use Crm\UpgradesModule\Components\UserPaymentsListingBadge;
-use League\Event\Emitter;
 
 class UpgradesModule extends CrmModule
 {
@@ -48,11 +47,11 @@ class UpgradesModule extends CrmModule
         );
     }
 
-    public function registerEventHandlers(Emitter $emitter)
+    public function registerLazyEventHandlers(\Crm\ApplicationModule\Event\LazyEventEmitter $emitter)
     {
         $emitter->addListener(
             \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            $this->getInstance(\Crm\UpgradesModule\Events\PaymentStatusChangeHandler::class),
+            \Crm\UpgradesModule\Events\PaymentStatusChangeHandler::class,
             1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
         );
     }
