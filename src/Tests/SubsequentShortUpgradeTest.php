@@ -2,6 +2,7 @@
 
 namespace Crm\UpgradesModule\Tests;
 
+use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\PaymentsModule\GatewayFactory;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
@@ -42,7 +43,6 @@ use Crm\UpgradesModule\Upgrade\UpgraderFactory;
 use Crm\UsersModule\Auth\UserManager;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
-use League\Event\Emitter;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 
@@ -102,8 +102,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $this->recurrentPaymentsRepository = $this->getRepository(RecurrentPaymentsRepository::class);
         $this->upgradeableSubscriptions = $this->inject(SpecificUserSubscriptions::class);
 
-        /** @var Emitter $emitter */
-        $emitter = $this->inject(Emitter::class);
+        /** @var LazyEventEmitter $lazyEventEmitter */
+        $lazyEventEmitter = $this->inject(LazyEventEmitter::class);
         /** @var GatewayFactory $gatewayFactory */
         $gatewayFactory = $this->inject(GatewayFactory::class);
         /** @var PaymentStatusChangeHandler $upgradeStatusChangeHandler */
@@ -159,28 +159,28 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         if (!$this->initialized) {
             // clear initialized handlers (we do not want duplicated listeners)
-            $emitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
-            $emitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
-            $emitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
+            $lazyEventEmitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
+            $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
+            $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
 
             // bind necessary event handlers
-            $emitter->addListener(
+            $lazyEventEmitter->addListener(
                 \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
                 1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
             );
-            $emitter->addListener(
+            $lazyEventEmitter->addListener(
                 \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
                 500
             );
 
-            $emitter->addListener(
+            $lazyEventEmitter->addListener(
                 \Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class,
                 $this->inject(\Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler::class),
             );
 
-            $emitter->addListener(
+            $lazyEventEmitter->addListener(
                 \Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
             );
@@ -199,27 +199,12 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $this->inject(PaymentStatusChangeHandler::class)->setNow(null);
         $this->inject(UpgraderFactory::class)->setNow(null);
 
-        /** @var Emitter $emitter */
-        $emitter = $this->inject(Emitter::class);
+        /** @var LazyEventEmitter $lazyEventEmitter */
+        $lazyEventEmitter = $this->inject(LazyEventEmitter::class);
 
-        $emitter->removeListener(
-            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            $this->inject(PaymentStatusChangeHandler::class),
-        );
-        $emitter->removeListener(
-            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
-        );
-
-        $emitter->removeListener(
-            \Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class,
-            $this->inject(\Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler::class),
-        );
-
-        $emitter->removeListener(
-            \Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class,
-            $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
-        );
+        $lazyEventEmitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
+        $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
+        $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
 
         parent::tearDown();
     }
