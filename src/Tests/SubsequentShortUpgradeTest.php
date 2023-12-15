@@ -45,6 +45,7 @@ use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class SubsequentShortUpgradeTest extends DatabaseTestCase
 {
@@ -243,7 +244,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    public function shortUpgradeDataProvider()
+    public static function shortUpgradeDataProvider()
     {
         return [
             'Short_NoneFollowing_ShouldShortenOne' => [
@@ -447,7 +448,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    public function freeRecurrentUpgradeDataProvider()
+    public static function freeRecurrentUpgradeDataProvider()
     {
         return [
             'FreeRecurrent_NoneFollowing_ShouldUpgradeOne' => [
@@ -648,7 +649,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    public function paidRecurrentUpgradeDataProvider()
+    public static function paidRecurrentUpgradeDataProvider()
     {
         return [
             'PaidRecurrent_NoneFollowing_ShouldUpgradeOne' => [
@@ -849,7 +850,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    public function paidExtendUpgradeDataProvider()
+    public static function paidExtendUpgradeDataProvider()
     {
         return [
             'PaidExtend_NoneFollowing_ShouldUpgradeOne' => [
@@ -1049,12 +1050,10 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    /**
-     * @dataProvider paidExtendUpgradeDataProvider
-     * @dataProvider shortUpgradeDataProvider
-     * @dataProvider paidRecurrentUpgradeDataProvider
-     * @dataProvider freeRecurrentUpgradeDataProvider
-     */
+    #[DataProvider('paidExtendUpgradeDataProvider')]
+    #[DataProvider('shortUpgradeDataProvider')]
+    #[DataProvider('paidRecurrentUpgradeDataProvider')]
+    #[DataProvider('freeRecurrentUpgradeDataProvider')]
     public function testSubsequentUpgrade($upgradeType, $payments, $subscriptionResult, $recurrentResult = [])
     {
         $user = $this->getUser('user@example.com');
