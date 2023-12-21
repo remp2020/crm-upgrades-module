@@ -7,6 +7,7 @@ use Crm\ApplicationModule\Router\RedirectValidator;
 use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Upgrade\UpgradeException;
 use Crm\UsersModule\Auth\SignInRedirectValidator;
+use Nette\Application\Attributes\Persistent;
 use Nette\Application\BadRequestException;
 use Tracy\Debugger;
 
@@ -14,10 +15,10 @@ class UpgradePresenter extends FrontendPresenter
 {
     const SALES_FUNNEL_UPGRADE = 'upgrade';
 
-    /** @persistent */
+    #[Persistent]
     public $contentAccess = [];
 
-    /** @persistent */
+    #[Persistent]
     public $limit;
 
 

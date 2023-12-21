@@ -9,14 +9,15 @@ use Crm\ApplicationModule\Graphs\Criteria;
 use Crm\ApplicationModule\Graphs\GraphDataItem;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\UpgradesModule\Upgrade\UpgraderFactory;
+use Nette\DI\Attributes\Inject;
 
 class UpgradesAdminPresenter extends AdminPresenter
 {
-    /** @var PaymentsRepository @inject */
-    public $paymentsRepository;
+    #[Inject]
+    public PaymentsRepository $paymentsRepository;
 
-    /** @var UpgraderFactory @inject */
-    public $upgraderFactory;
+    #[Inject]
+    public UpgraderFactory $upgraderFactory;
 
     /**
      * @admin-access-level read
