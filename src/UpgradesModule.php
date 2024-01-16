@@ -3,14 +3,17 @@
 namespace Crm\UpgradesModule;
 
 use Crm\ApplicationModule\CrmModule;
+use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Menu\MenuItem;
 use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
+use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget;
 use Crm\UpgradesModule\Components\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget;
 use Crm\UpgradesModule\Components\ShortWidget;
 use Crm\UpgradesModule\Components\UserPaymentsListingBadge;
+use Crm\UpgradesModule\Events\PaymentStatusChangeHandler;
 
 class UpgradesModule extends CrmModule
 {
@@ -47,11 +50,11 @@ class UpgradesModule extends CrmModule
         );
     }
 
-    public function registerLazyEventHandlers(\Crm\ApplicationModule\Event\LazyEventEmitter $emitter)
+    public function registerLazyEventHandlers(LazyEventEmitter $emitter)
     {
         $emitter->addListener(
-            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            \Crm\UpgradesModule\Events\PaymentStatusChangeHandler::class,
+            PaymentChangeStatusEvent::class,
+            PaymentStatusChangeHandler::class,
             1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
         );
     }

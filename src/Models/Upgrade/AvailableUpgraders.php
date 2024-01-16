@@ -9,6 +9,7 @@ use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
 use Crm\UpgradesModule\Repository\UpgradeSchemasRepository;
 use Crm\UsersModule\Repository\UserActionsLogRepository;
 use Nette\Utils\Json;
+use Nette\Utils\JsonException;
 
 class AvailableUpgraders
 {
@@ -74,7 +75,7 @@ class AvailableUpgraders
      * but are not primarily targeted at it. This forces return of these upgraders.
      * object.
      * @return UpgraderInterface[]
-     * @throws \Nette\Utils\JsonException
+     * @throws JsonException
      */
     public function all(
         int $userId,

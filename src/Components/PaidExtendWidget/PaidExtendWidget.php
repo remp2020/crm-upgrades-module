@@ -107,7 +107,7 @@ class PaidExtendWidget extends BaseLazyWidget
             return;
         }
 
-        if (!$params['upgrader'] instanceof \Crm\UpgradesModule\Upgrade\PaidExtendUpgrade) {
+        if (!$params['upgrader'] instanceof PaidExtendUpgrade) {
             return;
         }
 

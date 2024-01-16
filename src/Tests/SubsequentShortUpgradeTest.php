@@ -4,6 +4,8 @@ namespace Crm\UpgradesModule\Tests;
 
 use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
+use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
+use Crm\PaymentsModule\Events\SubscriptionMovedHandler;
 use Crm\PaymentsModule\GatewayFactory;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\RecurrentPaymentsResolver;
@@ -17,6 +19,9 @@ use Crm\PaymentsModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Tests\Gateways\TestRecurrentGateway;
 use Crm\PaymentsModule\UnknownPaymentMethodCode;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
+use Crm\SubscriptionsModule\Events\SubscriptionMovedEvent;
+use Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent;
+use Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler;
 use Crm\SubscriptionsModule\Extension\ExtendActualExtension;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
@@ -160,30 +165,30 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         if (!$this->initialized) {
             // clear initialized handlers (we do not want duplicated listeners)
-            $lazyEventEmitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
-            $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
-            $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
+            $lazyEventEmitter->removeAllListeners(PaymentChangeStatusEvent::class);
+            $lazyEventEmitter->removeAllListeners(SubscriptionShortenedEvent::class);
+            $lazyEventEmitter->removeAllListeners(SubscriptionMovedEvent::class);
 
             // bind necessary event handlers
             $lazyEventEmitter->addListener(
-                \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
+                PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
                 1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
             );
             $lazyEventEmitter->addListener(
-                \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
+                PaymentChangeStatusEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
                 500
             );
 
             $lazyEventEmitter->addListener(
-                \Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class,
-                $this->inject(\Crm\SubscriptionsModule\Events\SubscriptionShortenedHandler::class),
+                SubscriptionShortenedEvent::class,
+                $this->inject(SubscriptionShortenedHandler::class),
             );
 
             $lazyEventEmitter->addListener(
-                \Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class,
-                $this->inject(\Crm\PaymentsModule\Events\SubscriptionMovedHandler::class),
+                SubscriptionMovedEvent::class,
+                $this->inject(SubscriptionMovedHandler::class),
             );
 
             $this->initialized = true;
@@ -203,9 +208,9 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         /** @var LazyEventEmitter $lazyEventEmitter */
         $lazyEventEmitter = $this->inject(LazyEventEmitter::class);
 
-        $lazyEventEmitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
-        $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent::class);
-        $lazyEventEmitter->removeAllListeners(\Crm\SubscriptionsModule\Events\SubscriptionMovedEvent::class);
+        $lazyEventEmitter->removeAllListeners(PaymentChangeStatusEvent::class);
+        $lazyEventEmitter->removeAllListeners(SubscriptionShortenedEvent::class);
+        $lazyEventEmitter->removeAllListeners(SubscriptionMovedEvent::class);
 
         parent::tearDown();
     }

@@ -59,7 +59,7 @@ class ShortWidget extends BaseLazyWidget
             return;
         }
 
-        if (!$params['upgrader'] instanceof \Crm\UpgradesModule\Upgrade\ShortUpgrade) {
+        if (!$params['upgrader'] instanceof ShortUpgrade) {
             return;
         }
 

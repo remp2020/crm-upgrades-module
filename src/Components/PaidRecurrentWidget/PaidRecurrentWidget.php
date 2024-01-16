@@ -54,7 +54,7 @@ class PaidRecurrentWidget extends BaseLazyWidget
             return;
         }
 
-        if (!$params['upgrader'] instanceof \Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade) {
+        if (!$params['upgrader'] instanceof PaidRecurrentUpgrade) {
             return;
         }
 

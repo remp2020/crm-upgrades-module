@@ -54,7 +54,7 @@ class FreeRecurrentWidget extends BaseLazyWidget
             return;
         }
 
-        if (!$params['upgrader'] instanceof \Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade) {
+        if (!$params['upgrader'] instanceof FreeRecurrentUpgrade) {
             return;
         }
 
