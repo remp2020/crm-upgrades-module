@@ -4,9 +4,9 @@ namespace Crm\UpgradesModule\Events;
 
 use Crm\ApplicationModule\NowTrait;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
-use Crm\PaymentsModule\Repository\PaymentMetaRepository;
-use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
+use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
+use Crm\PaymentsModule\Repositories\PaymentsRepository;
+use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use Crm\UpgradesModule\Models\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\PaidRecurrentUpgrade;

@@ -3,7 +3,7 @@
 namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
-use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
+use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\UpgradesModule\DataProviders\TrackerDataProviderInterface;
 use Crm\UpgradesModule\UpgradesModule;
 use Nette\Database\Table\ActiveRow;
