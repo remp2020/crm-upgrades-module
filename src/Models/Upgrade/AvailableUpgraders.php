@@ -7,7 +7,7 @@ use Crm\ApplicationModule\NowTrait;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
 use Crm\UpgradesModule\Repositories\UpgradeSchemasRepository;
-use Crm\UsersModule\Repository\UserActionsLogRepository;
+use Crm\UsersModule\Repositories\UserActionsLogRepository;
 use Nette\Utils\Json;
 use Nette\Utils\JsonException;
 

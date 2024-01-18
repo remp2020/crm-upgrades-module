@@ -6,7 +6,7 @@ use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\ApplicationModule\Router\RedirectValidator;
 use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Models\Upgrade\UpgradeException;
-use Crm\UsersModule\Auth\SignInRedirectValidator;
+use Crm\UsersModule\Models\Auth\SignInRedirectValidator;
 use Nette\Application\Attributes\Persistent;
 use Nette\Application\BadRequestException;
 use Tracy\Debugger;
