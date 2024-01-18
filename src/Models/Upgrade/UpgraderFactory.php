@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\UpgradesModule\Upgrade;
+namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\NowTrait;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\UpgradesModule\Components;
+namespace Crm\UpgradesModule\Components\UserPaymentsListingBadge;
 
 use Crm\ApplicationModule\Widget\BaseLazyWidget;
 use Nette\Database\Table\ActiveRow;

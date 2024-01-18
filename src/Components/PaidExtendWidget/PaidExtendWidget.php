@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\UpgradesModule\Components;
+namespace Crm\UpgradesModule\Components\PaidExtendWidget;
 
 use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;

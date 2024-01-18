@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\UpgradesModule\Repository;
+namespace Crm\UpgradesModule\Repositories;
 
 use Crm\ApplicationModule\Repository;
 use Nette\Database\Table\ActiveRow;

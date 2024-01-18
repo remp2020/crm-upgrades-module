@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\UpgradesModule\Upgrade;
+namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Nette\Database\Table\ActiveRow;
 
