@@ -6,7 +6,7 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 use Crm\ApplicationModule\NowTrait;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\ContentAccessRepository;
-use Crm\UpgradesModule\Repository\UpgradeSchemasRepository;
+use Crm\UpgradesModule\Repositories\UpgradeSchemasRepository;
 use Crm\UsersModule\Repository\UserActionsLogRepository;
 use Nette\Utils\Json;
 use Nette\Utils\JsonException;

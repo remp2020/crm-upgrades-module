@@ -4,8 +4,8 @@ namespace Crm\UpgradesModule\Presenters;
 
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\ApplicationModule\Router\RedirectValidator;
-use Crm\UpgradesModule\Upgrade\AvailableUpgraders;
-use Crm\UpgradesModule\Upgrade\UpgradeException;
+use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
+use Crm\UpgradesModule\Models\Upgrade\UpgradeException;
 use Crm\UsersModule\Auth\SignInRedirectValidator;
 use Nette\Application\Attributes\Persistent;
 use Nette\Application\BadRequestException;

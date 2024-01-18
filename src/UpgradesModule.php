@@ -8,11 +8,11 @@ use Crm\ApplicationModule\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Menu\MenuItem;
 use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
-use Crm\UpgradesModule\Components\FreeRecurrentWidget;
-use Crm\UpgradesModule\Components\PaidExtendWidget;
-use Crm\UpgradesModule\Components\PaidRecurrentWidget;
-use Crm\UpgradesModule\Components\ShortWidget;
-use Crm\UpgradesModule\Components\UserPaymentsListingBadge;
+use Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget;
+use Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget;
+use Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget;
+use Crm\UpgradesModule\Components\ShortWidget\ShortWidget;
+use Crm\UpgradesModule\Components\UserPaymentsListingBadge\UserPaymentsListingBadge;
 use Crm\UpgradesModule\Events\PaymentStatusChangeHandler;
 
 class UpgradesModule extends CrmModule

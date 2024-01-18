@@ -7,22 +7,22 @@ services:
 		setup:
 			- registerType(Crm\UpgradesModule\UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE)
 
-	upgradeSchemasRepository: Crm\UpgradesModule\Repository\UpgradeSchemasRepository
-	upgradeOptionsRepository: Crm\UpgradesModule\Repository\UpgradeOptionsRepository
-	subscriptionTypeUpgradeSchemasRepository: Crm\UpgradesModule\Repository\SubscriptionTypeUpgradeSchemasRepository
-	subscriptionUpgradesRepository: Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository
+	upgradeSchemasRepository: Crm\UpgradesModule\Repositories\UpgradeSchemasRepository
+	upgradeOptionsRepository: Crm\UpgradesModule\Repositories\UpgradeOptionsRepository
+	subscriptionTypeUpgradeSchemasRepository: Crm\UpgradesModule\Repositories\SubscriptionTypeUpgradeSchemasRepository
+	subscriptionUpgradesRepository: Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository
 
-	- Crm\UpgradesModule\Components\PaidRecurrentWidget
-	- Crm\UpgradesModule\Components\ShortWidget
-	- Crm\UpgradesModule\Components\FreeRecurrentWidget
-	- Crm\UpgradesModule\Components\UserPaymentsListingBadge
-	- Crm\UpgradesModule\Upgrade\AvailableUpgraders
-	- Crm\UpgradesModule\Upgrade\ActualUserSubscriptions
-	- Crm\UpgradesModule\Upgrade\SpecificUserSubscriptions
+	- Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget
+	- Crm\UpgradesModule\Components\ShortWidget\ShortWidget
+	- Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget
+	- Crm\UpgradesModule\Components\UserPaymentsListingBadge\UserPaymentsListingBadge
+	- Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders
+	- Crm\UpgradesModule\Models\Upgrade\ActualUserSubscriptions
+	- Crm\UpgradesModule\Models\Upgrade\SpecificUserSubscriptions
 	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
 
 	paidExtendWidget:
-		factory: Crm\UpgradesModule\Components\PaidExtendWidget
+		factory: Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget
 		setup:
 			- addPaymentGateway(cardpay, "Platobná karta - jednorázová platba")
 			- addPaymentGateway(csob, "Platební karta - jednorázová platba")
@@ -31,9 +31,9 @@ services:
 			- addPaymentGateway(proforma_invoice, "Platba predfaktúrou")
 
 	upgraderFactory:
-		factory: Crm\UpgradesModule\Upgrade\UpgraderFactory
+		factory: Crm\UpgradesModule\Models\Upgrade\UpgraderFactory
 		setup:
-			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidRecurrentUpgrade())
-			- registerUpgrader(\Crm\UpgradesModule\Upgrade\PaidExtendUpgrade())
-			- registerUpgrader(\Crm\UpgradesModule\Upgrade\ShortUpgrade())
-			- registerUpgrader(\Crm\UpgradesModule\Upgrade\FreeRecurrentUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Models\Upgrade\PaidRecurrentUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Models\Upgrade\PaidExtendUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Models\Upgrade\ShortUpgrade())
+			- registerUpgrader(\Crm\UpgradesModule\Models\Upgrade\FreeRecurrentUpgrade())

@@ -7,7 +7,7 @@ use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
-use Crm\UpgradesModule\Repository\SubscriptionUpgradesRepository;
+use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use League\Event\Emitter;
 use Nette\Utils\DateTime;
 

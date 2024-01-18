@@ -8,7 +8,7 @@ use Crm\ApplicationModule\Components\PreviousNextPaginator;
 use Crm\ApplicationModule\Graphs\Criteria;
 use Crm\ApplicationModule\Graphs\GraphDataItem;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\UpgradesModule\Upgrade\UpgraderFactory;
+use Crm\UpgradesModule\Models\Upgrade\UpgraderFactory;
 use Nette\DI\Attributes\Inject;
 
 class UpgradesAdminPresenter extends AdminPresenter
