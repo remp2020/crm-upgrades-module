@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 
 class ActualUserSubscriptions implements UpgradeableSubscriptionsInterface
 {

@@ -10,7 +10,7 @@ use Crm\PaymentsModule\CannotProcessPayment;
 use Crm\PaymentsModule\Gateways\ProcessResponse;
 use Crm\PaymentsModule\PaymentProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Models\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\SubsequentUpgradeInterface;

@@ -7,7 +7,7 @@ use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use Crm\UpgradesModule\Models\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\PaidRecurrentUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\SubsequentUpgradeInterface;

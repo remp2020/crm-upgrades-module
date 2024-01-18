@@ -3,7 +3,7 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
+use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use DateTime;
 
 trait ShortenSubscriptionTrait
