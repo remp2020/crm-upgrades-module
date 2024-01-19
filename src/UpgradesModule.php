@@ -3,10 +3,10 @@
 namespace Crm\UpgradesModule;
 
 use Crm\ApplicationModule\CrmModule;
-use Crm\ApplicationModule\Event\LazyEventEmitter;
-use Crm\ApplicationModule\Menu\MenuContainerInterface;
-use Crm\ApplicationModule\Menu\MenuItem;
-use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
+use Crm\ApplicationModule\Models\Event\LazyEventEmitter;
+use Crm\ApplicationModule\Models\Menu\MenuContainerInterface;
+use Crm\ApplicationModule\Models\Menu\MenuItem;
+use Crm\ApplicationModule\Models\Widget\LazyWidgetManagerInterface;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget;
 use Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget;

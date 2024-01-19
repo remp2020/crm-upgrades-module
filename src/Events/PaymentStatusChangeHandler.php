@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Events;
 
-use Crm\ApplicationModule\NowTrait;
+use Crm\ApplicationModule\Models\NowTrait;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;

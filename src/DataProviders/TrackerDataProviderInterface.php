@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\DataProviders;
 
-use Crm\ApplicationModule\DataProvider\DataProviderInterface;
+use Crm\ApplicationModule\Models\DataProvider\DataProviderInterface;
 
 interface TrackerDataProviderInterface extends DataProviderInterface
 {

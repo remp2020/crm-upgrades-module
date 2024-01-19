@@ -3,7 +3,7 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\ApplicationModule\NowTrait;
+use Crm\ApplicationModule\Models\NowTrait;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
 use Crm\UpgradesModule\Repositories\UpgradeSchemasRepository;

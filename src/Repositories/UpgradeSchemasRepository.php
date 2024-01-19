@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Repositories;
 
-use Crm\ApplicationModule\Repository;
+use Crm\ApplicationModule\Models\Database\Repository;
 use Nette\Database\Table\ActiveRow;
 
 class UpgradeSchemasRepository extends Repository

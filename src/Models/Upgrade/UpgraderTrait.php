@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\ApplicationModule\DataProvider\DataProviderManager;
+use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\UpgradesModule\DataProviders\TrackerDataProviderInterface;
 use Crm\UpgradesModule\UpgradesModule;

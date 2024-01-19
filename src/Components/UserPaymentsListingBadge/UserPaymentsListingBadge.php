@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Components\UserPaymentsListingBadge;
 
-use Crm\ApplicationModule\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
 use Nette\Database\Table\ActiveRow;
 
 class UserPaymentsListingBadge extends BaseLazyWidget

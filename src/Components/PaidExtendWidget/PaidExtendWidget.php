@@ -2,10 +2,10 @@
 
 namespace Crm\UpgradesModule\Components\PaidExtendWidget;
 
-use Crm\ApplicationModule\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Models\Widget\LazyWidgetManager;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
-use Crm\ApplicationModule\Widget\BaseLazyWidget;
-use Crm\ApplicationModule\Widget\LazyWidgetManager;
 use Crm\PaymentsModule\Models\CannotProcessPayment;
 use Crm\PaymentsModule\Models\Gateways\ProcessResponse;
 use Crm\PaymentsModule\Models\PaymentProcessor;

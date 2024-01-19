@@ -2,7 +2,7 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\ApplicationModule\NowTrait;
+use Crm\ApplicationModule\Models\NowTrait;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Nette\Caching\Cache;

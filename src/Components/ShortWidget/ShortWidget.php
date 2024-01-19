@@ -2,10 +2,10 @@
 
 namespace Crm\UpgradesModule\Components\ShortWidget;
 
-use Crm\ApplicationModule\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Models\Widget\LazyWidgetManager;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
-use Crm\ApplicationModule\Widget\BaseLazyWidget;
-use Crm\ApplicationModule\Widget\LazyWidgetManager;
 use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Models\Upgrade\ShortUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\SubsequentUpgradeInterface;
