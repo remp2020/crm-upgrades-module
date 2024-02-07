@@ -34,6 +34,7 @@ trait UpgraderTrait
     {
         $this->baseSubscription = $baseSubscription;
 
+        // TODO [crm#2938]: no need to check trials when upgrading
         if ($baseSubscription->subscription_type->next_subscription_type_id) {
             $this->nextSubscriptionType = $baseSubscription->subscription_type->next_subscription_type;
         } else {

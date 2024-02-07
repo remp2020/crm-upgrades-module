@@ -229,6 +229,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         // vypocitame kolko stoji do konca stareho predplatneho novy typ predplatneho
         if (isset($this->monthlyFix)) {
             $subscriptionType = $this->baseSubscription->subscription_type;
+            // TODO [crm#2938]: no need to check trials when upgrading
             if ($subscriptionType->next_subscription_type_id) {
                 $subscriptionType = $subscriptionType->next_subscription_type;
             }
@@ -263,6 +264,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         }
 
         $subscriptionType = $this->getTargetSubscriptionType();
+        // TODO [crm#2938]: no need to check trials when upgrading
         if ($subscriptionType->next_subscription_type_id) {
             $subscriptionType = $this->subscriptionTypesRepository->find($subscriptionType->next_subscription_type_id);
         }

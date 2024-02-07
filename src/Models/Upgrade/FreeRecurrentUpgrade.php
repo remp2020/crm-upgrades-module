@@ -144,6 +144,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
     {
         if ($this->monthlyFix) {
             $subscriptionType = $this->baseSubscription->subscription_type;
+            // TODO [crm#2938]: no need to check trials when upgrading
             if ($subscriptionType->next_subscription_type_id) {
                 $subscriptionType = $subscriptionType->next_subscription_type;
             }
@@ -152,6 +153,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         }
 
         $subscriptionType = $this->targetSubscriptionType;
+        // TODO [crm#2938]: no need to check trials when upgrading
         if ($subscriptionType->next_subscription_type_id) {
             $subscriptionType = $subscriptionType->next_subscription_type;
         }

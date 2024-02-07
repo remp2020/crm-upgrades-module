@@ -126,6 +126,7 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     {
         if ($this->monthlyFix) {
             $subscriptionType = $this->baseSubscription->subscription_type;
+            // TODO [crm#2938]: no need to check trials when upgrading
             if ($subscriptionType->next_subscription_type_id) {
                 $subscriptionType = $subscriptionType->next_subscription_type;
             }
@@ -134,6 +135,7 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         }
 
         $subscriptionType = $this->targetSubscriptionType;
+        // TODO [crm#2938]: no need to check trials when upgrading
         if ($subscriptionType->next_subscription_type_id) {
             $subscriptionType = $subscriptionType->next_subscription_type;
         }
