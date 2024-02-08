@@ -8,6 +8,7 @@ use Crm\ApplicationModule\Models\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Models\Menu\MenuItem;
 use Crm\ApplicationModule\Models\Widget\LazyWidgetManagerInterface;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
+use Crm\UpgradesModule\Components\AvailableUpgradesForSubscriptionTypeWidget\AvailableUpgradesForSubscriptionTypeWidget;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget;
 use Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget;
@@ -47,6 +48,12 @@ class UpgradesModule extends CrmModule
         $widgetManager->registerWidget(
             'admin.payments.user_payments_listing.badge',
             UserPaymentsListingBadge::class
+        );
+
+        $widgetManager->registerWidget(
+            'subscription_types_admin.show.right',
+            AvailableUpgradesForSubscriptionTypeWidget::class,
+            500,
         );
     }
 

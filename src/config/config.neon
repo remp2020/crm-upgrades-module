@@ -12,6 +12,7 @@ services:
 	subscriptionTypeUpgradeSchemasRepository: Crm\UpgradesModule\Repositories\SubscriptionTypeUpgradeSchemasRepository
 	subscriptionUpgradesRepository: Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository
 
+	- Crm\UpgradesModule\Components\AvailableUpgradesForSubscriptionTypeWidget\AvailableUpgradesForSubscriptionTypeWidget
 	- Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget
 	- Crm\UpgradesModule\Components\ShortWidget\ShortWidget
 	- Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget

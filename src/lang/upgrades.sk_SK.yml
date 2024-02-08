@@ -26,6 +26,12 @@ admin:
         short: "Skrátenie predplatného"
         paid_extend: "Nerekurentné s platbou"
 
+components:
+    available_upgrades_for_subscription_type:
+        header: Upgrade
+        tooltip: "Upgrade je možný na nasledujúce typy predplatného. Výslednu ponuku pre používateľa ovplyvňujú nastavenia upgradu, začiatok a koniec predplatného a stav rekurentnej platby."
+        message_no_available_upgrades: Tento typ predplatného nemá povolený upgrade.
+
 frontend:
     upgrade:
         error:

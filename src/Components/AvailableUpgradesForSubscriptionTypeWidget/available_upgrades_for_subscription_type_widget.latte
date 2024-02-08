@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="page-header">
+          {_upgrades.components.available_upgrades_for_subscription_type.header}
+
+          <button type="button" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="top"
+            title="{_upgrades.components.available_upgrades_for_subscription_type.tooltip}">
+            <i class="fa fa-question-circle"></i>
+          </button>
+
+        </h2>
+
+        {if count($availableUpgrades)}
+            <ul class="list-group">
+                <li n:foreach="$availableUpgrades as $availableSubscriptionType" class="list-group-item">
+                    <a href="{plink :Subscriptions:SubscriptionTypesAdmin:show $availableSubscriptionType->id}">
+                      {$availableSubscriptionType->name}
+                    </a>
+                    <code>{$availableSubscriptionType->code}</code>
+                </li>
+            </ul>
+        {else}
+            <p class="text-muted well text-center">{_upgrades.components.available_upgrades_for_subscription_type.message_no_available_upgrades}</p>
+        {/if}
+    </div>
+</div>

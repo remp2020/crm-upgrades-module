@@ -26,6 +26,12 @@ admin:
         short: "Subscription shortening"
         paid_extend: "Non-recurrent with payment"
 
+components:
+    available_upgrades_for_subscription_type:
+        header: Upgrades
+        tooltip: "Upgrade is possible to the following subscription types. The resulting offer to the user is affected by the upgrade settings, the start and end of the subscription and the status of the recurring payment."
+        message_no_available_upgrades: "No upgrade options found for this subscription type."
+
 frontend:
     upgrade:
         error:
