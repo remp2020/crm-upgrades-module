@@ -151,7 +151,7 @@ class UpgradePresenter extends FrontendPresenter
     public function renderNotAvailable($error)
     {
         $this->template->contactEmail = $this->applicationConfig->get('contact_email');
-        $this->template->dbUser = $this->usersRepository->find($this->getUser()->getId());
+        $this->template->userRow = $this->usersRepository->find($this->getUser()->getId());
         $this->template->error = $error;
     }
 
