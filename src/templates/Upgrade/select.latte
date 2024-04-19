@@ -9,7 +9,7 @@
         <p>
             {capture $subscriptionType}{$upgraders[0]->getBaseSubscription()->subscription_type->user_label}{/capture}
             {_upgrades.frontend.upgrade.select.current_subscription_type, [
-                subscription_type => escapehtml($subscriptionType),
+                subscription_type => $subscriptionType,
             ]|noescape}
         </p>
     </div>
