@@ -17,6 +17,7 @@ use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\PaymentsModule\Seeders\PaymentGatewaysSeeder;
+use Crm\PaymentsModule\Seeders\TestPaymentGatewaysSeeder;
 use Crm\PaymentsModule\Tests\Gateways\TestRecurrentGateway;
 use Crm\SubscriptionsModule\Events\SubscriptionMovedEvent;
 use Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent;
@@ -131,9 +132,9 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         // initialize gateways
         try {
-            $gatewayFactory->getGateway(self::GATEWAY_RECURRENT);
+            $gatewayFactory->getGateway(TestRecurrentGateway::GATEWAY_CODE);
         } catch (UnknownPaymentMethodCode $e) {
-            $gatewayFactory->registerGateway(self::GATEWAY_RECURRENT, TestRecurrentGateway::class);
+            $gatewayFactory->registerGateway(TestRecurrentGateway::GATEWAY_CODE, TestRecurrentGateway::class);
         }
         try {
             $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
@@ -141,7 +142,6 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
         }
 
-        $this->paymentGatewaysRepository->add(self::GATEWAY_RECURRENT, self::GATEWAY_RECURRENT, 10, true, true);
         $this->paymentGatewaysRepository->add(self::GATEWAY_NON_RECURRENT, self::GATEWAY_NON_RECURRENT, 10, true, false);
 
         // initialize subscription types
@@ -243,6 +243,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         return [
             PaymentGatewaysSeeder::class,
+            TestPaymentGatewaysSeeder::class,
             SubscriptionTypeNamesSeeder::class,
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
@@ -385,7 +386,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
@@ -394,7 +395,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-06-03',
                     ],
@@ -423,7 +424,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
                         'start' => '2021-05-05',
                         'end' => '2022-05-05',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2022-05-03', // 2 days before end
                     ],
@@ -463,7 +464,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-04-05',
@@ -484,7 +485,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -492,7 +493,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
@@ -514,7 +515,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -522,14 +523,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                     ],
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-08',
                         'end' => '2021-06-08',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-06-06',
                     ],
@@ -553,7 +554,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'upgradeable' => true,
                     ],
@@ -561,7 +562,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
@@ -569,7 +570,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-06',
                         'end' => '2022-04-06',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '2222',
                         'rp_charge_at' => '2022-04-04',
                     ],
@@ -593,7 +594,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -601,7 +602,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-07',
                         'end' => '2021-05-08',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-06',
                     ],
@@ -622,7 +623,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-07',
                         'end' => '2021-04-07',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'upgradeable' => true,
                     ],
@@ -664,7 +665,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-04-18',
@@ -685,7 +686,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -693,7 +694,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
@@ -715,7 +716,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -723,14 +724,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                     ],
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-21',
                         'end' => '2021-06-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-06-19',
                     ],
@@ -754,7 +755,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -762,7 +763,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
@@ -770,7 +771,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-05-01',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-05-19',
                     ],
@@ -794,7 +795,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
                     ],
@@ -802,7 +803,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2021-05-19',
                     ],
@@ -823,7 +824,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'upgradeable' => true,
                     ],
@@ -991,7 +992,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
                         'start' => '2021-03-20',
                         'end' => '2021-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'upgradeable' => true,
                         'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
@@ -1000,7 +1001,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
                         'start' => '2021-04-20',
                         'end' => '2021-05-21',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '2222',
                         'rp_charge_at' => '2021-05-19',
                     ],
@@ -1029,7 +1030,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
                         'start' => '2021-04-20',
                         'end' => '2022-04-20',
-                        'gateway' => self::GATEWAY_RECURRENT,
+                        'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'rp_charge_at' => '2022-04-18', // 2 days before end
                     ],
