@@ -676,7 +676,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                 ],
                 'recurrent_result' => [
-                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-18'],
+                    ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-18', 'amount' => 10.0, 'custom_amount' => null],
                 ],
             ],
             'PaidRecurrent_OneFollowingSubscription_ShouldShortenSecond' => [
@@ -1129,9 +1129,15 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
             /** @var RecurrentPaymentsResolver $rpResolver */
             $rpResolver = $this->inject(RecurrentPaymentsResolver::class);
-            $subscriptionType = $rpResolver->resolveSubscriptionType($rp);
-            $this->assertEquals($expectedRecurrent['type'], $subscriptionType->code);
+            $paymentData = $rpResolver->resolvePaymentData($rp);
+            $this->assertEquals($expectedRecurrent['type'], $paymentData->subscriptionType->code);
             $this->assertEquals(DateTime::from($expectedRecurrent['charge_at']), $rp->charge_at);
+            if (array_key_exists('amount', $expectedRecurrent)) {
+                $this->assertEquals($expectedRecurrent['amount'], $paymentData->paymentItemContainer->totalPrice());
+            }
+            if (array_key_exists('custom_amount', $expectedRecurrent)) {
+                $this->assertEquals($expectedRecurrent['custom_amount'], $paymentData->customChargeAmount);
+            }
         }
     }
 
