@@ -8,6 +8,8 @@ use Crm\PaymentsModule\Events\BeforeRecurrentPaymentChargeEvent;
 use Crm\PaymentsModule\Models\GatewayFactory;
 use Crm\PaymentsModule\Models\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Models\Gateways\RecurrentPaymentInterface;
+use Crm\PaymentsModule\Models\GeoIp\GeoIpException;
+use Crm\PaymentsModule\Models\OneStopShop\OneStopShop;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentLogsRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
@@ -15,8 +17,10 @@ use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
+use Crm\UsersModule\Repositories\CountriesRepository;
 use Exception;
 use League\Event\Emitter;
+use Tracy\Debugger;
 
 class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
@@ -50,6 +54,8 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         private PaymentLogsRepository $paymentLogsRepository,
         private DataProviderManager $dataProviderManager,
         private UpgraderFactory $upgraderFactory,
+        private OneStopShop $oneStopShop,
+        private CountriesRepository $countriesRepository,
     ) {
     }
 
@@ -128,6 +134,19 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
+        $countryResolution = null;
+        try {
+            $countryResolution = $this->oneStopShop->resolveCountry(
+                user: $this->basePayment->user,
+                paymentAddress: $this->basePayment->address,
+                paymentItemContainer: $paymentItemContainer,
+                previousPayment: $this->basePayment,
+            );
+        } catch (GeoIpException $exception) {
+            // do not crash because of wrong IP resolution, just log
+            Debugger::log("PaymentsRepository#copyPayment OSS error: " . $exception->getMessage());
+        }
+
         // create new payment and charge it right away
         $newPayment = $this->paymentsRepository->add(
             $this->targetSubscriptionType,
@@ -138,7 +157,9 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             null,
             null,
             null,
-            "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}"
+            "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}",
+            paymentCountry: $countryResolution ? $this->countriesRepository->findByIsoCode($countryResolution->countryCode) : null,
+            paymentCountryResolutionReason: $countryResolution?->getReasonValue(),
         );
 
         $this->paymentsRepository->update($newPayment, [
