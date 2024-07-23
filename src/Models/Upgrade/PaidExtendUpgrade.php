@@ -130,7 +130,7 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             $this->basePayment->user,
             $paymentItemContainer,
             '',
-            paymentCountry: $countryResolution ? $this->countriesRepository->findByIsoCode($countryResolution->countryCode) : null,
+            paymentCountry: $countryResolution?->country,
             paymentCountryResolutionReason: $countryResolution?->getReasonValue(),
         );
 

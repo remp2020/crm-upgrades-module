@@ -158,7 +158,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             null,
             null,
             "Payment for upgrade from {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}",
-            paymentCountry: $countryResolution ? $this->countriesRepository->findByIsoCode($countryResolution->countryCode) : null,
+            paymentCountry: $countryResolution?->country,
             paymentCountryResolutionReason: $countryResolution?->getReasonValue(),
         );
 
