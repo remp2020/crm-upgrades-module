@@ -8,7 +8,6 @@ use Crm\PaymentsModule\Events\BeforeRecurrentPaymentChargeEvent;
 use Crm\PaymentsModule\Models\GatewayFactory;
 use Crm\PaymentsModule\Models\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Models\Gateways\RecurrentPaymentInterface;
-use Crm\PaymentsModule\Models\GeoIp\GeoIpException;
 use Crm\PaymentsModule\Models\OneStopShop\OneStopShop;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentLogsRepository;
@@ -20,7 +19,6 @@ use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use Crm\UsersModule\Repositories\CountriesRepository;
 use Exception;
 use League\Event\Emitter;
-use Tracy\Debugger;
 
 class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
@@ -134,18 +132,12 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
-        $countryResolution = null;
-        try {
-            $countryResolution = $this->oneStopShop->resolveCountry(
-                user: $this->basePayment->user,
-                paymentAddress: $this->basePayment->address,
-                paymentItemContainer: $paymentItemContainer,
-                previousPayment: $this->basePayment,
-            );
-        } catch (GeoIpException $exception) {
-            // do not crash because of wrong IP resolution, just log
-            Debugger::log("PaymentsRepository#copyPayment OSS error: " . $exception->getMessage());
-        }
+        $countryResolution = $this->oneStopShop->resolveCountry(
+            user: $this->basePayment->user,
+            paymentAddress: $this->basePayment->address,
+            paymentItemContainer: $paymentItemContainer,
+            previousPayment: $this->basePayment,
+        );
 
         // create new payment and charge it right away
         $newPayment = $this->paymentsRepository->add(

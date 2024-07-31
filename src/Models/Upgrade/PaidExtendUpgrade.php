@@ -4,7 +4,6 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
-use Crm\PaymentsModule\Models\GeoIp\GeoIpException;
 use Crm\PaymentsModule\Models\OneStopShop\OneStopShop;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
@@ -18,7 +17,6 @@ use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
 use Tomaj\Hermes\Emitter;
-use Tracy\Debugger;
 
 class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 {
@@ -110,18 +108,12 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
-        $countryResolution = null;
-        try {
-            $countryResolution = $this->oneStopShop->resolveCountry(
-                user: $this->basePayment->user,
-                paymentAddress: $this->basePayment->address,
-                paymentItemContainer: $paymentItemContainer,
-                previousPayment: $this->basePayment,
-            );
-        } catch (GeoIpException $exception) {
-            // do not crash because of wrong IP resolution, just log
-            Debugger::log("Unable to upgrade, OSS error: " . $exception->getMessage());
-        }
+        $countryResolution = $this->oneStopShop->resolveCountry(
+            user: $this->basePayment->user,
+            paymentAddress: $this->basePayment->address,
+            paymentItemContainer: $paymentItemContainer,
+            previousPayment: $this->basePayment,
+        );
 
         // create new payment instance
         $newPayment = $this->paymentsRepository->add(
