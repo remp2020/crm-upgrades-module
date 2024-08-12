@@ -254,7 +254,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         return [
             'Short_NoneFollowing_ShouldShortenOne' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -264,13 +264,13 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'upgradeable' => true,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                 ],
             ],
             'Short_OneFollowingSubscription_ShouldShortenBoth' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -286,7 +286,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -294,7 +294,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'Short_TwoFollowingSubscription_ShouldShortenAll' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -316,7 +316,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -326,7 +326,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'Short_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -348,7 +348,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -357,7 +357,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'Short_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndMoveSecond' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -373,14 +373,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
                 ],
             ],
             'Short_BaseHasStoppedRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndMoveSecond' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -400,18 +400,18 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-06-03',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'], // keep "2 days before"
                 ],
             ],
             'Short_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
-                'upgrade_type' => ShortUpgrade::TYPE,
+                'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -438,7 +438,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 // now - 2021-04-05
                 // basic - 5 eur / mesiac; 50 eur / rok
                 // premium - 10 eur / mesiac; 100 eur / rok
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -447,7 +447,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     // 31 days -> 15.5 days, minus one hour for daylight savings happening at the end of October.
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-10-19 12:00:00', 'end' => '2021-11-03 23:00:00'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-10-17 12:00:00'], // keep "2 days before" end of "premium long"
                 ],
             ],
@@ -458,7 +458,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         return [
             'FreeRecurrent_NoneFollowing_ShouldUpgradeOne' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -470,16 +470,16 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-04-05',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-05'],
                 ],
             ],
             'FreeRecurrent_OneFollowingSubscription_ShouldShortenSecond' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -498,18 +498,18 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-06',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
                 ],
             ],
             'FreeRecurrent_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -535,7 +535,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-06-06',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
@@ -543,12 +543,12 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-22 12:00:00', 'end' => '2021-04-22 12:00:00'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-22 12:00:00', 'end' => '2021-05-08'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-06'],
                 ],
             ],
             'FreeRecurrent_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -575,20 +575,20 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2022-04-04',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-07', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-04-22 12:00:00'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-06', 'end' => '2022-04-06'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-20 12:00:00'],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_BASIC, 'charge_at' => '2022-04-04'],
                 ],
             ],
             'FreeRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -607,17 +607,17 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-06',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-07', 'end' => '2021-05-08'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-06'],
                 ],
             ],
             'FreeRecurrent_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
-                'upgrade_type' => FreeRecurrentUpgrade::TYPE,
+                'upgradeType' => FreeRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -643,7 +643,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 // now - 2021-04-05
                 // basic - 5 eur / mesiac; 50 eur / rok
                 // premium - 10 eur / mesiac; 100 eur / rok
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-07', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-07'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-07', 'end' => '2021-04-07'],
@@ -659,7 +659,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         return [
             'PaidRecurrent_NoneFollowing_ShouldUpgradeOne' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -671,16 +671,16 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-04-18',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-04-18', 'amount' => 10.0, 'custom_amount' => null],
                 ],
             ],
             'PaidRecurrent_OneFollowingSubscription_ShouldShortenSecond' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -699,18 +699,18 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
                 ],
             ],
             'PaidRecurrent_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -736,7 +736,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-06-19',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -744,12 +744,12 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-05 12:00:00'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-05 12:00:00', 'end' => '2021-05-21'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'],
                 ],
             ],
             'PaidRecurrent_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -776,20 +776,20 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-01', 'end' => '2021-05-21'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-03 12:00:00'],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_BASIC, 'charge_at' => '2021-05-19'],
                 ],
             ],
             'PaidRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -808,17 +808,17 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'],
                 ],
             ],
             'PaidRecurrent_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
-                'upgrade_type' => PaidRecurrentUpgrade::TYPE,
+                'upgradeType' => PaidRecurrentUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -844,7 +844,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 // now - 2021-04-05
                 // basic - 5 eur / mesiac; 50 eur / rok
                 // premium - 10 eur / mesiac; 100 eur / rok
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-04-20', 'end' => '2021-04-20'],
@@ -860,7 +860,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     {
         return [
             'PaidExtend_NoneFollowing_ShouldUpgradeOne' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -870,13 +870,13 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'upgradeable' => true,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                 ],
             ],
             'PaidExtend_OneFollowingSubscription_ShouldShortenSecond' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -892,7 +892,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'], // start was moved before shortened
@@ -900,7 +900,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'PaidExtend_TwoFollowingSubscriptions_ShouldShortenSecondAndThird' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -922,7 +922,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
@@ -932,7 +932,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'PaidExtend_OneFollowingOneOverlapping_ShouldShortenOnlyFollowing' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -954,7 +954,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-05-06', 'end' => '2021-05-06'],
@@ -963,7 +963,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ],
             ],
             'PaidExtend_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -979,14 +979,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
                 ],
             ],
             'PaidExtend_BaseHasStoppedRecurrent_OneFollowingAlreadyUpgraded_ShouldShortenFirstAndKeepSecondUntouched' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -1006,18 +1006,18 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'rp_charge_at' => '2021-05-19',
                     ],
                 ],
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
                 ],
-                'recurrent_result' => [
+                'recurrentResult' => [
                     ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-06-04'], // keep "2 days before"
                 ],
             ],
             'PaidExtend_FollowingOfDifferentLengths_ShouldUpgradeBothOfFollowing' => [
-                'upgrade_type' => PaidExtendUpgrade::TYPE,
+                'upgradeType' => PaidExtendUpgrade::TYPE,
                 'payments' => [
                     [
                         'type' => self::SUBSCRIPTION_TYPE_BASIC,
@@ -1044,7 +1044,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 // now - 2021-04-05
                 // basic - 5 eur / mesiac; 50 eur / rok
                 // premium - 10 eur / mesiac; 100 eur / rok
-                'subscription_result' => [
+                'subscriptionResult' => [
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-03-20', 'end' => '2021-04-05'],
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-05-06'],
                     ['type' => self::SUBSCRIPTION_TYPE_BASIC_LONG, 'start' => '2021-05-06', 'end' => '2021-05-06'],
