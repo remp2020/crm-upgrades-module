@@ -123,7 +123,7 @@
     <div class="col-md-12 text-center">
         <hr>
         <p class="text-muted">
-            {_upgrades.frontend.upgrade.subscription.actual_subscription} {$upgrader->getBaseSubscription()->subscription_type|typeContent|noescape}
+            {_upgrades.frontend.upgrade.subscription.actual_subscription} {$upgrader->getBaseSubscription()->subscription_type|typeContent}
             ({$upgrader->getBaseSubscription()->start_time|userDate,true} - {$upgrader->getBaseSubscription()->end_time|userDate,true})
         </p>
     </div>
