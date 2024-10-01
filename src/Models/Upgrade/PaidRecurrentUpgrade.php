@@ -186,13 +186,13 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             HermesMessage::PRIORITY_DEFAULT
         );
 
-        $this->emitter->emit(new BeforeRecurrentPaymentChargeEvent($newPayment, $recurrentPayment->cid)); // ability to modify payment
+        $this->emitter->emit(new BeforeRecurrentPaymentChargeEvent($newPayment, $recurrentPayment->payment_method->external_token)); // ability to modify payment
         $newPayment = $this->paymentsRepository->find($newPayment->id); // reload
         /** @var GatewayAbstract|RecurrentPaymentInterface $gateway */
         $gateway = $this->gatewayFactory->getGateway($newPayment->payment_gateway->code);
 
         try {
-            $gateway->charge($newPayment, $recurrentPayment->cid);
+            $gateway->charge($newPayment, $recurrentPayment->payment_method->external_token);
         } catch (Exception $e) {
             $this->paymentsRepository->updateStatus(
                 $newPayment,

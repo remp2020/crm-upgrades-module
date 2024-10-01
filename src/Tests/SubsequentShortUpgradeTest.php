@@ -1118,7 +1118,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         foreach ($recurrentResult as $expectedRecurrent) {
             $rp = $this->recurrentPaymentsRepository->userRecurrentPayments($user->id)
-                ->where(['cid' => $expectedRecurrent['cid']])
+                ->where(['payment_method.external_token' => $expectedRecurrent['cid']])
                 ->order('charge_at DESC')
                 ->fetch();
 
@@ -1265,9 +1265,9 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         if ($gateway->is_recurrent) {
             $rp = $this->recurrentPaymentsRepository->createFromPayment($payment, $cid);
             $previousRp = $this->recurrentPaymentsRepository->getTable()
-                ->where('cid = ?', $rp->cid)
-                ->where('id < ?', $rp->id)
-                ->order('created_at DESC')
+                ->where('payment_method.external_token = ?', $rp->cid)
+                ->where('recurrent_payments.id < ?', $rp->id)
+                ->order('recurrent_payments.created_at DESC')
                 ->fetch();
             if ($previousRp) {
                 $this->recurrentPaymentsRepository->update($previousRp, [
