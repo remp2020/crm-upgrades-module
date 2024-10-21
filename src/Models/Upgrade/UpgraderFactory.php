@@ -47,8 +47,10 @@ class UpgraderFactory
         foreach ($this->upgraders as $type => $upgrader) {
             $u = clone $upgrader;
             $u->setNow($this->getNow());
-            if ($u instanceof SubsequentUpgradeInterface) {
-                $u->setSubsequentUpgrader($this->subsequentUpgrader);
+            if ($u instanceof SubsequentUpgradeInterface && $this->subsequentUpgrader) {
+                $subsequentUpgrader = clone $this->subsequentUpgrader;
+                $subsequentUpgrader->setNow($this->getNow());
+                $u->setSubsequentUpgrader($subsequentUpgrader);
             }
             $result[$type] = $u;
         }

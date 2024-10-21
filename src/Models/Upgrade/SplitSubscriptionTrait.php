@@ -41,7 +41,7 @@ trait SplitSubscriptionTrait
         ]);
 
         $this->emitter->emit(new SubscriptionShortenedEvent($this->getBaseSubscription(), $originalEndTime));
-        $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
+            $this->baseSubscription = $this->subscriptionsRepository->find(($this->baseSubscription->id));
         return $newSubscription;
     }
 }

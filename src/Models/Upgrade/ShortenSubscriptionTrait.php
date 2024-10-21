@@ -52,7 +52,7 @@ trait ShortenSubscriptionTrait
         $savedFromActual = $remainingSeconds / 60 / 60 / 24 * $dayPrice;
 
         // calculate daily price of target subscription type
-        if ($this->monthlyFix) {
+        if (isset($this->monthlyFix)) {
             $toSubscriptionPrice = $this->getBaseSubscription()->subscription_type->price;
             $newDayPrice = $toSubscriptionPrice / $this->targetSubscriptionType->length + ($this->monthlyFix / 31);
         } else {

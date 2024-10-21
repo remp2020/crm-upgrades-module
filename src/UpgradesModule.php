@@ -8,6 +8,7 @@ use Crm\ApplicationModule\Models\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Models\Menu\MenuItem;
 use Crm\ApplicationModule\Models\Widget\LazyWidgetManagerInterface;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
+use Crm\SubscriptionsModule\Events\SubscriptionEndsEvent;
 use Crm\UpgradesModule\Components\AvailableUpgradesForSubscriptionTypeWidget\AvailableUpgradesForSubscriptionTypeWidget;
 use Crm\UpgradesModule\Components\FreeRecurrentWidget\FreeRecurrentWidget;
 use Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget;
@@ -15,6 +16,7 @@ use Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget;
 use Crm\UpgradesModule\Components\ShortWidget\ShortWidget;
 use Crm\UpgradesModule\Components\UserPaymentsListingBadge\UserPaymentsListingBadge;
 use Crm\UpgradesModule\Events\PaymentStatusChangeHandler;
+use Crm\UpgradesModule\Events\TrialSubscriptionEndsEventHandler;
 
 class UpgradesModule extends CrmModule
 {
@@ -63,6 +65,12 @@ class UpgradesModule extends CrmModule
             PaymentChangeStatusEvent::class,
             PaymentStatusChangeHandler::class,
             1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+        );
+
+        $emitter->addListener(
+            SubscriptionEndsEvent::class,
+            TrialSubscriptionEndsEventHandler::class,
+            LazyEventEmitter::P_LOW
         );
     }
 }
