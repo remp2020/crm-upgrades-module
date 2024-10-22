@@ -218,7 +218,6 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'next_subscription_type_id' => $this->targetSubscriptionType->id,
             'custom_amount' => $this->futureChargePrice,
-            'parent_payment_id' => $newPayment->id,
             'note' => "Paid recurrent upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}\n(" . time() . ')',
         ]);
 
