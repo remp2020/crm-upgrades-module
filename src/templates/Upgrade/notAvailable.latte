@@ -119,15 +119,15 @@
     <div class="col-md-12 text-center">
         <div class="alert alert-danger text-center">
             {if in_array($error, [\Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders::ERROR_NOT_LOGGED_IN, \Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders::ERROR_NO_SUBSCRIPTION])}
-                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.not_available, [
+                <p class="margin-top margin-bottom-lg"><i class="fa-regular fa-face-meh"></i> {_upgrades.frontend.upgrade.error.not_available, [
                     'contactEmail' => escapehtml($contactEmail),
                 ]|noescape}</p>
             {elseif in_array($error, [\Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders::ERROR_NO_BASE_PAYMENT])}
-                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.no_base_payment, [
+                <p class="margin-top margin-bottom-lg"><i class="fa-regular fa-face-meh"></i> {_upgrades.frontend.upgrade.error.no_base_payment, [
                     'contactEmail' => escapehtml($contactEmail),
                 ]|noescape}</p>
             {else}
-                <p class="margin-top margin-bottom-lg"><i class="fa fa-meh-o"></i> {_upgrades.frontend.upgrade.error.no_upgrade_possible, [
+                <p class="margin-top margin-bottom-lg"><i class="fa-regular fa-face-meh"></i> {_upgrades.frontend.upgrade.error.no_upgrade_possible, [
                     'contactEmail' => escapehtml($contactEmail),
                 ]|noescape}</p>
             {/if}
