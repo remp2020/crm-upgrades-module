@@ -70,6 +70,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         }
 
         $trialAlreadyExpired = $this->subscriptionMetaRepository->getTable()
+            ->where('subscription.user_id = ?', $this->baseSubscription->user_id)
             ->where('subscription.subscription_type_id = ?', $this->trialSubscriptionType->id)
             ->where('key = ?', self::SUBSCRIPTION_META_TRIAL_EXPIRED)
             ->fetch();
