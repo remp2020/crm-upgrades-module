@@ -28,7 +28,6 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     public const SUBSCRIPTION_META_TRIAL_LATEST_END_TIME = 'trial_latest_end_time';
     public const SUBSCRIPTION_META_TRIAL_EXPIRED = 'trial_expired';
     public const SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG = 'trial_upgrade_config';
-    public const UPGRADE_OPTION_CONFIG_PERIOD_DAYS = 'trial_period_days';
     public const UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS = 'trial_eligible_content_access';
     public const UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE = 'trial_subscription_type_code';
     public const UPGRADE_OPTION_CONFIG_SALES_FUNNEL_ID = 'sales_funnel_id';
@@ -70,12 +69,12 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             return false;
         }
 
-        $trialAlreadyApproved = $this->subscriptionMetaRepository->getTable()
+        $trialAlreadyExpired = $this->subscriptionMetaRepository->getTable()
             ->where('subscription.subscription_type_id = ?', $this->trialSubscriptionType->id)
-            ->where('key = ?', self::SUBSCRIPTION_META_TRIAL_ACCEPTED)
+            ->where('key = ?', self::SUBSCRIPTION_META_TRIAL_EXPIRED)
             ->fetch();
 
-        if ($trialAlreadyApproved) {
+        if ($trialAlreadyExpired) {
             return false;
         }
 
@@ -97,17 +96,6 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             );
             return $this;
         }
-        if (!isset($config[self::UPGRADE_OPTION_CONFIG_PERIOD_DAYS])) {
-            Debugger::log(
-                sprintf(
-                    'Trial upgrade used without configuring %s. Add %s into upgrade_options.config',
-                    self::UPGRADE_OPTION_CONFIG_PERIOD_DAYS,
-                    self::UPGRADE_OPTION_CONFIG_PERIOD_DAYS,
-                ),
-                ILogger::ERROR,
-            );
-            return $this;
-        }
 
         if (isset($config[self::UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS])) {
             $this->eligibleContentAccess = $config[self::UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS];
@@ -120,7 +108,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         }
 
         $this->trialSubscriptionType = $subscriptionType;
-        $this->trialPeriodDays = $config[self::UPGRADE_OPTION_CONFIG_PERIOD_DAYS];
+        $this->trialPeriodDays = $subscriptionType->length;
         $this->salesFunnelId ??= $config[self::UPGRADE_OPTION_CONFIG_SALES_FUNNEL_ID];
 
         $this->config = $config;
@@ -151,9 +139,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             HermesMessage::PRIORITY_DEFAULT
         );
 
-        $trialInterval = new \DateInterval('P' . $this->trialPeriodDays . 'D');
-        $trialPeriodEnd = $this->now()->add($trialInterval);
-
+        $trialPeriodEnd = $this->getTrialPeriodEnd();
         $selectedTrialEndTime = $this->baseSubscription->end_time;
 
         if ($selectedTrialEndTime > $trialPeriodEnd) {
@@ -196,6 +182,18 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         );
 
         return true;
+    }
+
+    public function expire(ActiveRow $trialSubscription)
+    {
+        $this->subscriptionMetaRepository->setMeta(
+            subscription: $trialSubscription,
+            key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_EXPIRED,
+            value: 1,
+        );
+        $this->subscriptionsRepository->update($trialSubscription, [
+            'end_time' => $this->now(),
+        ]);
     }
 
     public function finalize(ActiveRow $trialSubscription)
@@ -267,5 +265,11 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             ->where('subscriptions.user_id = ?', $userId)
             ->order('end_time DESC')
             ->limit(1);
+    }
+
+    public function getTrialPeriodEnd(): \DateTime
+    {
+        $trialInterval = new \DateInterval('P' . $this->trialPeriodDays . 'D');
+        return $this->now()->add($trialInterval);
     }
 }

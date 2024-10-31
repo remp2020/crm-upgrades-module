@@ -270,12 +270,6 @@ class TrialUpgradeTest extends DatabaseTestCase
                 'configChanges' => [],
                 'shouldBeUsable' => true,
             ],
-            'MissingTrialPeriodDays_ShouldNotBeUsable' => [
-                'configChanges' => [
-                    TrialUpgrade::UPGRADE_OPTION_CONFIG_PERIOD_DAYS => null,
-                ],
-                'shouldBeUsable' => false,
-            ],
             'MissingTrialSubscriptionType_ShouldNotBeUsable' => [
                 'configChanges' => [
                     TrialUpgrade::UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE => null,
@@ -810,7 +804,6 @@ class TrialUpgradeTest extends DatabaseTestCase
             config: [
                 'require_content' => $requireContent,
                 'omit_content' => $omitContent,
-                TrialUpgrade::UPGRADE_OPTION_CONFIG_PERIOD_DAYS => 90,
                 TrialUpgrade::UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE => self::SUBSCRIPTION_TYPE_PREMIUM_TRIAL,
             ],
         );
@@ -822,7 +815,6 @@ class TrialUpgradeTest extends DatabaseTestCase
                 config: [
                     'require_content' => $requireContent,
                     'omit_content' => $omitContent,
-                    TrialUpgrade::UPGRADE_OPTION_CONFIG_PERIOD_DAYS => 90,
                     TrialUpgrade::UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE => self::SUBSCRIPTION_TYPE_PREMIUM_TRIAL,
                 ],
             );
