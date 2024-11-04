@@ -163,7 +163,6 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             type: UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE,
             startTime: $this->now(),
             endTime: $selectedTrialEndTime,
-            sendEmail: false,
         );
 
         $this->subscriptionMetaRepository->add(
