@@ -5,17 +5,12 @@ declare(strict_types=1);
 namespace Crm\UpgradesModule\Events;
 
 use Crm\ApplicationModule\Models\NowTrait;
-use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
-use Crm\PaymentsModule\Repositories\PaymentsRepository;
-use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Events\SubscriptionEndsEvent;
 use Crm\SubscriptionsModule\Repositories\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use Crm\UpgradesModule\Models\Upgrade\TrialUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\UpgraderFactory;
-use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use League\Event\AbstractListener;
-use League\Event\Emitter;
 use League\Event\EventInterface;
 use Nette\Utils\DateTime;
 
@@ -25,12 +20,7 @@ class TrialSubscriptionEndsEventHandler extends AbstractListener
 
     public function __construct(
         private readonly SubscriptionsRepository $subscriptionsRepository,
-        private readonly PaymentsRepository $paymentsRepository,
-        private readonly SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
-        private readonly PaymentMetaRepository $paymentMetaRepository,
         private readonly UpgraderFactory $upgraderFactory,
-        private readonly RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        private readonly Emitter $emitter,
         private readonly SubscriptionMetaRepository $subscriptionMetaRepository,
     ) {
     }

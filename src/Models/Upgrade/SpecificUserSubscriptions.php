@@ -2,19 +2,11 @@
 
 namespace Crm\UpgradesModule\Models\Upgrade;
 
-use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use Nette\Database\Table\ActiveRow;
 
 class SpecificUserSubscriptions implements UpgradeableSubscriptionsInterface
 {
-    private $subscriptionsRepository;
-
     private $subscriptions;
-
-    public function __construct(SubscriptionsRepository $subscriptionsRepository)
-    {
-        $this->subscriptionsRepository = $subscriptionsRepository;
-    }
 
     public function setSpecificSubscriptions($userId, ActiveRow ...$subscriptions): self
     {

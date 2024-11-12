@@ -16,7 +16,6 @@ use Crm\UpgradesModule\Models\Upgrade\UpgraderInterface;
 use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use Crm\UpgradesModule\UpgradesModule;
 use League\Event\AbstractListener;
-use League\Event\Emitter;
 use League\Event\EventInterface;
 use Nette\Utils\Json;
 use Tracy\Debugger;
@@ -33,7 +32,6 @@ class PaymentStatusChangeHandler extends AbstractListener
         private PaymentMetaRepository $paymentMetaRepository,
         private UpgraderFactory $upgraderFactory,
         private RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        private Emitter $emitter,
     ) {
     }
 
