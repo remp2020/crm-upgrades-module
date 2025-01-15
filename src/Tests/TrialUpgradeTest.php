@@ -6,11 +6,9 @@ use Crm\ApplicationModule\Models\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\SubscriptionMovedHandler;
-use Crm\PaymentsModule\Models\GatewayFactory;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Models\RecurrentPayment\StateEnum;
-use Crm\PaymentsModule\Models\UnknownPaymentMethodCode;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -20,6 +18,7 @@ use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\PaymentsModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Seeders\TestPaymentGatewaysSeeder;
 use Crm\PaymentsModule\Tests\Gateways\TestRecurrentGateway;
+use Crm\PaymentsModule\Tests\Gateways\TestSingleGateway;
 use Crm\SubscriptionsModule\Events\SubscriptionEndsEvent;
 use Crm\SubscriptionsModule\Events\SubscriptionMovedEvent;
 use Crm\SubscriptionsModule\Events\SubscriptionShortenedEvent;
@@ -59,8 +58,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 class TrialUpgradeTest extends DatabaseTestCase
 {
-    private const GATEWAY_RECURRENT = 'recurrent';
-    private const GATEWAY_NON_RECURRENT = 'non_recurrent';
+    private const GATEWAY_RECURRENT = TestRecurrentGateway::GATEWAY_CODE;
+    private const GATEWAY_NON_RECURRENT = TestSingleGateway::GATEWAY_CODE;
 
     private const SUBSCRIPTION_TYPE_BASIC = 'st_basic';
     private const SUBSCRIPTION_TYPE_BASIC_LONG = 'st_basic_long';
@@ -100,8 +99,6 @@ class TrialUpgradeTest extends DatabaseTestCase
 
         /** @var LazyEventEmitter $lazyEventEmitter */
         $lazyEventEmitter = $this->inject(LazyEventEmitter::class);
-        /** @var GatewayFactory $gatewayFactory */
-        $gatewayFactory = $this->inject(GatewayFactory::class);
         /** @var PaymentStatusChangeHandler $upgradeStatusChangeHandler */
         $upgradeStatusChangeHandler = $this->inject(PaymentStatusChangeHandler::class);
         /** @var UpgraderFactory $upgraderFactory */
@@ -112,20 +109,6 @@ class TrialUpgradeTest extends DatabaseTestCase
 
         $this->now = DateTime::from('2021-04-05');
         $this->setNow($this->now);
-
-        // initialize gateways
-        try {
-            $gatewayFactory->getGateway(TestRecurrentGateway::GATEWAY_CODE);
-        } catch (UnknownPaymentMethodCode $e) {
-            $gatewayFactory->registerGateway(TestRecurrentGateway::GATEWAY_CODE, TestRecurrentGateway::class);
-        }
-        try {
-            $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
-        } catch (UnknownPaymentMethodCode $e) {
-            $gatewayFactory->registerGateway(self::GATEWAY_NON_RECURRENT);
-        }
-
-        $this->paymentGatewaysRepository->add(self::GATEWAY_NON_RECURRENT, self::GATEWAY_NON_RECURRENT, 10, true, false);
 
         // initialize subscription types
         $basic = $this->getSubscriptionType(
