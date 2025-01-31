@@ -3,6 +3,7 @@
 namespace Crm\UpgradesModule;
 
 use Crm\ApplicationModule\CrmModule;
+use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Models\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Models\Menu\MenuContainerInterface;
 use Crm\ApplicationModule\Models\Menu\MenuItem;
@@ -15,6 +16,7 @@ use Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget;
 use Crm\UpgradesModule\Components\PaidRecurrentWidget\PaidRecurrentWidget;
 use Crm\UpgradesModule\Components\ShortWidget\ShortWidget;
 use Crm\UpgradesModule\Components\UserPaymentsListingBadge\UserPaymentsListingBadge;
+use Crm\UpgradesModule\DataProviders\BaseSubscriptionDataProvider;
 use Crm\UpgradesModule\Events\PaymentStatusChangeHandler;
 use Crm\UpgradesModule\Events\TrialSubscriptionEndsEventHandler;
 
@@ -71,6 +73,14 @@ class UpgradesModule extends CrmModule
             SubscriptionEndsEvent::class,
             TrialSubscriptionEndsEventHandler::class,
             LazyEventEmitter::P_LOW
+        );
+    }
+
+    public function registerDataProviders(DataProviderManager $dataProviderManager)
+    {
+        $dataProviderManager->registerDataProvider(
+            'payments.dataprovider.base_subscription',
+            $this->getInstance(BaseSubscriptionDataProvider::class)
         );
     }
 }

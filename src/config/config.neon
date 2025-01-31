@@ -22,6 +22,7 @@ services:
 	- Crm\UpgradesModule\Models\Upgrade\SpecificUserSubscriptions
 	- Crm\UpgradesModule\Events\PaymentStatusChangeHandler
 	- Crm\UpgradesModule\Events\TrialSubscriptionEndsEventHandler
+	- Crm\UpgradesModule\DataProviders\BaseSubscriptionDataProvider
 
 	paidExtendWidget:
 		factory: Crm\UpgradesModule\Components\PaidExtendWidget\PaidExtendWidget
