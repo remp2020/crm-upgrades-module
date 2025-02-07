@@ -3,6 +3,7 @@
 namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Models\NowTrait;
+use Crm\ApplicationModule\Models\ResettableInterface;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Nette\Caching\Cache;
@@ -10,7 +11,7 @@ use Nette\Caching\Storage;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 
-class UpgraderFactory
+class UpgraderFactory implements ResettableInterface
 {
     use NowTrait;
 
@@ -183,5 +184,10 @@ class UpgraderFactory
         }
 
         return $subscriptionType->fetch();
+    }
+
+    public function reset(): void
+    {
+        $this->cacheStorage->remove(self::CACHE_KEY);
     }
 }
