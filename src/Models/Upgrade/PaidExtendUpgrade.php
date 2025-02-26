@@ -12,6 +12,7 @@ use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
+use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use Crm\UsersModule\Repositories\CountriesRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
@@ -45,6 +46,7 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         private UpgraderFactory $upgraderFactory,
         private OneStopShop $oneStopShop,
         private CountriesRepository $countriesRepository,
+        private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
     ) {
     }
 

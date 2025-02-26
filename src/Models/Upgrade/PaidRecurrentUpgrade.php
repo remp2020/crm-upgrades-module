@@ -16,6 +16,7 @@ use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
+use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use Exception;
 use League\Event\Emitter;
 
@@ -52,6 +53,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         private DataProviderManager $dataProviderManager,
         private UpgraderFactory $upgraderFactory,
         private OneStopShop $oneStopShop,
+        private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
     ) {
     }
 

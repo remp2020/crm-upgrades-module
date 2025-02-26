@@ -41,7 +41,16 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     public function isUsable(): bool
     {
         if ($this->basePayment->payment_gateway->is_recurrent) {
-            $recurrent = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+            $paymentToCheck = $this->basePayment;
+            if ($paymentToCheck->subscription) {
+                $originalSubscription = $this->loadOriginalUpgradedSubscriptionFromSubscription($paymentToCheck->subscription);
+                $originalPayment = $originalSubscription?->related('payments')->fetch();
+                if ($originalPayment) {
+                    $paymentToCheck = $originalPayment;
+                }
+            }
+
+            $recurrent = $this->recurrentPaymentsRepository->recurrent($paymentToCheck);
             if (!$this->recurrentPaymentsRepository->isStopped($recurrent)) {
                 return false;
             }

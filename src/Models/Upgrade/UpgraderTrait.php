@@ -5,11 +5,13 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\UpgradesModule\DataProviders\TrackerDataProviderInterface;
+use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use Crm\UpgradesModule\UpgradesModule;
 use Nette\Database\Table\ActiveRow;
 
 /**
  * @property DataProviderManager $dataProviderManager
+ * @property SubscriptionUpgradesRepository $subscriptionUpgradesRepository
  */
 trait UpgraderTrait
 {
@@ -73,6 +75,25 @@ trait UpgraderTrait
     public function getBasePayment(): ?ActiveRow
     {
         return $this->basePayment;
+    }
+
+    public function loadOriginalUpgradedSubscriptionFromSubscription(ActiveRow $subscription): ?ActiveRow
+    {
+        $iteratedSubscription = $subscription;
+        while (true) {
+            $previousSubscription = $this->subscriptionUpgradesRepository
+                ->findBy('upgraded_subscription_id', $iteratedSubscription->id)
+                ?->base_subscription;
+            if ($previousSubscription) {
+                $iteratedSubscription = $previousSubscription;
+            } else {
+                break;
+            }
+        }
+        if ($iteratedSubscription->id === $subscription->id) {
+            return null;
+        }
+        return $iteratedSubscription;
     }
 
     public function setTargetSubscriptionType(ActiveRow $targetSubscriptionType): UpgraderInterface
