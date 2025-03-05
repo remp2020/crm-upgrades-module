@@ -6,6 +6,7 @@ use Crm\ApplicationModule\Models\NowTrait;
 use Crm\ApplicationModule\Models\ResettableInterface;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
+use Crm\UpgradesModule\Repositories\UpgradeOptionsRepository;
 use Nette\Caching\Cache;
 use Nette\Caching\Storage;
 use Nette\Database\Table\ActiveRow;
@@ -23,9 +24,10 @@ class UpgraderFactory implements ResettableInterface
     private ?UpgraderInterface $subsequentUpgrader = null;
 
     public function __construct(
-        private SubscriptionTypesRepository $subscriptionTypesRepository,
-        private Storage $cacheStorage,
-        private ContentAccessRepository $contentAccessRepository
+        private readonly SubscriptionTypesRepository $subscriptionTypesRepository,
+        private readonly Storage $cacheStorage,
+        private readonly ContentAccessRepository $contentAccessRepository,
+        private readonly UpgradeOptionsRepository $upgradeOptionsRepository,
     ) {
     }
 
@@ -108,6 +110,17 @@ class UpgraderFactory implements ResettableInterface
         // check if the upgrade option actually gives us any extra content
         if (empty(array_diff($config['require_content'], $currentContent))) {
             return null;
+        }
+
+        $directUpgradeOption = $this->upgradeOptionsRepository->getTable()
+            ->where('upgrade_options.subscription_type_id IS NOT NULL')
+            ->where('upgrade_schema:subscription_type_upgrade_schemas.subscription_type_id = ?', $baseSubscriptionType->id)
+            ->fetch();
+
+        // this is a simplification that expects that all the possible upgrade_options always point to the same
+        // target subscription types, no matter the upgrade type.
+        if ($directUpgradeOption) {
+            return $directUpgradeOption->subscription_type;
         }
 
         $subscriptionType = $this->resolveDefaultSubscriptionType(

@@ -58,8 +58,10 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
     private const GATEWAY_NON_RECURRENT = TestSingleGateway::GATEWAY_CODE;
 
     private const SUBSCRIPTION_TYPE_BASIC = 'st_basic';
+    private const SUBSCRIPTION_TYPE_BASIC_DISCOUNT = 'st_basic_discount';
     private const SUBSCRIPTION_TYPE_BASIC_LONG = 'st_basic_long';
     private const SUBSCRIPTION_TYPE_PREMIUM = 'st_premium';
+    private const SUBSCRIPTION_TYPE_PREMIUM_DISCOUNT = 'st_premium_discount';
     private const SUBSCRIPTION_TYPE_PREMIUM_LONG = 'st_premium_long';
 
     private const CONTENT_ACCESS_BASIC = 'basic';
@@ -129,8 +131,10 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
 
         // initialize subscription types
         $basic = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_BASIC, [self::CONTENT_ACCESS_BASIC], 31, 5);
+        $basicDiscount = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_BASIC_DISCOUNT, [self::CONTENT_ACCESS_BASIC], 31, 5, false);
         $basicLong = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_BASIC_LONG, [self::CONTENT_ACCESS_BASIC], 365, 50);
         $premium = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_PREMIUM, [self::CONTENT_ACCESS_PREMIUM], 31, 10);
+        $premiumDiscount = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_PREMIUM_DISCOUNT, [self::CONTENT_ACCESS_PREMIUM], 31, 10, false);
         $premiumLong = $this->getSubscriptionType(self::SUBSCRIPTION_TYPE_PREMIUM_LONG, [self::CONTENT_ACCESS_PREMIUM], 365, 100);
 
         $this->configureUpgradeOption(
@@ -144,6 +148,13 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             baseSubscriptionType: $basicLong,
             requireContent: [self::CONTENT_ACCESS_PREMIUM],
             omitContent: [self::CONTENT_ACCESS_BASIC],
+        );
+        $this->configureUpgradeOption(
+            schema: 'discount',
+            baseSubscriptionType: $basicDiscount,
+            requireContent: [self::CONTENT_ACCESS_PREMIUM],
+            omitContent: [self::CONTENT_ACCESS_BASIC],
+            targetSubscriptionType: $premiumDiscount,
         );
 
         if (!$this->initialized) {
@@ -256,24 +267,24 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 'upgradeType' => ShortUpgrade::TYPE,
                 'payments' => [
                     [
-                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_DISCOUNT,
                         'start' => '2021-04-04',
                         'end' => '2021-05-05',
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                         'upgradeable' => true,
                     ],
                     [
-                        'type' => self::SUBSCRIPTION_TYPE_BASIC,
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_DISCOUNT,
                         'start' => '2021-05-05',
                         'end' => '2021-06-05',
                         'gateway' => self::GATEWAY_NON_RECURRENT,
                     ],
                 ],
                 'subscriptionResult' => [
-                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-04', 'end' => '2021-04-05'],
-                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-05', 'end' => '2021-04-20'],
-                    ['type' => self::SUBSCRIPTION_TYPE_BASIC, 'start' => '2021-04-20', 'end' => '2021-04-20'],
-                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_DISCOUNT, 'start' => '2021-04-04', 'end' => '2021-04-05'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_DISCOUNT, 'start' => '2021-04-05', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_BASIC_DISCOUNT, 'start' => '2021-04-20', 'end' => '2021-04-20'],
+                    ['type' => self::SUBSCRIPTION_TYPE_PREMIUM_DISCOUNT, 'start' => '2021-04-20', 'end' => '2021-05-05 12:00:00'],
                 ],
             ],
             'Short_TwoFollowingSubscription_ShouldShortenAll' => [
@@ -1133,7 +1144,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         return $user;
     }
 
-    private function getSubscriptionType(string $code, array $contentAccess, int $length, $price = null)
+    private function getSubscriptionType(string $code, array $contentAccess, int $length, $price = null, bool $default = true)
     {
         /** @var ContentAccessRepository $contentAccessRepository */
         $contentAccessRepository = $this->inject(ContentAccessRepository::class);
@@ -1154,7 +1165,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 ->setCode($code)
                 ->setLength($length)
                 ->setActive(true)
-                ->setDefault(true)
+                ->setDefault($default)
                 ->setContentAccessOption(...$contentAccess)
                 ->save();
         }
@@ -1166,7 +1177,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         string $schema,
         ActiveRow $baseSubscriptionType,
         array $requireContent,
-        array $omitContent
+        array $omitContent,
+        ?ActiveRow $targetSubscriptionType = null,
     ) {
         /** @var UpgradeSchemasRepository $upgradeSchemasRepository */
         $upgradeSchemasRepository = $this->inject(UpgradeSchemasRepository::class);
@@ -1195,7 +1207,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                 [
                     'require_content' => $requireContent,
                     'omit_content' => $omitContent,
-                ]
+                ],
+                $targetSubscriptionType?->id,
             );
 
             if (!$option) {
@@ -1205,7 +1218,8 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     [
                         'require_content' => $requireContent,
                         'omit_content' => $omitContent,
-                    ]
+                    ],
+                    $targetSubscriptionType,
                 );
             }
         }
