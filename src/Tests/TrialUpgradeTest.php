@@ -708,7 +708,7 @@ class TrialUpgradeTest extends DatabaseTestCase
         if ($expectedRecurrent) {
             $recurrentPayment = $this->recurrentPaymentsRepository->getTable()
                 ->where('user_id = ?', $user->id)
-                ->where('state = ?', \Crm\PaymentsModule\Models\RecurrentPayment\StateEnum::Active->value)
+                ->where('state = ?', StateEnum::Active->value)
                 ->order('id ASC')
                 ->fetch();
 
