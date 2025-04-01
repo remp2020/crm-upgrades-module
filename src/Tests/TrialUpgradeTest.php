@@ -8,7 +8,7 @@ use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\SubscriptionMovedHandler;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
-use Crm\PaymentsModule\Models\RecurrentPayment\StateEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -708,7 +708,7 @@ class TrialUpgradeTest extends DatabaseTestCase
         if ($expectedRecurrent) {
             $recurrentPayment = $this->recurrentPaymentsRepository->getTable()
                 ->where('user_id = ?', $user->id)
-                ->where('state = ?', StateEnum::Active->value)
+                ->where('state = ?', RecurrentPaymentStateEnum::Active->value)
                 ->order('id ASC')
                 ->fetch();
 
@@ -906,7 +906,7 @@ class TrialUpgradeTest extends DatabaseTestCase
             if ($previousRp) {
                 $this->recurrentPaymentsRepository->update($previousRp, [
                     'payment_id' => $payment->id,
-                    'state' => StateEnum::Charged->value,
+                    'state' => RecurrentPaymentStateEnum::Charged->value,
                 ]);
             }
 
