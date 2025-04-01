@@ -5,6 +5,7 @@ namespace Crm\UpgradesModule\Events;
 use Crm\ApplicationModule\Models\NowTrait;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -137,7 +138,7 @@ class PaymentStatusChangeHandler extends AbstractListener
         if ($payment->upgrade_type === PaidExtendUpgrade::TYPE) {
             $basePayment = $this->paymentsRepository->subscriptionPayment($upgradedSubscription);
             $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($basePayment);
-            if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+            if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentStateEnum::UserStop->value) {
                 $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment->id);
             }
 

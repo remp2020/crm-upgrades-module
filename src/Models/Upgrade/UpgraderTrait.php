@@ -3,7 +3,7 @@
 namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
-use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\UpgradesModule\DataProviders\TrackerDataProviderInterface;
 use Crm\UpgradesModule\Repositories\SubscriptionUpgradesRepository;
 use Crm\UpgradesModule\UpgradesModule;
@@ -166,8 +166,8 @@ trait UpgraderTrait
 
             $rp = $this->recurrentPaymentsRepository->recurrent($payment);
             $statesToHandle = [
-                RecurrentPaymentsRepository::STATE_ACTIVE,
-                RecurrentPaymentsRepository::STATE_USER_STOP,
+                RecurrentPaymentStateEnum::Active->value,
+                RecurrentPaymentStateEnum::UserStop->value,
             ];
             if ($rp && in_array($rp->state, $statesToHandle, true)) {
                 $subscriptionUpgrade = $subscription->related('subscription_upgrades')->fetch();

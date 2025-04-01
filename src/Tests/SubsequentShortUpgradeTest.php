@@ -8,6 +8,7 @@ use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\SubscriptionMovedHandler;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Models\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
@@ -384,7 +385,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'upgradeable' => true,
                         'cid' => '1111',
-                        'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
+                        'rp_state' => RecurrentPaymentStateEnum::UserStop->value,
                     ],
                     [
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
@@ -401,7 +402,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-04-20', 'end' => '2021-05-21'], // only moved
                 ],
                 'recurrentResult' => [
-                    ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
+                    ['cid' => '1111', 'state' => RecurrentPaymentStateEnum::SystemStop->value],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-05-19'], // keep "2 days before"
                 ],
             ],
@@ -990,7 +991,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                         'gateway' => TestRecurrentGateway::GATEWAY_CODE,
                         'cid' => '1111',
                         'upgradeable' => true,
-                        'rp_state' => RecurrentPaymentsRepository::STATE_USER_STOP,
+                        'rp_state' => RecurrentPaymentStateEnum::UserStop->value,
                     ],
                     [
                         'type' => self::SUBSCRIPTION_TYPE_PREMIUM,
@@ -1007,7 +1008,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
                     ['type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'start' => '2021-05-06', 'end' => '2021-06-06'],
                 ],
                 'recurrentResult' => [
-                    ['cid' => '1111', 'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP],
+                    ['cid' => '1111', 'state' => RecurrentPaymentStateEnum::SystemStop->value],
                     ['cid' => '2222', 'type' => self::SUBSCRIPTION_TYPE_PREMIUM, 'charge_at' => '2021-06-04'], // keep "2 days before"
                 ],
             ],
@@ -1270,7 +1271,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             if ($previousRp) {
                 $this->recurrentPaymentsRepository->update($previousRp, [
                     'payment_id' => $payment->id,
-                    'state' => RecurrentPaymentsRepository::STATE_CHARGED,
+                    'state' => RecurrentPaymentStateEnum::Charged->value,
                 ]);
             }
 

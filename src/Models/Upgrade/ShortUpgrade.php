@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
@@ -123,7 +124,7 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         );
 
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
-        if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+        if ($recurrentPayment && $recurrentPayment->state === RecurrentPaymentStateEnum::UserStop->value) {
             $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment->id);
         }
 
