@@ -65,11 +65,11 @@
 		      <td>
 		    	 <div class="dropdown clearfix">
 		    	   {var $btn_class = 'btn-default'}
-		    	   {if $payment->status == \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_PAID}
+		    	   {if $payment->status === \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Paid->value}
 		    		 {var $btn_class = 'btn-success'}
-		    	   {elseif $payment->status == \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_FORM}
+		    	   {elseif $payment->status === \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Form->value}
 		    		 {var $btn_class = 'btn-info'}
-		    	   {elseif $payment->status == \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_FAIL || $payment->status == \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_TIMEOUT}
+		    	   {elseif $payment->status === \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Fail->value || $payment->status === \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Timeout->value}
 		    		 {var $btn_class = 'btn-danger'}
 		    	   {/if}
 		    	   <button class="btn {$btn_class} btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
@@ -77,10 +77,10 @@
 		    	     <span class="caret"></span>
 		    	   </button>
 		    	   <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_FORM, payment => $payment->id}">Form</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Form->value, payment => $payment->id}">Form</a></li>
 		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-toggle="modal" data-target="#change-status-modal-{$payment->id}">Paid</a></li>
-		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_FAIL, payment => $payment->id}">Fail</a></li>
-		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Repositories\PaymentsRepository::STATUS_TIMEOUT, payment => $payment->id}">Timeout</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Fail->value, payment => $payment->id}">Fail</a></li>
+		    		   <li role="presentation"><a role="menuitem" tabindex="-1" href="{link :Payments:PaymentsAdmin:changeStatus status => \Crm\PaymentsModule\Models\Payment\PaymentStatusEnum::Timeout->value, payment => $payment->id}">Timeout</a></li>
 		    	   </ul>
 		    	 </div>
 		      </td>

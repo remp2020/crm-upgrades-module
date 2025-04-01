@@ -6,6 +6,7 @@ use Crm\ApplicationModule\Models\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\SubscriptionMovedHandler;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Models\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
@@ -1089,7 +1090,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         }
         $result = $upgrader->upgrade();
         if ($upgrader instanceof PaidExtendUpgrade) {
-            $this->paymentsRepository->updateStatus($result, PaymentsRepository::STATUS_PAID);
+            $this->paymentsRepository->updateStatus($result, PaymentStatusEnum::Paid->value);
         }
 
         $subscriptions = [];
@@ -1257,7 +1258,7 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $this->paymentsRepository->update($payment, [
             'paid_at' => $startTime,
         ]);
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PAID);
+        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Paid->value);
 
         if ($gateway->is_recurrent) {
             $rp = $this->recurrentPaymentsRepository->createFromPayment($payment, $cid);

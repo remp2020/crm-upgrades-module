@@ -9,6 +9,7 @@ use Crm\PaymentsModule\Models\GatewayFactory;
 use Crm\PaymentsModule\Models\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Models\Gateways\RecurrentPaymentInterface;
 use Crm\PaymentsModule\Models\OneStopShop\OneStopShop;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentLogsRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
@@ -196,7 +197,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         } catch (Exception $e) {
             $this->paymentsRepository->updateStatus(
                 $newPayment,
-                PaymentsRepository::STATUS_FAIL,
+                PaymentStatusEnum::Fail->value,
                 false,
                 $newPayment->note . '; failed: ' . $gateway->getResultCode()
             );
@@ -212,7 +213,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             return false;
         }
 
-        $this->paymentsRepository->updateStatus($newPayment, PaymentsRepository::STATUS_PAID);
+        $this->paymentsRepository->updateStatus($newPayment, PaymentStatusEnum::Paid->value);
 
         // TODO: move this to some event handler; if someone confirmed the $newPayment via admin, this step wouldn't happen
         $this->recurrentPaymentsRepository->update($recurrentPayment, [

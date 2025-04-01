@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Events;
 
 use Crm\ApplicationModule\Models\NowTrait;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -55,7 +56,7 @@ class PaymentStatusChangeHandler extends AbstractListener
             return;
         }
 
-        if (!in_array($payment->status, [PaymentsRepository::STATUS_PAID, PaymentsRepository::STATUS_PREPAID], true)) {
+        if (!in_array($payment->status, [PaymentStatusEnum::Paid->value, PaymentStatusEnum::Prepaid->value], true)) {
             return;
         }
 
