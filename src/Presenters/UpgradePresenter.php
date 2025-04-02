@@ -6,7 +6,6 @@ use Crm\ApplicationModule\Presenters\FrontendPresenter;
 use Crm\ApplicationModule\Router\RedirectValidator;
 use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Models\Upgrade\UpgradeException;
-use Crm\UsersModule\Models\Auth\SignInRedirectValidator;
 use Nette\Application\Attributes\Persistent;
 use Nette\Application\BadRequestException;
 use Tracy\Debugger;
@@ -25,8 +24,6 @@ class UpgradePresenter extends FrontendPresenter
     public function __construct(
         private AvailableUpgraders $availableUpgraders,
         private RedirectValidator $redirectValidator,
-        // temporary injection to make @deprecated SignInRedirectValidator work, will be removed
-        private SignInRedirectValidator $signInRedirectValidator,
     ) {
         parent::__construct();
     }
