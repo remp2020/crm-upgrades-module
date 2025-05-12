@@ -217,10 +217,17 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             $targetContentAccess[] = $contentAccess->name;
         }
 
+        $trialUpgradeConfigRaw = $this->subscriptionMetaRepository
+            ->getMeta($trialSubscription, TrialUpgrade::SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG)
+            ->fetch()
+            ?->value;
+        $trialUpgradeConfig = Json::decode(json: $trialUpgradeConfigRaw, forceArrays: true);
+
         $targetSubscriptionType = $this->upgraderFactory->resolveTargetSubscriptionType(
             baseSubscriptionType: $basePayment->subscription_type,
             config: [
                 'require_content' => $targetContentAccess,
+                'omit_content' => $trialUpgradeConfig['omit_content'] ?? [],
             ],
         );
         $upgradeConfig = Json::decode(
