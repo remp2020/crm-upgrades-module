@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\ContentAccessRepository;
@@ -247,7 +248,12 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $upgrader->upgrade();
 
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($basePayment);
-        if ($recurrentPayment) {
+        $statesToHandle = [
+            RecurrentPaymentStateEnum::Active->value,
+            RecurrentPaymentStateEnum::UserStop->value,
+        ];
+
+        if ($recurrentPayment && in_array($recurrentPayment->state, $statesToHandle, true)) {
             // determine how far to move recurrent charge, and move it
             $baseSubscription = $this->subscriptionsRepository->find($baseSubscription->id);
             $upgradedSubscription = $this->subscriptionUpgradesRepository->getTable()
