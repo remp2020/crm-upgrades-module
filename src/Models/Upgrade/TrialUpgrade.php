@@ -29,6 +29,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     public const SUBSCRIPTION_META_TRIAL_LATEST_END_TIME = 'trial_latest_end_time';
     public const SUBSCRIPTION_META_TRIAL_EXPIRED = 'trial_expired';
     public const SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG = 'trial_upgrade_config';
+    public const SUBSCRIPTION_META_TRIAL_FINALIZED = 'trial_finalized';
     public const UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS = 'trial_eligible_content_access';
     public const UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE = 'trial_subscription_type_code';
     public const UPGRADE_OPTION_CONFIG_SALES_FUNNEL_ID = 'sales_funnel_id';
@@ -199,6 +200,14 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 
     public function finalize(ActiveRow $trialSubscription)
     {
+        $trialFinalized = $this->subscriptionMetaRepository
+            ->getMeta($trialSubscription, TrialUpgrade::SUBSCRIPTION_META_TRIAL_FINALIZED)
+            ->fetch();
+
+        if ($trialFinalized) {
+            return true;
+        }
+
         $baseSubscription = $this->getActiveEligibleSubscription($trialSubscription->user_id)->fetch();
         $originalEndTime = $baseSubscription->end_time;
 
@@ -269,6 +278,12 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
                 'next_subscription_type_id' => $targetSubscriptionType->id,
             ]);
         }
+
+        $this->subscriptionMetaRepository->add(
+            subscription: $trialSubscription,
+            key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_FINALIZED,
+            value: true,
+        );
 
         return true;
     }
