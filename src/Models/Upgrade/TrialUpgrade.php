@@ -243,6 +243,10 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
                 'omit_content' => $upgradeConfig['omit_content'] ?? [],
             ],
         );
+        if (!$targetSubscriptionType) {
+            Debugger::log("Unable to finalize trial upgrade, subscription '{$baseSubscription->id} can't resolve target subscription type for '{$basePayment->subscription_type->code}'.");
+            return false;
+        }
 
         $upgrader = $this->getSubsequentUpgrader()
             ->setTargetSubscriptionType($targetSubscriptionType)
