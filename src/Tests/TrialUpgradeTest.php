@@ -483,6 +483,42 @@ class TrialUpgradeTest extends DatabaseTestCase
                 ],
                 'expectedRecurrent' => null,
             ],
+            'TrialFinalize_SingleRecurrentBaseSubscription_ShouldMoveChargeAt' => [
+                'payments' => [
+                    [
+                        'type' => self::SUBSCRIPTION_TYPE_BASIC_LONG,
+                        'start' => '2020-08-08',
+                        'end' => '2021-08-08',
+                        'gateway' => self::GATEWAY_RECURRENT,
+                        'cid' => '1111',
+                        'rp_charge_at' => '2021-08-06', // 2 days before
+                    ],
+                ],
+                'expectedSubscriptions' => [
+                    // original subscription 1, stopped at the time of upgrade finalization
+                    [
+                        'start_time' => '2020-08-08',
+                        'end_time' => '2021-07-04',
+                        'type' => 'regular',
+                    ],
+                    // trial subscription
+                    [
+                        'start_time' => '2021-04-05',
+                        'end_time' => '2021-07-04',
+                        'type' => 'upgrade',
+                    ],
+                    // upgraded subscription 1, upgraded-shortened
+                    [
+                        'start_time' => '2021-07-04',
+                        'end_time' => '2021-07-21 12:00:00',
+                        'type' => 'upgrade',
+                    ],
+                ],
+                'expectedRecurrent' => [
+                    'cid' => '1111',
+                    'rp_charge_at' => '2021-07-19 12:00:00',
+                ],
+            ],
             'TrialFinalize_RenewedRecurrentBaseSubscription_ShouldMoveChargeAt' => [
                 'payments' => [
                     [

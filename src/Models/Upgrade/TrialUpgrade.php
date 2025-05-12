@@ -199,6 +199,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     public function finalize(ActiveRow $trialSubscription)
     {
         $baseSubscription = $this->getActiveEligibleSubscription($trialSubscription->user_id)->fetch();
+        $originalEndTime = $baseSubscription->end_time;
 
         $latestEndTime = $this->subscriptionMetaRepository
             ->getMeta($trialSubscription, TrialUpgrade::SUBSCRIPTION_META_TRIAL_LATEST_END_TIME)
@@ -217,25 +218,20 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             $targetContentAccess[] = $contentAccess->name;
         }
 
-        $trialUpgradeConfigRaw = $this->subscriptionMetaRepository
-            ->getMeta($trialSubscription, TrialUpgrade::SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG)
-            ->fetch()
-            ?->value;
-        $trialUpgradeConfig = Json::decode(json: $trialUpgradeConfigRaw, forceArrays: true);
-
-        $targetSubscriptionType = $this->upgraderFactory->resolveTargetSubscriptionType(
-            baseSubscriptionType: $basePayment->subscription_type,
-            config: [
-                'require_content' => $targetContentAccess,
-                'omit_content' => $trialUpgradeConfig['omit_content'] ?? [],
-            ],
-        );
         $upgradeConfig = Json::decode(
             json: $this->subscriptionMetaRepository->getMeta(
                 subscription: $trialSubscription,
                 key: self::SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG,
             )->fetch()->value,
             forceArrays: true,
+        );
+
+        $targetSubscriptionType = $this->upgraderFactory->resolveTargetSubscriptionType(
+            baseSubscriptionType: $basePayment->subscription_type,
+            config: [
+                'require_content' => $targetContentAccess,
+                'omit_content' => $upgradeConfig['omit_content'] ?? [],
+            ],
         );
 
         $upgrader = $this->getSubsequentUpgrader()
@@ -249,6 +245,24 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         }
 
         $upgrader->upgrade();
+
+        $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($basePayment);
+        if ($recurrentPayment) {
+            // determine how far to move recurrent charge, and move it
+            $baseSubscription = $this->subscriptionsRepository->find($baseSubscription->id);
+            $upgradedSubscription = $this->subscriptionUpgradesRepository->getTable()
+                ->where('base_subscription_id = ?', $baseSubscription->id)
+                ->fetch()
+                ->upgraded_subscription;
+
+            $newEndTime = $upgradedSubscription->end_time;
+            $diff = $originalEndTime->diff($newEndTime);
+
+            $this->recurrentPaymentsRepository->update($recurrentPayment, [
+                'charge_at' => (clone $recurrentPayment->charge_at)->add($diff),
+                'next_subscription_type_id' => $targetSubscriptionType->id,
+            ]);
+        }
 
         return true;
     }
