@@ -165,12 +165,12 @@ class TrialUpgradeTest extends DatabaseTestCase
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
-                1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+                1000, // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
             );
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 \Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class,
-                500
+                500,
             );
             $lazyEventEmitter->addListener(
                 SubscriptionShortenedEvent::class,
@@ -183,7 +183,7 @@ class TrialUpgradeTest extends DatabaseTestCase
             $lazyEventEmitter->addListener(
                 SubscriptionEndsEvent::class,
                 TrialSubscriptionEndsEventHandler::class,
-                LazyEventEmitter::P_LOW
+                LazyEventEmitter::P_LOW,
             );
 
             $this->initialized = true;
@@ -401,7 +401,7 @@ class TrialUpgradeTest extends DatabaseTestCase
                         'start_time' => '2021-07-04',
                         'end_time' => '2021-10-19 12:30:00',
                         'type' => 'upgrade',
-                    ]
+                    ],
                 ],
                 'expectedRecurrent' => null,
             ],
@@ -661,13 +661,13 @@ class TrialUpgradeTest extends DatabaseTestCase
             if ($subscriptions[$i]->subscription_type->code === self::SUBSCRIPTION_TYPE_PREMIUM_TRIAL) {
                 $trialAccepted = $this->subscriptionMetaRepository->getMeta(
                     subscription: $subscriptions[$i],
-                    key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_ACCEPTED
+                    key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_ACCEPTED,
                 )->fetch();
                 $this->assertEquals(DateTime::from($expectedSubscription['accepted_at']), DateTime::from($trialAccepted->value));
 
                 $trialLatestEndTime = $this->subscriptionMetaRepository->getMeta(
                     subscription: $subscriptions[$i],
-                    key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_LATEST_END_TIME
+                    key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_LATEST_END_TIME,
                 )->fetch();
                 $this->assertEquals(DateTime::from($expectedSubscription['latest_end_time']), DateTime::from($trialLatestEndTime->value));
             }
@@ -913,7 +913,7 @@ class TrialUpgradeTest extends DatabaseTestCase
 
         $paymentItemContainer = new PaymentItemContainer();
         $paymentItemContainer->addItems(
-            SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType)
+            SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType),
         );
 
         $payment = $this->paymentsRepository->add(

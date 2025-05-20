@@ -129,7 +129,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             name: $upgradedItem->name,
             price: $chargePrice,
             vat: $upgradedItem->vat,
-            subscriptionTypeItemId: $upgradedItem->id
+            subscriptionTypeItemId: $upgradedItem->id,
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
@@ -182,9 +182,9 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         $this->hermesEmitter->emit(
             new HermesMessage(
                 'sales-funnel',
-                array_merge($eventParams, $trackerParams)
+                array_merge($eventParams, $trackerParams),
             ),
-            HermesMessage::PRIORITY_DEFAULT
+            HermesMessage::PRIORITY_DEFAULT,
         );
 
         $this->emitter->emit(new BeforeRecurrentPaymentChargeEvent($newPayment, $recurrentPayment->payment_method->external_token)); // ability to modify payment
@@ -199,7 +199,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
                 $newPayment,
                 PaymentStatusEnum::Fail->value,
                 false,
-                $newPayment->note . '; failed: ' . $gateway->getResultCode()
+                $newPayment->note . '; failed: ' . $gateway->getResultCode(),
             );
         }
 
@@ -207,7 +207,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             $gateway->isSuccessful() ? 'OK' : 'ERROR',
             json_encode($gateway->getResponseData()),
             'recurring-payment-manual-charge',
-            $newPayment->id
+            $newPayment->id,
         );
         if (!$gateway->isSuccessful()) {
             return false;

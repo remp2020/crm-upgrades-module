@@ -34,7 +34,7 @@ class PaidRecurrentWidget extends BaseLazyWidget
         ApplicationConfig $applicationConfig,
         Translator $translator,
         AvailableUpgraders $availableUpgraders,
-        User $user
+        User $user,
     ) {
         parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;

@@ -84,7 +84,7 @@ class PaymentStatusChangeHandler extends AbstractListener
             Debugger::log(
                 'Upgrade payment without meta information about upgraded subscription: ' . $payment->id . '. ' .
                 'Did you set "upgraded_subscription_id" payment meta tag in your upgrader implementation?',
-                ILogger::WARNING
+                ILogger::WARNING,
             );
             $upgradedSubscription = $this->subscriptionsRepository->actualUserSubscription($payment->user->id);
         }
@@ -114,7 +114,7 @@ class PaymentStatusChangeHandler extends AbstractListener
             UpgradesModule::SUBSCRIPTION_TYPE_UPGRADE,
             $changeTime,
             $newSubscriptionEndTime,
-            "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}"
+            "Upgrade from {$upgradedSubscription->subscription_type->name} to {$payment->subscription_type->name}",
         );
 
         $this->paymentsRepository->update($payment, ['subscription_id' => $newSubscription]);
@@ -125,14 +125,14 @@ class PaymentStatusChangeHandler extends AbstractListener
         // In such case, we do not want to add a bonus subscription
         $this->subscriptionsRepository->update($upgradedSubscription, [
             'end_time' => $changeTime,
-            'note' => '[upgrade] Previously ended on ' . $upgradedSubscription->end_time
+            'note' => '[upgrade] Previously ended on ' . $upgradedSubscription->end_time,
         ]);
         $upgradedSubscription = $this->subscriptionsRepository->find($upgradedSubscription->id);
 
         $this->subscriptionUpgradesRepository->add(
             $upgradedSubscription,
             $newSubscription,
-            $payment->upgrade_type
+            $payment->upgrade_type,
         );
 
         if ($payment->upgrade_type === PaidExtendUpgrade::TYPE) {
@@ -166,7 +166,7 @@ class PaymentStatusChangeHandler extends AbstractListener
         if (!$basePayment) {
             Debugger::log(
                 "Unable to upgrade subsequent subscriptions, could not find base payment for subscription: " . $upgradedSubscription->id,
-                Debugger::ERROR
+                Debugger::ERROR,
             );
             return;
         }

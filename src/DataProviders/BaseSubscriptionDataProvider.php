@@ -10,7 +10,7 @@ use Nette\Database\Table\ActiveRow;
 final class BaseSubscriptionDataProvider implements BaseSubscriptionDataProviderInterface
 {
     public function __construct(
-        private readonly SubscriptionUpgradesRepository $subscriptionUpgradesRepository
+        private readonly SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
     ) {
     }
 

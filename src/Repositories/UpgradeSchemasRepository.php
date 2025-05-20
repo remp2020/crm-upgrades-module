@@ -29,7 +29,7 @@ class UpgradeSchemasRepository extends Repository
     final public function allForSubscriptionType(ActiveRow $subscriptionType)
     {
         return $this->getTable()->where([
-            ':subscription_type_upgrade_schemas.subscription_type_id' => $subscriptionType->id
+            ':subscription_type_upgrade_schemas.subscription_type_id' => $subscriptionType->id,
         ]);
     }
 }

@@ -137,9 +137,9 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $this->hermesEmitter->emit(
             new HermesMessage(
                 'sales-funnel',
-                array_merge(['type' => 'payment'], $eventParams, $this->getTrackerParams())
+                array_merge(['type' => 'payment'], $eventParams, $this->getTrackerParams()),
             ),
-            HermesMessage::PRIORITY_DEFAULT
+            HermesMessage::PRIORITY_DEFAULT,
         );
 
         $trialPeriodEnd = $this->getTrialPeriodEnd();

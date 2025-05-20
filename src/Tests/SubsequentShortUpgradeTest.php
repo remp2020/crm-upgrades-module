@@ -169,12 +169,12 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
-                1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+                1000, // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
             );
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
-                500
+                500,
             );
 
             $lazyEventEmitter->addListener(
@@ -1235,14 +1235,14 @@ class SubsequentShortUpgradeTest extends DatabaseTestCase
         $gatewayCode,
         $cid,
         $rpState,
-        $rpChargeAt
+        $rpChargeAt,
     ) {
         $gateway = $this->paymentGatewaysRepository->findByCode($gatewayCode);
         $subscriptionType = $this->subscriptionTypesRepository->findByCode($subscriptionTypeCode);
 
         $paymentItemContainer = new PaymentItemContainer();
         $paymentItemContainer->addItems(
-            SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType)
+            SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType),
         );
 
         $payment = $this->paymentsRepository->add(

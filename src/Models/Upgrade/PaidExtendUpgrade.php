@@ -106,7 +106,7 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             name: $upgradedItem->name,
             price: $chargePrice,
             vat: $upgradedItem->vat,
-            subscriptionTypeItemId: $upgradedItem->id
+            subscriptionTypeItemId: $upgradedItem->id,
         );
         $paymentItemContainer = (new PaymentItemContainer())->addItem($item);
 
@@ -157,9 +157,9 @@ class PaidExtendUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $this->hermesEmitter->emit(
             new HermesMessage(
                 'sales-funnel',
-                array_merge($eventParams, $trackerParams)
+                array_merge($eventParams, $trackerParams),
             ),
-            HermesMessage::PRIORITY_DEFAULT
+            HermesMessage::PRIORITY_DEFAULT,
         );
 
         return $newPayment;

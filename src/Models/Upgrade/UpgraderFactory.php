@@ -99,7 +99,7 @@ class UpgraderFactory implements ResettableInterface
 
     public function resolveTargetSubscriptionType(
         ActiveRow $baseSubscriptionType,
-        array $config
+        array $config,
     ): ?ActiveRow {
         // target subscription type should also include all current contents
         $currentContent = [];
@@ -126,7 +126,7 @@ class UpgraderFactory implements ResettableInterface
         $subscriptionType = $this->resolveDefaultSubscriptionType(
             currentContentAccess: $currentContent,
             length: $baseSubscriptionType->length,
-            config: $config
+            config: $config,
         );
 
         if (!$subscriptionType) {
@@ -136,7 +136,7 @@ class UpgraderFactory implements ResettableInterface
                 $subscriptionType = $this->resolveDefaultSubscriptionType(
                     currentContentAccess: $currentContent,
                     length: $baseSubscriptionType->extending_length,
-                    config: $config
+                    config: $config,
                 );
             }
 
@@ -146,7 +146,7 @@ class UpgraderFactory implements ResettableInterface
                     [
                         'require_content' => array_unique(array_merge($currentContent, $config['require_content'] ?? [])),
                         'omit_content' => $config['omit_content'] ?? [],
-                    ]
+                    ],
                 );
             }
         }

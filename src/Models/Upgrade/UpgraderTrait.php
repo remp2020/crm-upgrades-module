@@ -222,7 +222,7 @@ trait UpgraderTrait
         /** @var TrackerDataProviderInterface[] $providers */
         $providers = $this->dataProviderManager->getProviders(
             'upgrades.dataprovider.tracker',
-            TrackerDataProviderInterface::class
+            TrackerDataProviderInterface::class,
         );
         foreach ($providers as $provider) {
             $trackerParams[] = $provider->provide();

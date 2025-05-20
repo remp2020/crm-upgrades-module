@@ -41,7 +41,7 @@ class AvailableUpgraders
         UpgradeSchemasRepository $upgradeSchemasRepository,
         UpgraderFactory $upgraderFactory,
         ContentAccessRepository $contentAccessRepository,
-        ActualUserSubscriptions $upgradeableSubscriptions
+        ActualUserSubscriptions $upgradeableSubscriptions,
     ) {
         $this->paymentsRepository = $paymentsRepository;
         $this->userActionsLogRepository = $userActionsLogRepository;
@@ -81,7 +81,7 @@ class AvailableUpgraders
         int $userId,
         array $targetContentAccessNames = [],
         array $requiredUpgradeOptionTags = [],
-        bool $enforceUpgradeOptionRequireContent = false
+        bool $enforceUpgradeOptionRequireContent = false,
     ) {
         $this->error = null;
         if (!$userId) {

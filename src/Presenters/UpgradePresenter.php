@@ -62,7 +62,7 @@ class UpgradePresenter extends FrontendPresenter
             $upgraders = $this->availableUpgraders->all(
                 userId: $this->user->getId(),
                 targetContentAccessNames: $this->contentAccess,
-                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1)
+                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1),
             );
         } catch (UpgradeException $e) {
             Debugger::log($e);
@@ -91,7 +91,7 @@ class UpgradePresenter extends FrontendPresenter
             $upgraders = $this->availableUpgraders->all(
                 userId: $this->user->getId(),
                 targetContentAccessNames: $this->contentAccess,
-                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1)
+                enforceUpgradeOptionRequireContent: ((int) $this->limit === 1),
             );
         } catch (UpgradeException $e) {
             Debugger::log($e);

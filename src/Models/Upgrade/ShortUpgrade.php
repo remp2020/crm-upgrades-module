@@ -94,9 +94,9 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $this->hermesEmitter->emit(
             new HermesMessage(
                 'sales-funnel',
-                array_merge(['type' => 'payment'], $eventParams, $this->getTrackerParams())
+                array_merge(['type' => 'payment'], $eventParams, $this->getTrackerParams()),
             ),
-            HermesMessage::PRIORITY_DEFAULT
+            HermesMessage::PRIORITY_DEFAULT,
         );
 
         $startTime = $this->calculateShortenedStartTime();
@@ -112,15 +112,15 @@ class ShortUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
         $this->subscriptionUpgradesRepository->add(
             $this->getBaseSubscription(),
             $upgradedSubscription,
-            self::TYPE
+            self::TYPE,
         );
 
         $this->hermesEmitter->emit(
             new HermesMessage(
                 'subscription-split',
-                array_merge($eventParams, $this->getTrackerParams())
+                array_merge($eventParams, $this->getTrackerParams()),
             ),
-            HermesMessage::PRIORITY_DEFAULT
+            HermesMessage::PRIORITY_DEFAULT,
         );
 
         $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);

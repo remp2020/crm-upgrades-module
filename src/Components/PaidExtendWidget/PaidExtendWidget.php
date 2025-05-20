@@ -59,7 +59,7 @@ class PaidExtendWidget extends BaseLazyWidget
         AvailableUpgraders $availableUpgraders,
         User $user,
         UpgradeOptionsRepository $upgradeOptionsRepository,
-        SubscriptionTypesRepository $subscriptionTypesRepository
+        SubscriptionTypesRepository $subscriptionTypesRepository,
     ) {
         parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;
@@ -95,7 +95,7 @@ class PaidExtendWidget extends BaseLazyWidget
         foreach ($gateways as $gateway) {
             $wrapper[] = [
                 'gateway' => $gateway,
-                'description' => $this->gateways[$gateway->code]
+                'description' => $this->gateways[$gateway->code],
             ];
         }
         return ArrayHash::from($wrapper);

@@ -122,7 +122,7 @@ class BaseSubscriptionDataProviderTest extends DatabaseTestCase
             // data provider we're testing
             $dataProviderManager->registerDataProvider(
                 'payments.dataprovider.base_subscription',
-                $this->inject(BaseSubscriptionDataProvider::class)
+                $this->inject(BaseSubscriptionDataProvider::class),
             );
 
             // clear initialized handlers (we do not want duplicated listeners)
@@ -134,12 +134,12 @@ class BaseSubscriptionDataProviderTest extends DatabaseTestCase
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 $upgradeStatusChangeHandler,
-                1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+                1000, // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
             );
             $lazyEventEmitter->addListener(
                 PaymentChangeStatusEvent::class,
                 $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class),
-                500
+                500,
             );
 
             $lazyEventEmitter->addListener(
@@ -190,7 +190,7 @@ class BaseSubscriptionDataProviderTest extends DatabaseTestCase
         string $schema,
         ActiveRow $baseSubscriptionType,
         array $requireContent,
-        array $omitContent
+        array $omitContent,
     ) {
         /** @var UpgradeSchemasRepository $upgradeSchemasRepository */
         $upgradeSchemasRepository = $this->inject(UpgradeSchemasRepository::class);
@@ -216,7 +216,7 @@ class BaseSubscriptionDataProviderTest extends DatabaseTestCase
                 [
                     'require_content' => $requireContent,
                     'omit_content' => $omitContent,
-                ]
+                ],
             );
 
             if (!$option) {
@@ -226,7 +226,7 @@ class BaseSubscriptionDataProviderTest extends DatabaseTestCase
                     [
                         'require_content' => $requireContent,
                         'omit_content' => $omitContent,
-                    ]
+                    ],
                 );
             }
         }

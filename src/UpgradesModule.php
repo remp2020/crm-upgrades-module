@@ -34,24 +34,24 @@ class UpgradesModule extends CrmModule
     {
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            PaidRecurrentWidget::class
+            PaidRecurrentWidget::class,
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            PaidExtendWidget::class
+            PaidExtendWidget::class,
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            ShortWidget::class
+            ShortWidget::class,
         );
         $widgetManager->registerWidget(
             'frontend.upgrades.subscription',
-            FreeRecurrentWidget::class
+            FreeRecurrentWidget::class,
         );
 
         $widgetManager->registerWidget(
             'admin.payments.user_payments_listing.badge',
-            UserPaymentsListingBadge::class
+            UserPaymentsListingBadge::class,
         );
 
         $widgetManager->registerWidget(
@@ -66,13 +66,13 @@ class UpgradesModule extends CrmModule
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
             PaymentStatusChangeHandler::class,
-            1000 // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
+            1000, // we need to have this executed before \Crm\PaymentsModule\Events\PaymentStatusChangeHandler
         );
 
         $emitter->addListener(
             SubscriptionEndsEvent::class,
             TrialSubscriptionEndsEventHandler::class,
-            LazyEventEmitter::P_LOW
+            LazyEventEmitter::P_LOW,
         );
     }
 
@@ -80,7 +80,7 @@ class UpgradesModule extends CrmModule
     {
         $dataProviderManager->registerDataProvider(
             'payments.dataprovider.base_subscription',
-            $this->getInstance(BaseSubscriptionDataProvider::class)
+            $this->getInstance(BaseSubscriptionDataProvider::class),
         );
     }
 }

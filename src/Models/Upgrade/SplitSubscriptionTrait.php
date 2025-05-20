@@ -30,7 +30,7 @@ trait SplitSubscriptionTrait
             $newSubscriptionEndTime,
             "Split upgrade from subscription type {$this->baseSubscription->subscription_type->name} to {$this->targetSubscriptionType->name}",
             $this->baseSubscription->address,
-            false
+            false,
         );
 
         // stop old subscription immediately (order is important, new subscription has to be running before we stop this)
