@@ -112,10 +112,22 @@ class UpgraderFactory implements ResettableInterface
             return null;
         }
 
-        $directUpgradeOption = $this->upgradeOptionsRepository->getTable()
+        $directUpgradeOptions = $this->upgradeOptionsRepository->getTable()
             ->where('upgrade_options.subscription_type_id IS NOT NULL')
             ->where('upgrade_schema:subscription_type_upgrade_schemas.subscription_type_id = ?', $baseSubscriptionType->id)
-            ->fetch();
+            ->fetchAll();
+
+        $directUpgradeOption = null;
+        foreach ($directUpgradeOptions as $directUpgradeOptionCandidate) {
+            $optionContentAccess = $this->contentAccessRepository
+                ->allForSubscriptionType($directUpgradeOptionCandidate->subscription_type)
+                ->fetchPairs(null, 'name');
+            $unmatchedContentAccess = array_diff($optionContentAccess, $config['require_content']);
+            if (count($unmatchedContentAccess) === 0) {
+                $directUpgradeOption = $directUpgradeOptionCandidate;
+                break;
+            }
+        }
 
         // this is a simplification that expects that all the possible upgrade_options always point to the same
         // target subscription types, no matter the upgrade type.
