@@ -13,6 +13,7 @@ use Crm\UpgradesModule\Models\Upgrade\UpgraderFactory;
 use League\Event\AbstractListener;
 use League\Event\EventInterface;
 use Nette\Utils\DateTime;
+use Nette\Utils\Json;
 
 class TrialSubscriptionEndsEventHandler extends AbstractListener
 {
@@ -53,6 +54,15 @@ class TrialSubscriptionEndsEventHandler extends AbstractListener
 
         /** @var TrialUpgrade $trialUpgrade */
         $trialUpgrade = $this->upgraderFactory->getUpgraders()[TrialUpgrade::TYPE];
+
+        $upgradeConfig = Json::decode(
+            json: $this->subscriptionMetaRepository->getMeta(
+                subscription: $trialSubscription,
+                key: TrialUpgrade::SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG,
+            )->fetch()->value,
+            forceArrays: true,
+        );
+        $trialUpgrade->applyConfig($upgradeConfig);
 
         $latestEligibleSubscription = $trialUpgrade->getLatestEligibleSubscription($trialSubscription->user_id)->fetch();
         if (!$latestEligibleSubscription) {

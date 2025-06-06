@@ -30,7 +30,7 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     public const SUBSCRIPTION_META_TRIAL_EXPIRED = 'trial_expired';
     public const SUBSCRIPTION_META_TRIAL_UPGRADE_CONFIG = 'trial_upgrade_config';
     public const SUBSCRIPTION_META_TRIAL_FINALIZED = 'trial_finalized';
-    public const UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS = 'trial_eligible_content_access';
+    public const UPGRADE_OPTION_CONFIG_ELIGIBLE_CONTENT_ACCESS = 'eligible_content';
     public const UPGRADE_OPTION_CONFIG_SUBSCRIPTION_TYPE_CODE = 'trial_subscription_type_code';
     public const UPGRADE_OPTION_CONFIG_SALES_FUNNEL_ID = 'sales_funnel_id';
 
@@ -294,11 +294,12 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 
     public function getActiveEligibleSubscription(int $userId): Selection
     {
+        $contentAccesss = $this->eligibleContentAccess ?? ['web'];
         return $this->subscriptionsRepository
             ->actualUserSubscriptionsByContentAccess(
-                date: $this->now(),
-                userId: $userId,
-                contentAccess: $this->eligibleContentAccess ?? 'web',
+                $this->now(),
+                $userId,
+                ...$contentAccesss,
             )
             ->order('end_time DESC')
             ->limit(1);
@@ -306,8 +307,9 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
 
     public function getLatestEligibleSubscription(int $userId): Selection
     {
+        $contentAccesss = $this->eligibleContentAccess ?? ['web'];
         return $this->subscriptionsRepository
-            ->latestSubscriptionsByContentAccess(contentAccess: $this->eligibleContentAccess ?? 'web')
+            ->latestSubscriptionsByContentAccess(...$contentAccesss)
             ->where('subscriptions.user_id = ?', $userId)
             ->order('end_time DESC')
             ->limit(1);
