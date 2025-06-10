@@ -130,10 +130,14 @@ class AvailableUpgraders
 
         $availableOptions = [];
         foreach ($candidates as $candidate) {
-            $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($candidate['subscriptionToUpgrade']->subscription_type);
+            $baseSubscriptionType = $candidate['subscriptionToUpgrade']->subscription_type;
+            $schemas = $this->upgradeSchemasRepository->allForSubscriptionType($baseSubscriptionType);
             if ($schemas->count()) {
                 foreach ($schemas as $schema) {
-                    $availableOptions += $schema->related('upgrade_options')->fetchAll();
+                    $availableOptions += $schema
+                        ->related('upgrade_options')
+                        ->where('subscription_type_id IS NULL OR subscription_type.length = ?', $baseSubscriptionType->length)
+                        ->fetchAll();
                 }
                 if (count($availableOptions)) {
                     $basePayment = $candidate['basePayment'];
