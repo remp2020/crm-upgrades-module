@@ -114,7 +114,7 @@ class UpgraderFactory implements ResettableInterface
 
         $directUpgradeOptions = $this->upgradeOptionsRepository->getTable()
             ->where('upgrade_options.subscription_type_id IS NOT NULL')
-            ->where('upgrade_options.subscription_type.length = ?', $baseSubscriptionType->length)
+            ->where('subscription_type.length = ?', $baseSubscriptionType->length)
             ->where('upgrade_schema:subscription_type_upgrade_schemas.subscription_type_id = ?', $baseSubscriptionType->id)
             ->fetchAll();
 
