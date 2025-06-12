@@ -3,6 +3,8 @@
 namespace Crm\UpgradesModule\Components\PaidRecurrentWidget;
 
 use Crm\ApplicationModule\Models\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Redis\RedisClientFactory;
+use Crm\ApplicationModule\Models\Redis\RedisClientTrait;
 use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
 use Crm\ApplicationModule\Models\Widget\LazyWidgetManager;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
@@ -10,6 +12,8 @@ use Crm\ApplicationModule\UI\Form;
 use Crm\UpgradesModule\Models\Upgrade\AvailableUpgraders;
 use Crm\UpgradesModule\Models\Upgrade\PaidRecurrentUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\SubsequentUpgradeInterface;
+use Malkusch\Lock\Exception\LockAcquireException;
+use Malkusch\Lock\Mutex\RedisMutex;
 use Nette\Localization\Translator;
 use Nette\Security\User;
 use Nette\Utils\Json;
@@ -21,6 +25,8 @@ use Tracy\ILogger;
  */
 class PaidRecurrentWidget extends BaseLazyWidget
 {
+    use RedisClientTrait;
+
     private $applicationConfig;
 
     private $translator;
@@ -35,12 +41,14 @@ class PaidRecurrentWidget extends BaseLazyWidget
         Translator $translator,
         AvailableUpgraders $availableUpgraders,
         User $user,
+        RedisClientFactory $redisClientFactory,
     ) {
         parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;
         $this->translator = $translator;
         $this->availableUpgraders = $availableUpgraders;
         $this->user = $user;
+        $this->redisClientFactory = $redisClientFactory;
     }
 
     public function identifier()
@@ -102,28 +110,42 @@ class PaidRecurrentWidget extends BaseLazyWidget
             $this->presenter->redirect('error');
         }
 
-        $result = null;
         try {
-            $result = $upgrader->upgrade();
-        } catch (\Exception $e) {
+            $mutex = new RedisMutex(
+                $this->redis(),
+                'paid_recurrent_upgrade_subscription_' . $upgrader->getBaseSubscription()?->id,
+                2,
+            );
+        } catch (LockAcquireException $e) {
             Debugger::log($e->getMessage(), ILogger::EXCEPTION);
-            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.payment_gateway_timeout'), 'error');
-            $this->presenter->redirect('error');
-        }
-
-        if (!$result) {
             $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
             $this->presenter->redirect('error');
         }
 
-        $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.success'));
+        $mutex->synchronized(function () use ($upgrader) {
+            $result = null;
+            try {
+                $result = $upgrader->upgrade();
+            } catch (\Exception $e) {
+                Debugger::log($e->getMessage(), ILogger::EXCEPTION);
+                $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.payment_gateway_timeout'), 'error');
+                $this->presenter->redirect('error');
+            }
 
-        $subscriptionUpgradeRow = $upgrader->getBaseSubscription()
-            ->related('subscription_upgrades', 'base_subscription_id')
-            ->fetch();
+            if (!$result) {
+                $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
+                $this->presenter->redirect('error');
+            }
 
-        $this->presenter->redirect('success', [
-            'subscriptionId' => $subscriptionUpgradeRow->upgraded_subscription_id,
-        ]);
+            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.success'));
+
+            $subscriptionUpgradeRow = $upgrader->getBaseSubscription()
+                ->related('subscription_upgrades', 'base_subscription_id')
+                ->fetch();
+
+            $this->presenter->redirect('success', [
+                'subscriptionId' => $subscriptionUpgradeRow->upgraded_subscription_id,
+            ]);
+        });
     }
 }

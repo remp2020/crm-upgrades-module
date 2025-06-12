@@ -3,6 +3,8 @@
 namespace Crm\UpgradesModule\Components\PaidExtendWidget;
 
 use Crm\ApplicationModule\Models\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Redis\RedisClientFactory;
+use Crm\ApplicationModule\Models\Redis\RedisClientTrait;
 use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
 use Crm\ApplicationModule\Models\Widget\LazyWidgetManager;
 use Crm\ApplicationModule\Presenters\FrontendPresenter;
@@ -17,6 +19,8 @@ use Crm\UpgradesModule\Models\Upgrade\PaidExtendUpgrade;
 use Crm\UpgradesModule\Models\Upgrade\SubsequentUpgradeInterface;
 use Crm\UpgradesModule\Models\Upgrade\UpgraderFactory;
 use Crm\UpgradesModule\Repositories\UpgradeOptionsRepository;
+use Malkusch\Lock\Exception\LockAcquireException;
+use Malkusch\Lock\Mutex\RedisMutex;
 use Nette\Localization\Translator;
 use Nette\Security\User;
 use Nette\Utils\ArrayHash;
@@ -29,6 +33,8 @@ use Tracy\ILogger;
  */
 class PaidExtendWidget extends BaseLazyWidget
 {
+    use RedisClientTrait;
+
     private $applicationConfig;
 
     private $upgraderFactory;
@@ -60,6 +66,7 @@ class PaidExtendWidget extends BaseLazyWidget
         User $user,
         UpgradeOptionsRepository $upgradeOptionsRepository,
         SubscriptionTypesRepository $subscriptionTypesRepository,
+        RedisClientFactory $redisClientFactory,
     ) {
         parent::__construct($lazyWidgetManager);
         $this->applicationConfig = $applicationConfig;
@@ -71,6 +78,7 @@ class PaidExtendWidget extends BaseLazyWidget
         $this->user = $user;
         $this->upgradeOptionsRepository = $upgradeOptionsRepository;
         $this->subscriptionTypesRepository = $subscriptionTypesRepository;
+        $this->redisClientFactory = $redisClientFactory;
     }
 
     public function identifier()
@@ -158,39 +166,53 @@ class PaidExtendWidget extends BaseLazyWidget
             $this->presenter->redirect('error');
         }
 
-        $gateway = $this->paymentGatewaysRepository->find($values->payment_gateway_id);
-
-        $result = null;
         try {
-            $result = $upgrader
-                ->setGateway($gateway)
-                ->upgrade();
-        } catch (\Exception $e) {
+            $mutex = new RedisMutex(
+                $this->redis(),
+                'paid_extend_upgrade_subscription_' . $upgrader->getBaseSubscription()?->id,
+                2,
+            );
+        } catch (LockAcquireException $e) {
             Debugger::log($e->getMessage(), ILogger::EXCEPTION);
-            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.payment_gateway_timeout'), 'error');
+            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
             $this->presenter->redirect('error');
         }
 
-        if ($result) {
+        $mutex->synchronized(function () use ($upgrader, $values) {
+            $gateway = $this->paymentGatewaysRepository->find($values->payment_gateway_id);
+
+            $result = null;
             try {
-                $url = $this->paymentProcessor->begin($result);
-                if ($url) {
-                    if (is_string($url)) { // backward compatibility
-                        $redirectUrl = $url;
-                    } elseif ($url instanceof ProcessResponse && $url->getType() === 'url') {
-                        $redirectUrl = $url->getData();
-                    } else {
-                        throw new CannotProcessPayment("Missing redirect url for upgrade payment [{$result->id}].");
-                    }
-                    $this->presenter->redirectUrl($redirectUrl);
-                }
-            } catch (CannotProcessPayment $err) {
-                $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'));
+                $result = $upgrader
+                    ->setGateway($gateway)
+                    ->upgrade();
+            } catch (\Exception $e) {
+                Debugger::log($e->getMessage(), ILogger::EXCEPTION);
+                $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.payment_gateway_timeout'), 'error');
                 $this->presenter->redirect('error');
             }
-        }
 
-        $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
-        $this->presenter->redirect('error');
+            if ($result) {
+                try {
+                    $url = $this->paymentProcessor->begin($result);
+                    if ($url) {
+                        if (is_string($url)) { // backward compatibility
+                            $redirectUrl = $url;
+                        } elseif ($url instanceof ProcessResponse && $url->getType() === 'url') {
+                            $redirectUrl = $url->getData();
+                        } else {
+                            throw new CannotProcessPayment("Missing redirect url for upgrade payment [{$result->id}].");
+                        }
+                        $this->presenter->redirectUrl($redirectUrl);
+                    }
+                } catch (CannotProcessPayment $err) {
+                    $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'));
+                    $this->presenter->redirect('error');
+                }
+            }
+
+            $this->presenter->flashMessage($this->translator->translate('upgrades.frontend.upgrade.error.message'), 'error');
+            $this->presenter->redirect('error');
+        });
     }
 }
