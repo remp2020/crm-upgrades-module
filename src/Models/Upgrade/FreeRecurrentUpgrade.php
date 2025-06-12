@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
+use Crm\PaymentsModule\Models\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
@@ -29,6 +30,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         private \Tomaj\Hermes\Emitter $hermesEmitter,
         private DataProviderManager $dataProviderManager,
         private UpgraderFactory $upgraderFactory,
+        private readonly RecurrentPaymentsResolver $recurrentPaymentsResolver,
     ) {
     }
 
@@ -117,15 +119,18 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             'upgrade_type' => self::TYPE,
         ]);
 
-        $customAmount = $this->getFutureChargePrice();
-        if ($customAmount === $this->targetSubscriptionType->price) {
-            $customAmount = null;
-        }
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'next_subscription_type_id' => $this->targetSubscriptionType->id,
-            'custom_amount' => $customAmount,
             'note' => $note . "\n(" . time() . ')',
         ]);
+
+        $customAmount = $this->getFutureChargePrice();
+        $futureSubscriptionType = $this->recurrentPaymentsResolver->resolveSubscriptionType($recurrentPayment);
+        if ($customAmount !== $futureSubscriptionType->price) {
+            $this->recurrentPaymentsRepository->update($recurrentPayment, [
+                'custom_amount' => $customAmount,
+            ]);
+        }
 
         $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
         $this->subscriptionUpgradesRepository->add(
