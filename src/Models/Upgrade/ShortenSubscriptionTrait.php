@@ -61,7 +61,12 @@ trait ShortenSubscriptionTrait
         }
 
         // determine how many days of new subscription type we can "buy" with what we "saved" from remaining days of current subscription
-        $lengthInSeconds = ceil($savedFromActual / $newDayPrice * 24 * 60 * 60);
+        if ($newDayPrice > 0) {
+            $lengthInSeconds = ceil($savedFromActual / $newDayPrice * 24 * 60 * 60);
+        } else {
+            $lengthInSeconds = $remainingSeconds;
+        }
+
         return $upgradedSubscriptionStart->add(new \DateInterval("PT{$lengthInSeconds}S"));
     }
 
