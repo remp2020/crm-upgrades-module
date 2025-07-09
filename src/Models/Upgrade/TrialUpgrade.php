@@ -81,6 +81,14 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
             return false;
         }
 
+        $contentAccess = $this->contentAccessRepository->allForSubscriptionType($this->baseSubscription->subscription_type)
+            ->fetchPairs(null, 'name');
+
+        $diff = array_diff($this->eligibleContentAccess ?? ['web'], $contentAccess);
+        if (!empty($diff)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -319,5 +327,10 @@ class TrialUpgrade implements UpgraderInterface, SubsequentUpgradeInterface
     {
         $trialInterval = new \DateInterval('P' . $this->trialPeriodDays . 'D');
         return $this->now()->add($trialInterval);
+    }
+
+    public function getTrialSubscriptionType(): ActiveRow
+    {
+        return $this->trialSubscriptionType;
     }
 }
