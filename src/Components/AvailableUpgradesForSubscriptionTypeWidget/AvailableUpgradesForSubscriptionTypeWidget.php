@@ -23,7 +23,7 @@ class AvailableUpgradesForSubscriptionTypeWidget extends BaseLazyWidget
         parent::__construct($lazyWidgetManager);
     }
 
-    public function header($id = '')
+    public function header()
     {
         return 'Available upgrades for subscription type';
     }
