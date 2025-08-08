@@ -4,6 +4,7 @@ namespace Crm\UpgradesModule\Models\Upgrade;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
+use Crm\ApplicationModule\Models\Database\ActiveRowFactory;
 use Crm\PaymentsModule\Models\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -31,6 +32,7 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         private DataProviderManager $dataProviderManager,
         private UpgraderFactory $upgraderFactory,
         private readonly RecurrentPaymentsResolver $recurrentPaymentsResolver,
+        private ActiveRowFactory $activeRowFactory,
     ) {
     }
 
@@ -124,14 +126,6 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             'note' => $note . "\n(" . time() . ')',
         ]);
 
-        $customAmount = $this->getFutureChargePrice();
-        $futureSubscriptionType = $this->recurrentPaymentsResolver->resolveSubscriptionType($recurrentPayment);
-        if ($customAmount !== $futureSubscriptionType->price) {
-            $this->recurrentPaymentsRepository->update($recurrentPayment, [
-                'custom_amount' => $customAmount,
-            ]);
-        }
-
         $upgradedSubscription = $this->splitSubscription($this->baseSubscription->end_time);
         $this->subscriptionUpgradesRepository->add(
             $this->getBaseSubscription(),
@@ -157,11 +151,18 @@ class FreeRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             return round($newDayPrice * $this->targetSubscriptionType->length, 2);
         }
 
-        $subscriptionType = $this->targetSubscriptionType;
-        // TODO [crm#2938]: no need to check trials when upgrading
-        if ($subscriptionType->next_subscription_type_id) {
-            $subscriptionType = $subscriptionType->next_subscription_type;
-        }
-        return $subscriptionType->price;
+        $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+
+        // Fake recurrent payment update so we can determine how future recurrent payment would resolve
+        // next subscription type to charge. This is too specific to touch RecurrentPaymentsResolve, hence this hack.
+        $tx = $this->recurrentPaymentsRepository->getTransaction();
+        $tx->start();
+        $this->recurrentPaymentsRepository->update($recurrentPayment, [
+            'next_subscription_type_id' => $this->targetSubscriptionType->id,
+        ]);
+        $nextSubscriptionType = $this->recurrentPaymentsResolver->resolveSubscriptionType($recurrentPayment);
+        $tx->rollback();
+
+        return $nextSubscriptionType->price;
     }
 }

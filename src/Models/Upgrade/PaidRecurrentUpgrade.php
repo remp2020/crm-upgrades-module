@@ -11,6 +11,7 @@ use Crm\PaymentsModule\Models\Gateways\RecurrentPaymentInterface;
 use Crm\PaymentsModule\Models\OneStopShop\OneStopShop;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\Models\RecurrentPaymentsResolver;
 use Crm\PaymentsModule\Repositories\PaymentLogsRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -55,6 +56,7 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
         private UpgraderFactory $upgraderFactory,
         private OneStopShop $oneStopShop,
         private SubscriptionUpgradesRepository $subscriptionUpgradesRepository,
+        private RecurrentPaymentsResolver $recurrentPaymentsResolver,
     ) {
     }
 
@@ -276,11 +278,18 @@ class PaidRecurrentUpgrade implements UpgraderInterface, SubsequentUpgradeInterf
             return $this->futureChargePrice;
         }
 
-        $subscriptionType = $this->getTargetSubscriptionType();
-        // TODO [crm#2938]: no need to check trials when upgrading
-        if ($subscriptionType->next_subscription_type_id) {
-            $subscriptionType = $this->subscriptionTypesRepository->find($subscriptionType->next_subscription_type_id);
-        }
-        return $subscriptionType->price;
+        $recurrentPayment = $this->recurrentPaymentsRepository->recurrent($this->basePayment);
+
+        // Fake recurrent payment update so we can determine how future recurrent payment would resolve
+        // next subscription type to charge. This is too specific to touch RecurrentPaymentsResolve, hence this hack.
+        $tx = $this->recurrentPaymentsRepository->getTransaction();
+        $tx->start();
+        $this->recurrentPaymentsRepository->update($recurrentPayment, [
+            'next_subscription_type_id' => $this->targetSubscriptionType->id,
+        ]);
+        $nextSubscriptionType = $this->recurrentPaymentsResolver->resolveSubscriptionType($recurrentPayment);
+        $tx->rollback();
+
+        return $nextSubscriptionType->price;
     }
 }
