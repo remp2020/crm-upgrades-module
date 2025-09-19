@@ -29,7 +29,7 @@ class UpgradeOptionsRepository extends Repository
             ]);
 
         if ($config) {
-            $option->where('JSON_CONTAINS(config, ?)', Json::encode($config));
+            $option->where('config = CAST(? AS JSON)', Json::encode($config));
         }
         if ($subscriptionTypeId) {
             $option->where(['subscription_type_id' => $subscriptionTypeId]);
